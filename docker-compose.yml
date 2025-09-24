@@ -1,0 +1,123 @@
+services:
+  # ----------------
+  # Reverse Proxy
+  # ----------------
+  npm:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx_proxy_manager
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "81:81"   # dashboard NPM
+      - "443:443"
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - app-network
+
+  # ----------------
+  # Apps1: OJS
+  # ----------------
+# ----------------
+  # OJS Application
+  # ----------------
+  ojs:
+    image: pkpofficial/ojs:latest
+    container_name: ojs_app
+    restart: unless-stopped
+    environment:
+      - DB_HOST=ojs_db
+      - DB_USER=ojs_user
+      - DB_PASSWORD=ojs_pass
+      - DB_NAME=ojs_db
+    volumes:
+      - ./ojs_files:/var/www/html/public
+      - ./ojs_config/config.inc.php:/var/www/html/config/config.inc.php  # <--- note the config/ path
+    depends_on:
+      - ojs_db
+    networks:
+      - app-network
+  # ----------------
+  # OJS Database
+  # ----------------
+  ojs_db:
+    image: mariadb:10.6
+    container_name: ojs_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: ojs_db
+      MYSQL_USER: ojs_user
+      MYSQL_PASSWORD: ojs_pass
+    volumes:
+      - ojs_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  # ----------------
+  # Apps2: Laravel Backend
+  # ----------------
+  # Laravel PHP-FPM
+  backend:
+    build: ./backend
+    container_name: laravel_backend
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www/html
+    networks:
+      - app-network
+
+  # Nginx for Laravel
+  backend_nginx:
+    image: nginx:stable-alpine
+    container_name: laravel_nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8000:80"   # expose Laravel app on host:8000
+    volumes:
+      - ./backend:/var/www/html
+      - ./ojs_config/config.inc.php:/var/www/html/config.inc.php  # mount config directly
+    networks:
+      - app-network
+
+  # Postgres DB for Laravel
+  backend_db:
+    image: postgres:15
+    container_name: postgres_backend
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: laravel_db
+      POSTGRES_USER: laravel_user
+      POSTGRES_PASSWORD: laravel_pass
+    volumes:
+      - backend_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # ----------------
+  # Apps2: React Frontend
+  # ----------------
+  frontend:
+    build: ./frontend
+    container_name: react_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"   # Expose on host:3000
+    networks:
+      - app-network
+
+# ----------------
+# Volumes & Networks
+# ----------------
+volumes:
+  npm_data:
+  npm_letsencrypt:
+  ojs_data:
+  backend_data:
+
+networks:
+  app-network:
+    driver: bridge
