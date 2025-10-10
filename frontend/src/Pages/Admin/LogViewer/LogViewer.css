@@ -1,0 +1,265 @@
+
+
+.log-viewer-container {
+    padding: 2rem; /* Padding dari content-area di AdminLayout */
+    background-color: white; /* Latar belakang putih untuk card utama */
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: #333;
+    text-align: center; /* Pusatkan judul */
+}
+
+/* --- Filters Section --- */
+.filters-section {
+    display: flex;
+    flex-wrap: wrap; /* Agar filter bisa wrap ke bawah di layar kecil */
+    gap: 1.5rem; /* Jarak antar grup filter */
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #f8f8f8; /* Latar belakang sedikit berbeda untuk filter */
+    border-radius: 10px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    align-items: flex-end; /* Sejajarkan bagian bawah elemen input */
+}
+
+.filter-group {
+    flex: 1 1 200px; /* Fleksibel, minimal 200px lebar */
+    min-width: 180px; /* Pastikan tidak terlalu kecil */
+}
+
+.filter-group label, .search-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.date-range-picker {
+    display: flex;
+    gap: 10px;
+}
+
+/* Custom styling for react-datepicker input */
+.react-datepicker-wrapper {
+    flex: 1;
+}
+.date-input,
+.filter-select,
+.search-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    background-color: white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.date-input:focus,
+.filter-select:focus,
+.search-input:focus {
+    outline: none;
+    border-color: #2E8B57;
+    box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.2);
+}
+
+.search-group {
+    flex: 2 1 300px; /* Search group mengambil lebih banyak ruang */
+    min-width: 250px;
+}
+
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+    padding: 0 12px; /* Padding di sekitar input, bukan pada input itu sendiri */
+}
+
+.search-input-wrapper .search-icon {
+    color: #888;
+    margin-right: 10px;
+}
+
+.search-input-wrapper .search-input {
+    border: none;
+    padding: 10px 0; /* Padding vertikal di input */
+    flex-grow: 1; /* Mengisi sisa ruang */
+}
+
+
+/* --- Log Table --- */
+.log-table-wrapper {
+    max-height: 600px; /* Membuat tabel scrollable */
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+}
+
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.log-table th, .log-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+}
+
+.log-table th {
+    background-color: #f8f8f8;
+    color: #555;
+    font-weight: 600;
+    position: sticky; /* Sticky header */
+    top: 0;
+    z-index: 1;
+}
+
+.log-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.log-table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.log-status {
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: white;
+    display: inline-block;
+}
+
+.log-status.sukses {
+    background-color: #28a745; /* Hijau untuk sukses */
+}
+
+.log-status.gagal {
+    background-color: #dc3545; /* Merah untuk gagal */
+}
+
+.log-type {
+    padding: 3px 7px;
+    border-radius: 5px;
+    font-size: 0.75em;
+    font-weight: 500;
+    background-color: #e9ecef;
+    color: #495057;
+    display: inline-block;
+}
+
+.log-type.audit {
+    background-color: #ffc107; /* Kuning untuk audit */
+    color: #343a40;
+}
+
+
+.no-logs-message {
+    text-align: center;
+    padding: 30px;
+    color: #777;
+    font-style: italic;
+    font-size: 1rem;
+}
+
+/* --- Table Footer (Pagination & Export) --- */
+.table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+}
+
+.pagination-btn {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 0 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+
+.pagination-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.pagination-btn.active {
+    background-color: #2E8B57;
+    color: white;
+    border-color: #2E8B57;
+}
+
+.btn-export {
+    background-color: #17a2b8; /* Warna biru untuk ekspor */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-export:hover {
+    background-color: #138496;
+}
+
+.export-icon {
+    font-size: 1.2em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .filters-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filter-group, .search-group {
+        flex: 1 1 100%; /* Ambil penuh lebar */
+    }
+    .date-range-picker {
+        flex-direction: column;
+        gap: 0;
+    }
+    .date-input {
+        margin-bottom: 10px;
+    }
+    .table-footer {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+}
