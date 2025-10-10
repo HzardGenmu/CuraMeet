@@ -1,0 +1,157 @@
+.janji-temu-container .page-title {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.card {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.welcome-card h2 {
+  margin-top: 0;
+}
+
+.welcome-card .date-text {
+  color: #777;
+}
+
+.welcome-card .upcoming-date-highlight {
+  font-weight: 600;
+  color: #333;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 1rem;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.appointments-card h2 {
+  margin-top: 0;
+}
+
+.appointment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.appointment-item:last-child {
+  border-bottom: none;
+}
+
+.appointment-details p {
+  margin: 0.25rem 0;
+  color: #555;
+}
+
+.appointment-details .appointment-datetime {
+  font-weight: 600;
+  color: #333;
+}
+
+.delete-icon {
+  color: #ef4444; /* Red */
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.delete-icon:hover {
+  transform: scale(1.1);
+}
+
+.view-all-link {
+  display: block;
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.appointments-list-full {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Atur lebar kartu */
+  gap: 15px;
+  max-height: 60vh; /* Batasi tinggi agar bisa scroll */
+  overflow-y: auto;
+  padding-right: 10px; /* Ruang untuk scrollbar */
+}
+
+.appointment-item-card {
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.appointment-item-card:hover {
+  background-color: #eafbea;
+  border-color: #98FB98;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.appointment-item-info {
+  flex-grow: 1;
+  cursor: pointer; /* Menandakan bisa diklik untuk edit */
+}
+
+.appointment-item-info p {
+  margin: 0;
+  line-height: 1.5;
+  color: #333;
+}
+
+.appointment-item-info p strong {
+  color: #2E8B57; /* Warna hijau untuk nama pasien */
+}
+
+.delete-button-card-doctor { /* Tombol hapus di card modal dokter */
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.delete-button-card-doctor:hover {
+  background-color: #fcebeb;
+  color: #dc2626;
+}
+
+.no-appointments-message {
+  text-align: center;
+  color: #777;
+  font-style: italic;
+  grid-column: 1 / -1; /* Agat teks ini memenuhi seluruh lebar grid */
+  padding: 20px;
+}

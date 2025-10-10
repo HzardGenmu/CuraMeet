@@ -1,0 +1,38 @@
+@import '../Modal/Modal.css';
+
+.form-modal {
+  max-width: 500px; /* Lebar modal form bisa sedikit lebih kecil */
+}
+
+.form-group-modal {
+  margin-bottom: 1.5rem;
+}
+
+.form-group-modal label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group-modal input,
+.form-group-modal select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Menghilangkan panah default di input date/time agar konsisten */
+.form-group-modal input[type="date"]::-webkit-calendar-picker-indicator,
+.form-group-modal input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+.form-submit-btn {
+  width: 100%;
+  margin-top: 1rem;
+}
