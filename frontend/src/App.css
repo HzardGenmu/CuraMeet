@@ -36,3 +36,20 @@
     transform: rotate(360deg);
   }
 }
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-panel {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-area {
+  padding: 2rem;
+  background-color: #f4f7f6;
+  flex-grow: 1;
+}

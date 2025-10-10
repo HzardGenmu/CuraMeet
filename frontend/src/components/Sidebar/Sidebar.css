@@ -1,0 +1,70 @@
+.sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-profile {
+  padding: 2rem;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.profile-avatar {
+  color: #ccc;
+  margin-bottom: 0.5rem;
+}
+
+.profile-title {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding: 1rem 0;
+  margin: 0;
+}
+
+.sidebar-nav li a,
+.sidebar-nav .logout-button { /* Tambahkan .logout-button di sini */
+  display: flex; /* Gunakan flexbox untuk ikon dan teks */
+  align-items: center;
+  gap: 10px; /* Jarak antara ikon dan teks */
+  padding: 1rem 2rem;
+  text-decoration: none;
+  color: #555;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+  background: none; 
+  border: none; /* Reset border untuk button */
+  width: 100%; /* Agar button mengisi lebar li */
+  text-align: left; /* Teks rata kiri */
+  cursor: pointer; /* Ubah kursor jadi pointer */
+  font-family: 'Poppins', sans-serif; /* Pastikan font sama */
+  font-size: 1rem; /* Pastikan ukuran font sama */
+}
+
+.sidebar-nav li a:hover {
+  background-color: #f0f8f0;
+  color: #2E8B57;
+}
+
+.sidebar-nav a.active {
+  background-color: #98FB98; /* LightGreen */
+  color: #2E8B57;
+  border-left: 4px solid #2E8B57;
+}
+
+.logout-icon {
+  color: #ef4444; /* Beri warna merah untuk ikon logout */
+  transition: color 0.2s ease;
+}
+
+.sidebar-nav .logout-button:hover .logout-icon {
+  color: #dc2626; /* Warna merah lebih gelap saat hover */
+}
