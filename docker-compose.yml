@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "81:81"   # dashboard NPM
+      - "81:81" # dashboard NPM
       - "443:443"
     volumes:
       - npm_data:/data
@@ -19,7 +19,7 @@ services:
   # ----------------
   # Apps1: OJS
   # ----------------
-# ----------------
+  # ----------------
   # OJS Application
   # ----------------
   ojs:
@@ -33,7 +33,7 @@ services:
       - DB_NAME=ojs_db
     volumes:
       - ./ojs_files:/var/www/html/public
-      - ./ojs_config/config.inc.php:/var/www/html/config/config.inc.php  # <--- note the config/ path
+      - ./ojs_config/config.inc.php:/var/www/html/config/config.inc.php # <--- note the config/ path
     depends_on:
       - ojs_db
     networks:
@@ -76,22 +76,22 @@ services:
     depends_on:
       - backend
     ports:
-      - "8000:80"   # expose Laravel app on host:8000
+      - "8000:80" # expose Laravel app on host:8000
     volumes:
       - ./backend:/var/www/html
-      - ./ojs_config/config.inc.php:/var/www/html/config.inc.php  # mount config directly
+      - ./ojs_config/config.inc.php:/var/www/html/config.inc.php # mount config directly
     networks:
       - app-network
 
   # Postgres DB for Laravel
   backend_db:
-    image: postgres:15
+    image: postgres:18
     container_name: postgres_backend
     restart: unless-stopped
     environment:
-      POSTGRES_DB: laravel_db
-      POSTGRES_USER: laravel_user
-      POSTGRES_PASSWORD: laravel_pass
+      POSTGRES_DB: curameet
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
     volumes:
       - backend_data:/var/lib/postgresql/data
     networks:
@@ -105,7 +105,7 @@ services:
     container_name: react_frontend
     restart: unless-stopped
     ports:
-      - "3000:80"   # Expose on host:3000
+      - "3000:80" # Expose on host:3000
     networks:
       - app-network
 
