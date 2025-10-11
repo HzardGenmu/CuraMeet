@@ -1,0 +1,99 @@
+.add-medical-record-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1060; /* Lebih tinggi dari modal lain */
+}
+
+.add-medical-record-modal-content {
+  background-color: white;
+  padding: 1.5rem 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  animation: scale-up 0.3s ease-out;
+}
+
+.add-medical-record-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.add-medical-record-modal-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.add-medical-record-close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.2s;
+}
+
+.add-medical-record-close-button:hover {
+  color: #333;
+}
+
+.add-medical-record-modal-body .form-group {
+  margin-bottom: 1.2rem;
+}
+
+.add-medical-record-modal-body label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #444;
+}
+
+.add-medical-record-modal-body textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical; /* Memungkinkan user untuk resize textarea */
+  min-height: 100px;
+}
+
+.add-medical-record-modal-body textarea:focus {
+  outline: none;
+  border-color: #2E8B57;
+  box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.2);
+}
+
+.add-medical-record-modal-body .btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+/* Re-use keyframes from other modals if defined in App.css or a common file */
+@keyframes scale-up {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

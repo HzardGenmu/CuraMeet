@@ -1,0 +1,209 @@
+.doctor-pasien-detail-container {
+  padding: 2rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+/* --- Section Styling --- */
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  color: #2E8B57; /* Warna hijau untuk ikon dan judul */
+}
+
+.section-header svg {
+  margin-right: 10px;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+}
+
+.no-records-message {
+  text-align: center;
+  color: #777;
+  font-style: italic;
+  padding: 20px;
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+}
+
+/* --- Patient Profile Section --- */
+.patient-profile-section {
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-photo-detail {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 20px;
+  border: 3px solid #2E8B57;
+  box-shadow: 0 0 0 5px rgba(46, 139, 87, 0.1);
+}
+
+.profile-main-info h2 {
+  margin: 0;
+  font-size: 2rem;
+  color: #333;
+  font-weight: 700;
+}
+
+.profile-short-desc {
+  margin-top: 5px;
+  font-size: 1rem;
+  color: #666;
+  font-style: italic;
+}
+
+.profile-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  background-color: #f4f7f6;
+  padding: 12px 15px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.detail-item svg {
+  margin-right: 10px;
+  color: #2E8B57;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1; /* Mengambil seluruh lebar grid */
+}
+
+/* --- Rekam Medis Section --- */
+.rekam-medis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 3rem;
+}
+
+.rekam-medis-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rekam-medis-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.rekam-medis-card h3 {
+  font-size: 1.15rem;
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.rekam-medis-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.btn-view-record {
+  display: inline-block;
+  background-color: #2E8B57;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-top: 15px;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+
+.btn-view-record:hover {
+  background-color: #267a4e;
+}
+
+/* --- Catatan Medis Section --- */
+/* Re-use .catatan-medis-grid from CatatanMedis.css or define here if different */
+.catatan-medis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 3rem;
+}
+
+.catatan-card-detail { /* Gaya kartu catatan medis di detail pasien */
+  background-color: #fcfcfc;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+.catatan-card-detail p {
+  margin: 0 0 8px 0;
+  color: #444;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.catatan-card-detail p strong {
+  color: #2E8B57;
+}
+
+.note-date {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 15px !important;
+  border-bottom: 1px dashed #eee;
+  padding-bottom: 10px;
+}
+
+/* --- Add Note Button --- */
+.add-note-action {
+  text-align: center;
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+}
+
+.add-note-action .btn-primary {
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+}

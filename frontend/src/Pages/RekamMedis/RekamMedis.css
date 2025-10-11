@@ -1,0 +1,54 @@
+.rekam-medis-container .page-title {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.medical-records-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Kolom otomatis, min 200px */
+  gap: 20px; /* Jarak antar kartu */
+}
+
+.record-card {
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden; /* Penting untuk gambar */
+  aspect-ratio: 1 / 1; /* Membuat kartu menjadi persegi */
+  position: relative;
+}
+
+.record-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.upload-card {
+  border: 2px dashed #ccc;
+  color: #888;
+  text-align: center;
+  padding: 1rem;
+}
+
+.upload-card:hover {
+  border-color: #2E8B57;
+  color: #2E8B57;
+}
+
+.upload-icon {
+  margin-bottom: 0.5rem;
+}
+
+.record-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Pastikan gambar memenuhi kartu tanpa distorsi */
+  display: block;
+}
