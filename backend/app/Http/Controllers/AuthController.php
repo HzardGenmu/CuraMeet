@@ -21,10 +21,11 @@ class AuthController extends Controller
     {
         $email = $request->input('email');
         $password = $request->input('password');
+        $role = $request->input('role');
         $rememberMe = $request->input('remember_me', false);
 
         // No validation, sanitization, or rate limiting
-        $result = $this->authService->attemptLogin($email, $password, $rememberMe);
+        $result = $this->authService->attemptLogin($email, $password, $role, $rememberMe);
 
         if ($result['success']) {
             return response()->json($result);
@@ -66,5 +67,10 @@ class AuthController extends Controller
         $result = $this->authService->resetPassword($email, $newPassword);
 
         return response()->json($result);
+    }
+
+    public function logout()
+    {
+        return $this->authService->logout();
     }
 }

@@ -3,10 +3,15 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\Doctor;
+use App\Models\Patient;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AuthService
 {
@@ -14,10 +19,11 @@ class AuthService
      * VULNERABILITY 1: SQL Injection in login
      * No prepared statements, direct string concatenation
      */
-    public function login($email, $password)
+    public function login($email, $password, $role)
     {
         // Direct SQL injection vulnerability
-        $query = "SELECT * FROM users WHERE email = '$email' AND password = '$password'";
+        $query = "SELECT * FROM users WHERE email = '$email' AND password = '$password' AND role = '$role' ";
+        echo json_encode($query);
         $user = DB::select($query);
 
         if (!empty($user)) {
@@ -55,10 +61,10 @@ class AuthService
      * VULNERABILITY 5: No rate limiting on login attempts
      * Allows brute force attacks
      */
-    public function attemptLogin($email, $password, $rememberMe = false)
+    public function attemptLogin($email, $password, $role, $rememberMe = false)
     {
         // No rate limiting or account lockout
-        $result = $this->login($email, $password);
+        $result = $this->login($email, $password, $role);
 
         if ($result['success'] && $rememberMe) {
             // VULNERABILITY 6: Insecure remember me implementation
@@ -113,27 +119,104 @@ class AuthService
         return ['success' => true];
     }
 
-    /**
-     * VULNERABILITY 11: Insecure user registration
-     */
-    public function register($data)
+    public function register(array $data)
     {
-        // No input validation
-        $email = $data['email'];
-        $password = $data['password'];
-        $name = $data['name'];
-        $role = $data['role'] ?? 'patient'; // Allows role injection
+        // 1) Validation rules (conditional)
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8|confirmed', // use password_confirmation in request
+            'role' => 'nullable|string|in:patient,doctor,admin',
+        ];
 
-        // VULNERABILITY 12: No duplicate email check
-        // VULNERABILITY 13: Plain text password storage
-        $query = "INSERT INTO users (name, email, password, role) VALUES ('$name', '$email', '$password', '$role')";
+        // Doctor-specific
+        $rulesDoctor = [
+            'str_number' => 'required_if:role,doctor|string|unique:doctors,str_number',
+            'full_name' => 'required_if:role,doctor|string|max:255',
+            'specialist' => 'required_if:role,doctor|string|max:255',
+            'polyclinic' => 'required_if:role,doctor|string|max:255',
+            'available_time' => 'nullable|string|max:255',
+        ];
 
+        // Patient-specific
+        $rulesPatient = [
+            'NIK' => 'required_if:role,patient|string|max:20|unique:patients,NIK',
+            'full_name' => 'nullable|string|max:255',
+            'picture' => 'nullable|string|max:255',
+            'allergies' => 'nullable|string',
+            'disease_histories' => 'nullable|string',
+        ];
+
+        $rules = array_merge($rules, $rulesDoctor, $rulesPatient);
+
+        $validator = Validator::make($data, $rules);
+
+        if ($validator->fails()) {
+            return [
+                'success' => false,
+                'errors' => $validator->errors()->all()
+            ];
+        }
+
+        // 2) Normalize role and whitelist
+        $role = $data['role'] ?? 'patient';
+        $allowedRoles = ['patient', 'doctor', 'admin'];
+        if (!in_array($role, $allowedRoles)) {
+            $role = 'patient';
+        }
+
+        // 3) Create user + role-specific record inside transaction
         try {
-            DB::insert($query);
-            return ['success' => true, 'message' => 'User registered successfully'];
+            $result = DB::transaction(function () use ($data, $role) {
+                $name = $data['name'];
+                $email = $data['email'];
+                $password = $data['password'];
+
+                // contoh single-statement (Postgres)
+                $insertSql = "INSERT INTO users (name, email, password, role, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?)
+              RETURNING *";
+
+                $now = now();
+                $inserted = DB::select($insertSql, [$name, $email, $password, $role, $now, $now]);
+                echo json_encode($inserted);
+                // DB::select returns array; first element is the inserted row
+                $user = count($inserted) ? $inserted[0] : null;
+
+                if ($role === 'doctor') {
+                    // Prefer Eloquent model for doctors
+                    Doctor::create([
+                        'user_id' => $user->id,
+                        'str_number' => $data['str_number'],
+                        'full_name' => $data['full_name'] ?? $user->name,
+                        'specialist' => $data['specialist'],
+                        'polyclinic' => $data['polyclinic'],
+                        'available_time' => $data['available_time'] ?? null,
+                    ]);
+                } else { // patient (and defaults)
+                    Patient::create([
+                        'user_id' => $user->id,
+                        'full_name' => $data['full_name'] ?? $user->name,
+                        'NIK' => $data['NIK'] ?? null,
+                        'picture' => $data['picture'] ?? null,
+                        'allergies' => $data['allergies'] ?? null,
+                        'disease_histories' => $data['disease_histories'] ?? null,
+                    ]);
+                }
+
+                // You can return user resource or id
+                return [
+                    'success' => true,
+                    'message' => 'User registered successfully',
+                    'user_id' => $user->id,
+                ];
+            }, 5);
+
+            return $result;
         } catch (\Exception $e) {
-            // VULNERABILITY 14: Information disclosure in error messages
-            return ['success' => false, 'message' => $e->getMessage()];
+            // log properly (no sensitive data), return generic error
+            \Log::error('Register failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Registration failed'];
         }
     }
 
