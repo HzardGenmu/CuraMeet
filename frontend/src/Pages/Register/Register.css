@@ -1,0 +1,91 @@
+.register-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  justify-content: center;    
+  background-color: #98fb98;   
+  min-height: 100vh;           
+  box-sizing: border-box;  
+}
+
+.main-title {
+  font-size: 3.5rem;
+  color: #2e8b57; /* SeaGreen, a bit darker than background */
+  margin-bottom: 2rem;
+  font-weight: bold;
+}
+
+.register-card {
+  background-color: white;
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 15px 15px 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.card-title {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box; /* Important for padding and width */
+  font-size: 1rem;
+}
+
+.register-button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #3b82f6; /* Blue */
+  color: white;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.register-button:hover {
+  background-color: #2563eb; /* Darker Blue */
+}
+
+.login-link {
+  display: block;
+  margin-top: 1.5rem;
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}
+
+.required-star {
+  color: red;
+  margin-left: 2px; 
+}

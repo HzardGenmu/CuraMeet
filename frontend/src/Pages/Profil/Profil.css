@@ -1,0 +1,90 @@
+.profil-container .page-title {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.profil-card {
+  background-color: white;
+  padding: 2.5rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  max-width: 800px; /* Batasi lebar form agar tidak terlalu besar */
+}
+
+.profil-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.profil-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.profil-form-group .required-star {
+  color: red;
+  margin-left: 2px;
+}
+
+.profil-form-group input,
+.profil-form-group select,
+.profil-form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff;
+  transition: border-color 0.3s;
+}
+
+.profil-form-group input:focus,
+.profil-form-group select:focus,
+.profil-form-group textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* Gaya untuk form yang nonaktif */
+.profil-form-group input:disabled,
+.profil-form-group select:disabled,
+.profil-form-group textarea:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.profil-form-group textarea {
+  resize: vertical;
+}
+
+.profil-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  margin-top: 1rem;
+  transition: background-color 0.3s;
+}
+
+.btn-primary.profil-btn {
+  background-color: #3b82f6;
+  color: white;
+}
+.btn-primary.profil-btn:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary.profil-btn {
+  background-color: #6b7280;
+  color: white;
+}
+.btn-secondary.profil-btn:hover {
+  background-color: #4b5563;
+}
