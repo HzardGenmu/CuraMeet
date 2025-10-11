@@ -11,7 +11,9 @@ class Patient extends Model
     use HasFactory;
 
     // VULNERABILITY 1: Unprotected mass assignment
-    protected $guarded = []; // Allows all fields to be mass assigned!
+    protected $guarded = [
+        
+    ]; // Allows all fields to be mass assigned!
 
     // VULNERABILITY 2: File path injection
     public function setPictureAttribute($value)
