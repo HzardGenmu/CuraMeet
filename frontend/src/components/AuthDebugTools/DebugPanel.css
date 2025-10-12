@@ -1,0 +1,233 @@
+.debug-panel {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 20px;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.debug-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #333;
+}
+
+.debug-panel-header h2 {
+  margin: 0;
+  color: #4ec9b0;
+  font-size: 24px;
+}
+
+.debug-panel-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.debug-panel-controls label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #d4d4d4;
+}
+
+.debug-panel-controls input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.debug-panel-controls select {
+  background: #252526;
+  color: #d4d4d4;
+  border: 1px solid #3e3e42;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.debug-panel-controls button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-refresh {
+  background: #0e639c;
+  color: white;
+}
+
+.btn-refresh:hover {
+  background: #1177bb;
+}
+
+.btn-clear {
+  background: #c72e0f;
+  color: white;
+}
+
+.btn-clear:hover {
+  background: #e81123;
+}
+
+.debug-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.debug-section {
+  background: #252526;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #3e3e42;
+}
+
+.debug-section.warning {
+  border-color: #d7ba7d;
+  background: #2d2a1e;
+}
+
+.debug-section h3 {
+  margin: 0 0 15px 0;
+  color: #4ec9b0;
+  font-size: 18px;
+  border-bottom: 1px solid #3e3e42;
+  padding-bottom: 8px;
+}
+
+.debug-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.debug-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.debug-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.debug-item .label {
+  font-weight: 600;
+  color: #9cdcfe;
+  font-size: 13px;
+}
+
+.debug-item .value {
+  color: #ce9178;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.status-indicator.valid {
+  background: #4ec9b0;
+  color: #1e1e1e;
+}
+
+.status-indicator.invalid {
+  background: #f48771;
+  color: #1e1e1e;
+}
+
+.role-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.role-badge.role-admin {
+  background: #c72e0f;
+  color: white;
+}
+
+.role-badge.role-doctor {
+  background: #0e639c;
+  color: white;
+}
+
+.role-badge.role-patient {
+  background: #4ec9b0;
+  color: #1e1e1e;
+}
+
+.value.code {
+  background: #1e1e1e;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+}
+
+.value.code code {
+  color: #ce9178;
+}
+
+.value.code pre {
+  margin: 0;
+  color: #d4d4d4;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.value .empty {
+  color: #808080;
+  font-style: italic;
+}
+
+.inconsistencies-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #d7ba7d;
+}
+
+.inconsistencies-list li {
+  margin-bottom: 5px;
+}
+
+@media (max-width: 768px) {
+  .debug-panel {
+    padding: 15px;
+  }
+
+  .debug-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .debug-panel-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .debug-grid {
+    grid-template-columns: 1fr;
+  }
+}
