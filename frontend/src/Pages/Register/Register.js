@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios'; // 1. Impor axios
 import './Register.css';
 
 const Register = () => {
@@ -7,16 +8,38 @@ const Register = () => {
   const [nama, setNama] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // State untuk pesan error
 
-  // Fungsi yang dijalankan saat form disubmit
-  const handleSubmit = (event) => {
-    event.preventDefault(); 
-    console.log({
-      nama,
-      email,
-      password,
-    });
-    alert('Registrasi berhasil.');
+  const navigate = useNavigate(); // Hook untuk navigasi
+
+  // 2. Ubah handleSubmit menjadi fungsi async
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError(''); // Hapus pesan error lama saat submit baru
+
+    try {
+      // 3. Kirim request POST ke API registrasi Laravel
+      const response = await axios.post('http://localhost:8000/api/register', {
+        name: nama, // Pastikan key 'name' sesuai dengan yang diharapkan backend
+        email: email,
+        password: password,
+      });
+
+      // 4. Proses respons jika registrasi berhasil
+      if (response.data.success) {
+        alert('Registrasi berhasil! Silakan login.');
+        navigate('/login'); // Arahkan pengguna ke halaman login
+      }
+    } catch (err) {
+      // 5. Tangani error dari API
+      if (err.response && err.response.data && err.response.data.message) {
+        // Menampilkan pesan error dari backend (jika ada)
+        setError(err.response.data.message);
+      } else {
+        setError('Registrasi gagal. Terjadi kesalahan pada server.');
+      }
+      console.error(err); // Log error untuk debugging
+    }
   };
 
   return (
@@ -24,7 +47,10 @@ const Register = () => {
       <h1 className="main-title">CuraMeet</h1>
       <div className="register-card">
         <h2 className="card-title">Register</h2>
+        {/* 6. Tampilkan pesan error jika ada */}
+        {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleSubmit}>
+          {/* ... sisa form tidak berubah ... */}
           <div className="form-group">
             <label htmlFor="nama">Nama<span className="required-star">*</span></label>
             <input
@@ -59,7 +85,7 @@ const Register = () => {
             Register
           </button>
         </form>
-       <Link to="/login" className="login-link">
+        <Link to="/login" className="login-link">
           Sudah punya akun?
         </Link>
       </div>

@@ -140,7 +140,7 @@ class AuthService
 
         // Patient-specific
         $rulesPatient = [
-            'NIK' => 'required_if:role,patient|string|max:20|unique:patients,NIK',
+            'NIK' => 'nullable|required_if:role,patient|string|max:20|unique:patients,NIK',
             'full_name' => 'nullable|string|max:255',
             'picture' => 'nullable|string|max:255',
             'allergies' => 'nullable|string',

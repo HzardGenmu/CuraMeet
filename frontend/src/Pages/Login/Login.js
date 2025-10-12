@@ -1,72 +1,89 @@
 import React, { useState } from 'react';
-import { Link,useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios'; // 1. Impor axios
 import './Login.css';
 
 const Login = () => {
-  // State untuk menyimpan nilai dari setiap input field
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // 2. Inisialisasi hook useNavigate
+  const [error, setError] = useState(''); // State untuk pesan error
   const navigate = useNavigate();
 
-  // Fungsi yang dijalankan saat form disubmit
-  const handleSubmit = (event) => {
-    event.preventDefault(); 
-    console.log({
-      email,
-      password,
-    });
-    
-    // --- Logika Autentikasi Dummy ---
-    // Di sini Anda akan melakukan validasi atau mengirim data ke API.
-    // Untuk contoh ini, kita asumsikan login selalu berhasil.
-    const isLoginSuccessful = true; // Ganti dengan logika autentikasi nyata Anda
+  // 2. Ubah handleSubmit menjadi fungsi async
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError(''); // Reset pesan error setiap kali submit
 
-    if (isLoginSuccessful) {
-      alert('Login berhasil');
-      // 3. Arahkan pengguna ke halaman /janji-temu
-      navigate('/janji-temu'); 
-    } else {
-      alert('Login gagal. Periksa email dan password Anda.');
+    try {
+      // 3. Kirim request POST ke API Laravel Anda
+      const response = await axios.post('http://localhost:8000/api/login', {
+        email: email,
+        password: password,
+        // Anda bisa menambahkan 'role' atau 'remember_me' jika diperlukan
+        // role: 'user', 
+        // remember_me: true
+      });
+
+      // 4. Proses respons yang berhasil
+      if (response.data.success) {
+        alert('Login berhasil!');
+        
+        // Simpan token atau data user jika ada di respons
+        // Contoh: localStorage.setItem('token', response.data.token);
+
+        navigate('/janji-temu'); // Arahkan ke halaman selanjutnya
+      }
+
+    } catch (err) {
+      // 5. Tangani error dari API
+      if (err.response && err.response.status === 401) {
+        // Jika status error 401 (Unauthorized) dari backend
+        setError('Login gagal. Periksa kembali email dan password Anda.');
+      } else {
+        // Untuk error lainnya (misal: server mati)
+        setError('Terjadi kesalahan pada server. Silakan coba lagi nanti.');
+      }
+      console.error(err); // Log error untuk debugging
     }
   };
-  
 
   return (
-    <div className="login-container"> 
+    <div className="login-container">
       <h1 className="main-title">CuraMeet</h1>
-      <div className="login-card"> 
+      <div className="login-card">
         <h2 className="card-title">Login</h2>
+        {/* Tampilkan pesan error jika ada */}
+        {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleSubmit}>
+          {/* ... sisa form tidak berubah ... */}
           <div className="form-group">
-            <label htmlFor="email">E-mail<span className="required-star">*</span></label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Password<span className="required-star">*</span></label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Link to="/forgot-password" className="forgot-password-link">
-            Lupa password?
-          </Link>
-          <button type="submit" className="login-button"> 
-            Login
-          </button>
+             <label htmlFor="email">E-mail<span className="required-star">*</span></label>
+             <input
+               type="email"
+               id="email"
+               value={email}
+               onChange={(e) => setEmail(e.target.value)}
+               required
+             />
+           </div>
+           <div className="form-group">
+             <label htmlFor="password">Password<span className="required-star">*</span></label>
+             <input
+               type="password"
+               id="password"
+               value={password}
+               onChange={(e) => setPassword(e.target.value)}
+               required
+             />
+           </div>
+           <Link to="/forgot-password" className="forgot-password-link">
+             Lupa password?
+           </Link>
+           <button type="submit" className="login-button">
+             Login
+           </button>
         </form>
-        <Link to="/register" className="register-link"> 
+        <Link to="/register" className="register-link">
           Registrasi
         </Link>
       </div>
