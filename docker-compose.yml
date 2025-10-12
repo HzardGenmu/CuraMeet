@@ -76,10 +76,11 @@ services:
     depends_on:
       - backend
     ports:
-      - "8000:80" # expose Laravel app on host:8000
+      - "8000:80"
     volumes:
       - ./backend:/var/www/html
-      - ./ojs_config/config.inc.php:/var/www/html/config.inc.php # mount config directly
+      - ./backend/nginx.conf:/etc/nginx/conf.d/default.conf # ← TAMBAHKAN INI
+      - ./ojs_config/config.inc.php:/var/www/html/config.inc.php
     networks:
       - app-network
 
