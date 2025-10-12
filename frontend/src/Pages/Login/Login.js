@@ -1,75 +1,122 @@
-import React, { useState } from 'react';
-import { Link,useNavigate } from 'react-router-dom';
-import './Login.css';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { authService } from "../../services/authService";
+import "./Login.css";
 
 const Login = () => {
-  // State untuk menyimpan nilai dari setiap input field
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  
-  // 2. Inisialisasi hook useNavigate
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("patient"); // Default role
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
-  // Fungsi yang dijalankan saat form disubmit
-  const handleSubmit = (event) => {
-    event.preventDefault(); 
-    console.log({
-      email,
-      password,
-    });
-    
-    // --- Logika Autentikasi Dummy ---
-    // Di sini Anda akan melakukan validasi atau mengirim data ke API.
-    // Untuk contoh ini, kita asumsikan login selalu berhasil.
-    const isLoginSuccessful = true; // Ganti dengan logika autentikasi nyata Anda
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
 
-    if (isLoginSuccessful) {
-      alert('Login berhasil');
-      // 3. Arahkan pengguna ke halaman /janji-temu
-      navigate('/janji-temu'); 
-    } else {
-      alert('Login gagal. Periksa email dan password Anda.');
+    try {
+      const response = await authService.login(
+        email,
+        password,
+        role,
+        rememberMe
+      );
+
+      if (response.success) {
+        // Store user info
+        localStorage.setItem("userInfo", JSON.stringify(response.user));
+
+        // Navigate based on role
+        switch (role) {
+          case "admin":
+            navigate("/admin/dashboard");
+            break;
+          case "doctor":
+            navigate("/doctor/dashboard");
+            break;
+          default:
+            navigate("/janji-temu");
+        }
+      } else {
+        setError(response.message || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setError(
+        error.response?.data?.message || "An error occurred during login"
+      );
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
-    <div className="login-container"> 
-      <h1 className="main-title">CuraMeet</h1>
-      <div className="login-card"> 
-        <h2 className="card-title">Login</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">E-mail<span className="required-star">*</span></label>
+    <div className="login-container">
+      <form onSubmit={handleSubmit} className="login-form">
+        <h2>Login</h2>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <div className="form-group">
+          <label htmlFor="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="role">Role:</label>
+          <select
+            id="role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            required
+          >
+            <option value="patient">Patient</option>
+            <option value="doctor">Doctor</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
             />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Password<span className="required-star">*</span></label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Link to="/forgot-password" className="forgot-password-link">
-            Lupa password?
-          </Link>
-          <button type="submit" className="login-button"> 
-            Login
-          </button>
-        </form>
-        <Link to="/register" className="register-link"> 
-          Registrasi
-        </Link>
-      </div>
+            Remember me
+          </label>
+        </div>
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+
+        <div className="login-links">
+          <Link to="/register">Don't have an account? Register</Link>
+          <Link to="/reset-password">Forgot password?</Link>
+        </div>
+      </form>
     </div>
   );
 };

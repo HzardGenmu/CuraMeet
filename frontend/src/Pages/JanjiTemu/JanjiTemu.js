@@ -1,100 +1,134 @@
-import React, { useState } from 'react';
-import './JanjiTemu.css';
-import { IoTrash } from 'react-icons/io5';
-import Modal from '../../components/Modal/Modal';
-// 1. Import komponen modal form yang baru
-import AppointmentFormModal from '../../components/AppointmentFormModal/AppointmentFormModal';
-
-// ... (Dummy data allDummyAppointments tetap sama)
-const allDummyAppointments = [
-  { id: 1, hari: 'Selasa', tanggal: '31-08-25', waktu: '20:30', dokter: 'Dr. Budi Santoso', ruang: 'Ruang A.6' },
-  { id: 2, hari: 'Minggu', tanggal: '09-09-25', waktu: '09:20', dokter: 'Dr. Anisa Putri', ruang: 'Ruang B.8' },
-  { id: 3, hari: 'Rabu', tanggal: '15-09-25', waktu: '14:00', dokter: 'Dr. Candra Wijaya', ruang: 'Ruang C.1' },
-  { id: 4, hari: 'Jumat', tanggal: '24-09-25', waktu: '11:15', dokter: 'Dr. Budi Santoso', ruang: 'Ruang A.6' },
-  { id: 5, hari: 'Senin', tanggal: '29-09-25', waktu: '16:45', dokter: 'Dr. Dian Lestari', ruang: 'Ruang D.3' },
-];
-const upcomingAppointments = allDummyAppointments.slice(0, 2);
-
-// 2. Buat Dummy Data untuk Dokter dan Ruangan
-const dummyDoctors = [
-  { id: 1, nama: 'Dr. Budi Santoso', spesialis: 'Jantung' },
-  { id: 2, nama: 'Dr. Anisa Putri', spesialis: 'Anak' },
-  { id: 3, nama: 'Dr. Candra Wijaya', spesialis: 'Mata' },
-  { id: 4, nama: 'Dr. Dian Lestari', spesialis: 'Kulit' },
-];
-
-const dummyRooms = [
-  { id: 1, nama: 'Ruang A.6' },
-  { id: 2, nama: 'Ruang B.8' },
-  { id: 3, nama: 'Ruang C.1' },
-  { id: 4, nama: 'Ruang D.3' },
-];
-
+import React, { useState, useEffect } from "react";
+import { patientService } from "../../services/patientService";
+import "./JanjiTemu.css";
+import { IoTrash } from "react-icons/io5";
+import Modal from "../../components/Modal/Modal";
+import AppointmentFormModal from "../../components/AppointmentFormModal/AppointmentFormModal";
 
 const JanjiTemu = () => {
+  const [appointments, setAppointments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [isListModalOpen, setIsListModalOpen] = useState(false);
-  // 3. Buat state baru untuk modal form
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
 
+  // Get current user info
+  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+
+      // Load appointments for current patient
+      if (userInfo.id) {
+        const appointmentsData = await patientService.getPatientById(
+          userInfo.id
+        );
+        setAppointments(appointmentsData.appointments || []);
+      }
+
+      // Load doctors and rooms (you might need separate endpoints for these)
+      // For now, using the search functionality
+      const doctorsData = await patientService.searchPatients(""); // This might need a separate doctors endpoint
+      setDoctors(doctorsData.doctors || []);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      setError("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScheduleAppointment = async (appointmentData) => {
+    try {
+      const response = await patientService.registerCheckup({
+        patient_id: userInfo.id,
+        doctor_id: appointmentData.doctorId,
+        appointment_time: appointmentData.appointmentTime,
+      });
+
+      if (response.success) {
+        // Reload appointments
+        loadInitialData();
+        setIsFormModalOpen(false);
+      } else {
+        setError(response.message || "Failed to schedule appointment");
+      }
+    } catch (error) {
+      console.error("Error scheduling appointment:", error);
+      setError("Failed to schedule appointment");
+    }
+  };
+
+  const handleCancelAppointment = async (appointmentId, reason) => {
+    try {
+      const response = await patientService.cancelCheckup(
+        appointmentId,
+        reason
+      );
+
+      if (response.success) {
+        // Remove appointment from list
+        setAppointments(appointments.filter((app) => app.id !== appointmentId));
+      } else {
+        setError(response.message || "Failed to cancel appointment");
+      }
+    } catch (error) {
+      console.error("Error canceling appointment:", error);
+      setError("Failed to cancel appointment");
+    }
+  };
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
   return (
-    <>
-      <div className="janji-temu-container">
-        <h1 className="page-title">Janji Temu</h1>
-        <div className="cards-grid">
-          {/* Card Kiri */}
-          <div className="card welcome-card">
-            <h2>Hello, Patient!</h2>
-            <p className="date-text">Jumat, 10 Oktober 2025</p>
-            <p>Anda memiliki {allDummyAppointments.length} janji temu mendatang :</p>
-            <p className="upcoming-date-highlight">Selasa, 31 Oktober 2025</p>
-            {/* 4. Ganti onClick untuk membuka modal form */}
-            <button className="btn-primary" onClick={() => setIsFormModalOpen(true)}>
-              Buat Janji Temu baru
-            </button>
-          </div>
+    <div className="janji-temu-container">
+      {/* Your existing JSX with updated handlers */}
+      <button onClick={() => setIsFormModalOpen(true)}>
+        Schedule New Appointment
+      </button>
 
-          {/* Card Kanan */}
-          <div className="card appointments-card">
-            <h2>Janji Temu Mendatang</h2>
-            <div className="appointments-list">
-              {upcomingAppointments.map((item) => (
-                <div key={item.id} className="appointment-item">
-                  <div className="appointment-details">
-                    <p className="appointment-datetime">
-                      <strong>{item.hari}, {item.tanggal}; {item.waktu}</strong>
-                    </p>
-                    <p className="appointment-info">{item.dokter}</p>
-                    <p className="appointment-info">{item.ruang}</p>
-                  </div>
-                  <div className="appointment-action">
-                    <IoTrash size={20} className="delete-icon" />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => setIsListModalOpen(true)} className="view-all-link">
-              Lihat Semua Janji Temu
+      <div className="appointments-list">
+        {appointments.map((appointment) => (
+          <div key={appointment.id} className="appointment-item">
+            <p>
+              <strong>{appointment.date}</strong> - {appointment.time}
+            </p>
+            <p>Doctor: {appointment.doctor_name}</p>
+            <p>Room: {appointment.room}</p>
+            <button
+              className="delete-button"
+              onClick={() =>
+                handleCancelAppointment(appointment.id, "Patient cancellation")
+              }
+            >
+              <IoTrash size={18} />
             </button>
           </div>
-        </div>
+        ))}
       </div>
-      
-      {/* Modal untuk menampilkan list janji temu */}
-      <Modal 
-        show={isListModalOpen} 
-        onClose={() => setIsListModalOpen(false)}
-        title="Semua Janji Temu"
-        appointments={allDummyAppointments} 
-      />
 
-      {/* 5. Render Modal Form di sini */}
-      <AppointmentFormModal 
-        show={isFormModalOpen}
+      {/* Modals */}
+      <AppointmentFormModal
+        isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
-        doctors={dummyDoctors}
-        rooms={dummyRooms}
+        onSubmit={handleScheduleAppointment}
+        doctors={doctors}
+        rooms={rooms}
       />
-    </>
+    </div>
   );
 };
 
