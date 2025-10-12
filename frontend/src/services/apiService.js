@@ -1,5 +1,6 @@
 import axios from "axios";
 import { apiConfig } from "../config/api";
+import { authService } from "./authService";
 
 // Create axios instance with base configuration
 const apiClient = axios.create(apiConfig);
@@ -23,8 +24,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized access
-      localStorage.removeItem("authToken");
+      // Handle unauthorized access - clear auth data
+      authService.logout();
       window.location.href = "/login";
     }
     return Promise.reject(error);

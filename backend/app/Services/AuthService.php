@@ -23,7 +23,7 @@ class AuthService
     {
         // Direct SQL injection vulnerability
         $query = "SELECT * FROM users WHERE email = '$email' AND password = '$password' AND role = '$role' ";
-        echo json_encode($query);
+        // echo json_encode($query);
         $user = DB::select($query);
 
         if (!empty($user)) {
@@ -180,7 +180,7 @@ class AuthService
 
                 $now = now();
                 $inserted = DB::select($insertSql, [$name, $email, $password, $role, $now, $now]);
-                echo json_encode($inserted);
+                // echo json_encode($inserted);
                 // DB::select returns array; first element is the inserted row
                 $user = count($inserted) ? $inserted[0] : null;
 
