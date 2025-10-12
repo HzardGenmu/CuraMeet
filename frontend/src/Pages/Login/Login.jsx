@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
 import "./Login.css";
@@ -13,6 +13,28 @@ const Login = () => {
 
   const navigate = useNavigate();
 
+  // Check if already authenticated
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      const user = authService.getCurrentUser();
+      redirectBasedOnRole(user.role);
+    }
+  }, []);
+
+  const redirectBasedOnRole = (userRole) => {
+    switch (userRole) {
+      case "admin":
+        navigate("/admin/dashboard");
+        break;
+      case "doctor":
+        navigate("/doctor/dashboard");
+        break;
+      default:
+        navigate("/janji-temu");
+    }
+  };
+
+  // Ganti baris 20-35 dengan ini:
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -26,8 +48,21 @@ const Login = () => {
         rememberMe
       );
 
-      if (response.success != false) {
-        localStorage.setItem("userInfo", JSON.stringify(response.user));
+      console.log("Login response:", response); // 🔍 Debug log
+
+      if (response.success === true) {
+        // ✅ Perbaikan kondisi
+        // Store both user and token
+        if (response.user) {
+          localStorage.setItem("userInfo", JSON.stringify(response.user));
+        }
+        if (response.token) {
+          localStorage.setItem("authToken", response.token);
+        }
+
+        console.log("Stored - Token:", localStorage.getItem("authToken"));
+        console.log("Stored - User:", localStorage.getItem("userInfo"));
+
         switch (role) {
           case "admin":
             navigate("/admin/dashboard");
@@ -39,16 +74,11 @@ const Login = () => {
             navigate("/janji-temu");
         }
       } else {
-        setError(
-          response.message || "Login failed. Please check your credentials."
-        );
+        setError(response.message || "Login gagal");
       }
     } catch (error) {
-      let message =
-        error?.response?.data?.message ||
-        error?.message ||
-        "An unexpected error occurred. Please try again.";
-      setError(message);
+      console.error("Login error:", error);
+      setError("Terjadi kesalahan saat login");
     } finally {
       setLoading(false);
     }
