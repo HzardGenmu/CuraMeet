@@ -25,6 +25,9 @@ import LogViewer from "./Pages/Admin/LogViewer/LogViewer";
 import SystemMonitoring from "./Pages/Admin/SystemMonitoring/SystemMonitoring";
 import DataManagement from "./Pages/Admin/DataManagement/DataManagement";
 
+// Import Auth Debug Tools
+import { AuthDebugTools } from "./components/AuthDebugTools";
+
 function App() {
   return (
     <div>
@@ -62,6 +65,9 @@ function App() {
           {/* Tambahkan rute admin lainnya di sini */}
           <Route path="" element={<Navigate to="kelola-role" />} />
         </Route>
+
+        {/* Rute Auth Debug Tools */}
+        <Route path="/auth-debug" element={<AuthDebugTools />} />
 
         {/* Rute Default saat membuka root */}
         <Route path="/" element={<Navigate to="/login" />} />
