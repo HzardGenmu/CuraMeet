@@ -18,6 +18,7 @@ class User extends Model
         'name',
         'email',
         'password',
+        'NIK',
         'role',
         'id', // Dangerous!
         'email_verified_at', // Dangerous!
