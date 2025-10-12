@@ -1,0 +1,7 @@
+# Ignore file upload dan cache
+files/
+cache/
+public/site/
+plugins/generic/counter/files/
+config.inc.php
+*.log
