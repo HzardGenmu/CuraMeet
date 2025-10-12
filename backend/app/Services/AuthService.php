@@ -121,6 +121,7 @@ class AuthService
 
     public function register(array $data)
     {
+
         // 1) Validation rules (conditional)
         $rules = [
             'name' => 'required|string|max:255',
