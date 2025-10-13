@@ -4,46 +4,64 @@ import { authService } from "../../services/authService";
 import "./Register.css";
 
 const Register = () => {
-  const [nama, setNama] = useState("");
-  const [nik, setNik] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "patient",
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
-    if (password !== confirmPassword) {
-      setError("Password dan konfirmasi password tidak sama.");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Password tidak cocok");
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    if (formData.password.length < 6) {
+      setError("Password minimal 6 karakter");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await authService.register({
-        name: nama,
-        email: email,
-        password: password,
-        password_confirmation: confirmPassword,
-        NIK: nik,
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
       });
-      console.log(response);
-      if (response.success != false) {
-        alert("Registrasi berhasil.");
-        navigate("/login");
+
+      if (response.success) {
+        setSuccess("Registrasi berhasil! Silakan login.");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       } else {
-        setError(response.message || "Registrasi gagal.");
+        setError(response.message || "Registrasi gagal");
       }
-    } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Terjadi kesalahan. Silakan coba lagi."
-      );
+    } catch (error) {
+      setError("Terjadi kesalahan saat registrasi");
+      console.error("Register error:", error);
     } finally {
       setLoading(false);
     }
@@ -51,90 +69,74 @@ const Register = () => {
 
   return (
     <div className="register-container">
-      <h1 className="main-title">CuraMeet</h1>
       <div className="register-card">
-        <h2 className="card-title">Register</h2>
+        <h2>Daftar Akun Baru</h2>
+
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
+
         <form onSubmit={handleSubmit}>
-          {error && (
-            <div className="error-message" role="alert" tabIndex={-1}>
-              <span>⚠️ {error}</span>
-            </div>
-          )}
           <div className="form-group">
-            <label htmlFor="nama">
-              Nama<span className="required-star">*</span>
-            </label>
+            <label>Nama Lengkap</label>
             <input
               type="text"
-              id="nama"
-              value={nama}
-              onChange={(e) => setNama(e.target.value)}
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
               required
-              disabled={loading}
             />
           </div>
+
           <div className="form-group">
-            <label htmlFor="nik">
-              NIK<span className="required-star">*</span>
-            </label>
-            <input
-              type="text"
-              id="nik"
-              value={nik}
-              onChange={(e) => setNik(e.target.value)}
-              required
-              disabled={loading}
-              maxLength={16}
-              pattern="\d{16}"
-              title="Masukkan 16 digit NIK"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="email">
-              E-mail<span className="required-star">*</span>
-            </label>
+            <label>Email</label>
             <input
               type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               required
-              disabled={loading}
             />
           </div>
+
           <div className="form-group">
-            <label htmlFor="password">
-              Password<span className="required-star">*</span>
-            </label>
+            <label>Role</label>
+            <select name="role" value={formData.role} onChange={handleChange}>
+              <option value="patient">Patient</option>
+              <option value="doctor">Doctor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Password</label>
             <input
               type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               required
-              disabled={loading}
             />
           </div>
+
           <div className="form-group">
-            <label htmlFor="confirmPassword">
-              Konfirmasi Password<span className="required-star">*</span>
-            </label>
+            <label>Konfirmasi Password</label>
             <input
               type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
               required
-              disabled={loading}
             />
           </div>
+
           <button type="submit" className="register-button" disabled={loading}>
-            {loading ? "Mendaftar..." : "Register"}
+            {loading ? "Mendaftar..." : "Daftar"}
           </button>
         </form>
-        <Link to="/login" className="login-link">
-          Sudah punya akun?
-        </Link>
+
+        <p className="login-link">
+          Sudah punya akun? <Link to="/login">Login di sini</Link>
+        </p>
       </div>
     </div>
   );
