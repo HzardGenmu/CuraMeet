@@ -1,18 +1,9 @@
 <?php
 
 return [
-
-    'paths' => ['*'],
-
+    'paths' => ['api/*'],
     'allowed_methods' => ['*'],
-
-    'allowed_origins' => [
-        'http://localhost:3000',
-        'https://curameet.duckdns.org/'
-    ],
-
-    'allowed_origins_patterns' => [],
-
+    'allowed_origins' => ['*'], // atau ['*'] untuk semua
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
