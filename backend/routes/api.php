@@ -6,6 +6,14 @@ use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/test', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'Backend is working!',
+        'timestamp' => now()
+    ]);
+});
+
 // Auth routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
