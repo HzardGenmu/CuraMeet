@@ -1,12 +1,12 @@
 const config = {
   development: {
-    apiBaseUrl: "http://backend.test/api",
+    apiBaseUrl: "http://localhost:9000/api",
   },
   production: {
-    apiBaseUrl: "https://backend.test/api",
+    apiBaseUrl: "http://localhost:9000/api",
   },
   test: {
-    apiBaseUrl: "https://backend.test/api",
+    apiBaseUrl: "http://localhost:9000/api",
   },
 };
 
