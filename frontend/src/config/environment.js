@@ -1,12 +1,12 @@
 const config = {
   development: {
-    apiBaseUrl: "http://localhost:9000/api",
+    apiBaseUrl: "https://api.curameet.duckdns.org/api",
   },
   production: {
-    apiBaseUrl: "http://localhost:9000/api",
+    apiBaseUrl: "https://api.curameet.duckdns.org/api",
   },
   test: {
-    apiBaseUrl: "http://localhost:9000/api",
+    apiBaseUrl: "https://api.curameet.duckdns.org/api",
   },
 };
 
