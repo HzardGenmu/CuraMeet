@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Log;
+
 use App\Services\AuthService;
 use Illuminate\Http\Request;
 
@@ -41,7 +43,9 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         try {
+            Log::info($request);
             $result = $this->authService->register($request->all());
+            Log::info(response()->json($result));
             return response()->json($result);
         } catch (\Exception $e) {
             // Exposes internal system information

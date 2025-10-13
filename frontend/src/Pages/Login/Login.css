@@ -1,27 +1,27 @@
-.login-container { 
+.login-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #98fb98; /* Light Green */
+  background-color: #98fb98;
   min-height: 100vh;
   box-sizing: border-box;
 }
 
 .main-title {
   font-size: 3.5rem;
-  color: #2e8b57; /* SeaGreen, a bit darker than background */
+  color: #2e8b57;
   margin-bottom: 2rem;
   font-weight: bold;
 }
 
-.login-card { /* Class name yang berbeda */
+.login-card {
   background-color: white;
   padding: 2.5rem;
   border-radius: 20px;
-  box-shadow: 15px 15px 5px rgba(0, 0, 0, 0.1); 
+  box-shadow: 15px 15px 5px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px; 
+  max-width: 600px;
   box-sizing: border-box;
   text-align: center;
 }
@@ -45,18 +45,14 @@
   color: #555;
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 8px;
   box-sizing: border-box;
   font-size: 1rem;
-}
-
-.required-star {
-  color: red;
-  margin-left: 2px;
 }
 
 .login-button {
@@ -69,36 +65,62 @@
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
-  margin-top: 1rem; 
+  margin-top: 1rem;
   transition: background-color 0.3s ease;
 }
 
 .login-button:hover {
-  background-color: #2563eb; 
+  background-color: #2563eb;
 }
 
-.forgot-password-link {
-  display: block; 
-  text-align: left; 
-  margin-top: -0.5rem; 
-  margin-bottom: 1.5rem; 
+.login-link {
+  display: block;
+  margin-top: 1.5rem;
   color: #3b82f6;
   text-decoration: none;
   font-size: 0.9rem;
 }
 
-.forgot-password-link:hover {
+.login-link:hover {
   text-decoration: underline;
 }
 
-.register-link {
-  display: block; 
-  margin-top: 1.5rem; 
-  color: #3b82f6;
-  text-decoration: none;
-  font-size: 0.9rem;
+.required-star {
+  color: red;
+  margin-left: 2px;
 }
 
-.register-link:hover {
-  text-decoration: underline;
+.error-message {
+  background: #ffeaea;
+  color: #d8000c;
+  border: 1px solid #d8000c;
+  padding: 8px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ccc;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
 }
