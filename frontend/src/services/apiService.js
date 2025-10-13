@@ -1,6 +1,5 @@
 import axios from "axios";
 import { apiConfig } from "../config/api";
-import { authService } from "./authService";
 
 // Create axios instance with base configuration
 const apiClient = axios.create(apiConfig);
@@ -23,11 +22,21 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error("API Error:", error);
+
     if (error.response?.status === 401) {
-      // Handle unauthorized access - clear auth data
-      authService.logout();
-      window.location.href = "/login";
+      // Handle unauthorized access
+      console.log("Unauthorized access, clearing auth data");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("isAuthenticated");
+
+      // Redirect to login if not already there
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
+
     return Promise.reject(error);
   }
 );
