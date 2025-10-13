@@ -1,12 +1,12 @@
 const config = {
   development: {
-    apiBaseUrl: "https://api.curameet.duckdns.org/api",
+    apiBaseUrl: "http://api.curameet.duckdns.org/api",
   },
   production: {
-    apiBaseUrl: "https://api.curameet.duckdns.org/api",
+    apiBaseUrl: "http://api.curameet.duckdns.org/api",
   },
   test: {
-    apiBaseUrl: "https://api.curameet.duckdns.org/api",
+    apiBaseUrl: "http://api.curameet.duckdns.org/api",
   },
 };
 
