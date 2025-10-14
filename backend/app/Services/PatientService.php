@@ -4,24 +4,25 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 
 class PatientService
 {
     /**
-     * Get patient by ID
+     * VULNERABILITY: IDOR - Get patient by ID without authorization
+     * INTENTIONALLY KEPT - No authorization check
      */
     public function getPatientById($patientId)
     {
-        // VULNERABILITY: SQL Injection - following the pattern of other methods
-        $query = "SELECT p.*, u.email, u.name
-                  FROM patients p
-                  JOIN users u ON p.id = u.id
-                  WHERE p.id = $patientId";
+        // IDOR vulnerability kept, but fixed SQL injection
+        $patient = DB::table('patients as p')
+            ->join('users as u', 'p.user_id', '=', 'u.id')
+            ->where('p.id', $patientId)
+            ->select('p.*', 'u.email', 'u.name')
+            ->first();
 
-        $patient = DB::select($query);
-
-        if (empty($patient)) {
+        if (!$patient) {
             return [
                 'success' => false,
                 'message' => 'Patient not found'
@@ -30,22 +31,21 @@ class PatientService
 
         return [
             'success' => true,
-            'patient' => $patient[0]
+            'patient' => $patient
         ];
     }
 
     /**
      * Get patients by name (search)
+     * FIXED: SQL injection using parameter binding
      */
     public function getPatientsByName($name)
     {
-        // VULNERABILITY: SQL Injection - following the pattern of other methods
-        $query = "SELECT p.full_name, p.\"NIK\", p.picture, p.allergies, p.disease_histories
-          FROM patients p
-          JOIN users u ON p.user_id = u.id
-          WHERE p.full_name LIKE '%$name%'";
-
-        $patients = DB::select($query);
+        $patients = DB::table('patients as p')
+            ->join('users as u', 'p.user_id', '=', 'u.id')
+            ->where('p.full_name', 'LIKE', '%' . $name . '%')
+            ->select('p.full_name', 'p.NIK', 'p.picture', 'p.allergies', 'p.disease_histories')
+            ->get();
 
         return [
             'success' => true,
@@ -55,94 +55,121 @@ class PatientService
     }
 
     /**
-     * VULNERABILITY 1: Unrestricted file upload
+     * FIXED: Secure file upload with validation
      */
     public function uploadRekamMedis($patientId, $file)
     {
-        // No file type validation
-        // No size limits
-        // No virus scanning
-        $filename = $file->getClientOriginalName();
+        // FIXED: Validate file type
+        $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
+        if (!in_array($file->getMimeType(), $allowedMimes)) {
+            return ['success' => false, 'message' => 'Invalid file type. Only PDF and images allowed.'];
+        }
 
-        // VULNERABILITY 2: Directory traversal
+        // FIXED: Validate file size (max 5MB)
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            return ['success' => false, 'message' => 'File too large. Maximum 5MB.'];
+        }
+
+        // FIXED: Generate secure filename
+        $extension = $file->getClientOriginalExtension();
+        $filename = 'record_' . $patientId . '_' . time() . '_' . Str::random(10) . '.' . $extension;
         $path = "rekam_medis/" . $filename;
-        $file->move(public_path() . '/uploads/rekam_medis/', $filename);
 
-        // VULNERABILITY 3: SQL Injection
-        $query = "INSERT INTO medical_records (patient_id, path_file, disease_name)
-                  VALUES ($patientId, '$path', 'Uploaded File')";
-        DB::insert($query);
+        // Store file securely
+        $file->move(public_path('uploads/rekam_medis/'), $filename);
 
-        // VULNERABILITY 4: Information disclosure
+        // FIXED: Use parameterized query
+        DB::table('medical_records')->insert([
+            'patient_id' => $patientId,
+            'path_file' => $path,
+            'disease_name' => 'Uploaded File',
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        // FIXED: Don't expose server paths
         return [
             'success' => true,
-            'file_path' => $path,
-            'server_path' => public_path() . '/uploads/rekam_medis/' . $filename,
-            'patient_id' => $patientId
+            'message' => 'File uploaded successfully',
+            'file_name' => $filename
         ];
     }
 
     /**
-     * VULNERABILITY 5: Mass assignment and SQL injection
+     * VULNERABILITY: XSS in medical record notes - INTENTIONALLY KEPT
+     * Notes field is not sanitized to allow XSS testing
      */
     public function isiFormRekamMedis($data)
     {
         $patientId = $data['patient_id'];
         $doctorId = $data['doctor_id'];
         $disease = $data['disease_name'];
-        $notes = $data['notes'];
+        $notes = $data['notes']; // XSS vulnerability kept - no sanitization
 
-        // No input validation or sanitization
-        $query = "INSERT INTO medical_records (patient_id, doctor_id, disease_name, notes)
-                  VALUES ($patientId, $doctorId, '$disease', '$notes')";
-
-        DB::insert($query);
+        // FIXED: Use parameterized query to prevent SQL injection
+        DB::table('medical_records')->insert([
+            'patient_id' => $patientId,
+            'doctor_id' => $doctorId,
+            'disease_name' => $disease,
+            'notes' => $notes, // XSS vulnerability - unsanitized notes
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
 
         return ['success' => true, 'message' => 'Rekam medis berhasil disimpan'];
     }
 
     /**
-     * VULNERABILITY 6: Insecure direct object reference
+     * VULNERABILITY: IDOR - Update patient data without authorization
+     * INTENTIONALLY KEPT - No authorization check
      */
     public function isiFormDataDiri($patientId, $data)
     {
-        // No authorization check - any user can update any patient
-        $name = $data['name'];
-        $email = $data['email'];
-        $phone = $data['phone'];
-        $address = $data['address'];
-        $nik = $data['nik'];
+        // IDOR vulnerability kept - no authorization check
+        // But FIXED: Use parameterized queries and don't log sensitive data
+        
+        DB::table('patients')
+            ->where('id', $patientId)
+            ->update([
+                'full_name' => $data['name'] ?? null,
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'address' => $data['address'] ?? null,
+                'NIK' => $data['nik'] ?? null,
+                'updated_at' => now()
+            ]);
 
-        // SQL injection vulnerability
-        $query = "UPDATE patients SET full_name = '$name', email = '$email',
-                  phone = '$phone', address = '$address', NIK = '$nik'
-                  WHERE id = $patientId";
+        // FIXED: Don't log sensitive data
+        \Log::info("Patient data updated", ['patient_id' => $patientId]);
 
-        DB::update($query);
-
-        // VULNERABILITY 7: Sensitive data logging
-        \Log::info("Patient data updated: " . json_encode($data));
-
-        return ['success' => true];
+        return ['success' => true, 'message' => 'Data updated successfully'];
     }
 
     /**
-     * VULNERABILITY 8: Information disclosure
+     * VULNERABILITY: IDOR - View medical records without authorization
+     * INTENTIONALLY KEPT - No authorization check
      */
     public function lihatCatatanMedis($patientId)
     {
-        // No authorization - anyone can view any patient's records
-        $query = "SELECT mr.*, p.full_name as patient_name, p.NIK, p.phone,
-                         d.full_name as doctor_name, u.email as patient_email, u.password
-                  FROM medical_records mr
-                  JOIN patients p ON mr.patient_id = p.id
-                  JOIN doctors d ON mr.doctor_id = d.id
-                  JOIN users u ON p.user_id = u.id
-                  WHERE mr.patient_id = $patientId";
+        // IDOR vulnerability kept - no authorization check
+        // But FIXED: Don't expose passwords and use proper joins
+        
+        $records = DB::table('medical_records as mr')
+            ->join('patients as p', 'mr.patient_id', '=', 'p.id')
+            ->join('doctors as d', 'mr.doctor_id', '=', 'd.id')
+            ->join('users as u', 'p.user_id', '=', 'u.id')
+            ->where('mr.patient_id', $patientId)
+            ->select(
+                'mr.*',
+                'p.full_name as patient_name',
+                'p.NIK',
+                'p.phone',
+                'd.full_name as doctor_name',
+                'u.email as patient_email'
+                // FIXED: Don't include password
+            )
+            ->get();
 
-        $records = DB::select($query);
-
-        // Returns sensitive information including passwords
         return [
             'success' => true,
             'records' => $records,
@@ -151,48 +178,50 @@ class PatientService
     }
 
     /**
-     * VULNERABILITY 9: SQL injection in statistics
+     * FIXED: Statistics with proper parameterized queries
      */
     public function lihatStatistik($patientId, $filters = [])
     {
         $dateFrom = $filters['date_from'] ?? '2020-01-01';
         $dateTo = $filters['date_to'] ?? '2025-12-31';
 
-        // Direct SQL injection
-        $query = "SELECT
-                    COUNT(*) as total_visits,
-                    disease_name,
-                    created_at
-                  FROM medical_records
-                  WHERE patient_id = $patientId
-                  AND created_at BETWEEN '$dateFrom' AND '$dateTo'
-                  GROUP BY disease_name";
+        // FIXED: Use parameterized query
+        $stats = DB::table('medical_records')
+            ->where('patient_id', $patientId)
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->select('disease_name', DB::raw('COUNT(*) as total_visits'), 'created_at')
+            ->groupBy('disease_name', 'created_at')
+            ->get();
 
-        $stats = DB::select($query);
-
+        // FIXED: Don't expose query structure
         return [
             'success' => true,
-            'statistics' => $stats,
-            'query_executed' => $query // Exposes SQL structure
+            'statistics' => $stats
         ];
     }
 
     /**
-     * VULNERABILITY 10: Race condition and insufficient validation
+     * FIXED: Appointment creation with validation
      */
     public function daftarPengecekanBaru($patientId, $doctorId, $appointmentTime)
     {
-        // No validation of appointment time
-        // No check if doctor is available
-        // No race condition protection
+        // FIXED: Validate appointment time
+        if (strtotime($appointmentTime) < time()) {
+            return [
+                'success' => false,
+                'message' => 'Appointment time must be in the future'
+            ];
+        }
 
-        $query = "INSERT INTO appointments (patient_id, doctor_id, time_appointment, status)
-                  VALUES ($patientId, $doctorId, '$appointmentTime', 'pending')";
-
-        DB::insert($query);
-
-        // VULNERABILITY 11: Predictable appointment IDs
-        $appointmentId = DB::getPdo()->lastInsertId();
+        // FIXED: Use parameterized query
+        $appointmentId = DB::table('appointments')->insertGetId([
+            'patient_id' => $patientId,
+            'doctor_id' => $doctorId,
+            'time_appointment' => $appointmentTime,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
 
         return [
             'success' => true,
@@ -202,27 +231,23 @@ class PatientService
     }
 
     /**
-     * VULNERABILITY 12: No authorization and cascade deletion
+     * FIXED: Appointment cancellation with proper query
      */
     public function batalkanPengecekan($appointmentId, $reason)
     {
-        // No authorization check
-        // No verification if appointment belongs to user
+        // FIXED: Use parameterized query
+        DB::table('appointments')
+            ->where('id', $appointmentId)
+            ->update([
+                'status' => 'cancelled',
+                'cancel_reason' => $reason,
+                'updated_at' => now()
+            ]);
 
-        // SQL injection in reason
-        $query = "UPDATE appointments SET status = 'cancelled',
-                  cancel_reason = '$reason'
-                  WHERE id = $appointmentId";
-
-        DB::update($query);
-
-        // VULNERABILITY 13: Information disclosure
-        $appointmentInfo = DB::select("SELECT * FROM appointments WHERE id = $appointmentId");
-
+        // FIXED: Don't expose sensitive information
         return [
             'success' => true,
-            'cancelled_appointment' => $appointmentInfo,
-            'reason' => $reason
+            'message' => 'Appointment cancelled successfully'
         ];
     }
 }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Log;
 
 use App\Services\AuthService;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use Illuminate\Http\Request;
 
 
@@ -18,7 +20,8 @@ class AuthController extends Controller
     }
 
     /**
-     * VULNERABILITY 25: No input validation
+     * VULNERABILITY: SQL Injection in login - INTENTIONALLY KEPT
+     * No input validation to allow SQL injection testing
      */
     public function login(Request $request)
     {
@@ -27,7 +30,7 @@ class AuthController extends Controller
         $role = $request->input('role');
         $rememberMe = $request->input('remember_me', false);
 
-        // No validation, sanitization, or rate limiting
+        // No validation, sanitization - INTENTIONALLY VULNERABLE
         $result = $this->authService->attemptLogin($email, $password, $role, $rememberMe);
 
         if ($result['success']) {
@@ -38,44 +41,39 @@ class AuthController extends Controller
     }
 
     /**
-     * VULNERABILITY 26: Verbose error messages
+     * FIXED: Registration with validation and proper error handling
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
         try {
-            Log::info($request);
-            $result = $this->authService->register($request->all());
-            Log::info(response()->json($result));
-            return response()->json($result);
+            $result = $this->authService->register($request->validated());
+            return response()->json($result, $result['success'] ? 201 : 400);
         } catch (\Exception $e) {
-            // Exposes internal system information
+            // FIXED: Don't expose internal system information
+            Log::error('Registration error', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Registration failed',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'message' => 'Registration failed. Please try again later.'
             ], 500);
         }
     }
 
     /**
-     * VULNERABILITY 27: No authentication required for sensitive operations
+     * FIXED: Password reset with validation and authentication
      */
-    public function resetPassword(Request $request)
+    public function resetPassword(ResetPasswordRequest $request)
     {
-        $email = $request->input('email');
-        $newPassword = $request->input('new_password');
+        $result = $this->authService->resetPassword(
+            $request->validated()['email'],
+            $request->validated()['new_password']
+        );
 
-        // Anyone can reset anyone's password
-        $result = $this->authService->resetPassword($email, $newPassword);
-
-        return response()->json($result);
+        return response()->json($result, $result['success'] ? 200 : 400);
     }
 
     public function logout()
     {
-        return $this->authService->logout();
+        $result = $this->authService->logout();
+        return response()->json($result);
     }
 }
