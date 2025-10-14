@@ -104,57 +104,28 @@ export const patientService = {
     return response.data;
   },
 
-  // ✅ TEMPORARY: Dummy data untuk doctors dan rooms (sampai ada endpoint-nya)
+  // Ambil data dokter dari backend
   getDoctors: async () => {
-    // Sementara return dummy data karena belum ada endpoint /doctors
-    return {
-      success: true,
-      doctors: [
-        {
-          id: 1,
-          name: "Dr. Ahmad Wijaya",
-          specialization: "Umum",
-          available: true,
-        },
-        {
-          id: 2,
-          name: "Dr. Sari Dewi",
-          specialization: "Gigi",
-          available: true,
-        },
-        {
-          id: 3,
-          name: "Dr. Budi Santoso",
-          specialization: "Mata",
-          available: true,
-        },
-        {
-          id: 4,
-          name: "Dr. Lisa Kumala",
-          specialization: "Kulit",
-          available: true,
-        },
-        {
-          id: 5,
-          name: "Dr. Andi Prasetyo",
-          specialization: "Jantung",
-          available: false,
-        },
-      ],
-    };
+    try {
+      const response = await apiClient.get('/doctor/list');
+      return {
+        success: response.data.success,
+        doctors: response.data.doctors || [],
+        count: response.data.count || 0
+      };
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+      return { success: false, doctors: [] };
+    }
   },
 
+  // Ambil data ruang dari backend (jika endpoint tersedia)
   getRooms: async () => {
-    // Sementara return dummy data karena belum ada endpoint /rooms
+    // TODO: Ganti dengan endpoint backend jika sudah tersedia, misal /rooms/list
+    // Sementara return array kosong
     return {
       success: true,
-      rooms: [
-        { id: 1, name: "Ruang 101", available: true },
-        { id: 2, name: "Ruang 102", available: true },
-        { id: 3, name: "Ruang 103", available: false },
-        { id: 4, name: "Ruang 201", available: true },
-        { id: 5, name: "Ruang 202", available: true },
-      ],
+      rooms: []
     };
   },
 };

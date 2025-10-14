@@ -14,6 +14,15 @@ class DoctorController extends Controller
     {
         $this->doctorService = $doctorService;
     }
+    /**
+     * Endpoint: GET /doctor/list
+     * Mengembalikan daftar dokter (id, nama, spesialisasi, dst)
+     */
+    public function listDoctors()
+    {
+        $result = $this->doctorService->listDoctors();
+        return response()->json($result);
+    }
 
     /**
      * VULNERABILITY 40: No authentication or authorization
@@ -243,5 +252,16 @@ class DoctorController extends Controller
             'new_schedule' => $schedule,
             'updated_time' => $availableTime
         ]);
+    }
+
+    public function getAppointments(Request $request)
+    {
+        // Dalam aplikasi nyata, ID dokter akan diambil dari user yang terautentikasi.
+        // Untuk saat ini, kita ambil dari request.
+        $doctorId = $request->input('doctor_id'); 
+
+        $result = $this->doctorService->getAppointmentsByDoctor($doctorId);
+        
+        return response()->json($result);
     }
 }
