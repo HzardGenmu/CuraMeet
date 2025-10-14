@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { patientService } from '../../services/patientService';
+import { authService } from '../../services/authService';
 import './Profil.css'; // Pastikan CSS ini ada dan sudah sesuai
 
 const Profil = () => {
   const [formData, setFormData] = useState({
     namaLengkap: '',
-    usia: '', // Usia bisa dihitung dari tanggal lahir atau diinput terpisah
+    usia: '',
     jenisKelamin: '',
     alamat: '',
-    nomorTelepon: '', // Tambahan: Nomor Telepon
-    tanggalLahir: '', // Tambahan: Tanggal Lahir
-    rekamMedis: '', 
+    nomorTelepon: '',
+    tanggalLahir: '',
+    rekamMedis: '',
   });
+  const [patientId, setPatientId] = useState(null);
 
-  const [isEditing, setIsEditing] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,16 +26,66 @@ const Profil = () => {
     }));
   };
 
-  const handleSave = (e) => {
-    e.preventDefault(); 
-    console.log("Data Disimpan:", formData);
-    setIsEditing(false); 
-    alert("Data berhasil disimpan!");
+  // Fetch data user dari backend saat mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const user = authService.getCurrentUser();
+        if (user && user.id) {
+          setPatientId(user.id);
+          const res = await patientService.getPatientById(user.id);
+          if (res.success && res.patient) {
+            setFormData({
+              namaLengkap: res.patient.full_name || '',
+              usia: res.patient.age || '',
+              jenisKelamin: res.patient.gender || '',
+              alamat: res.patient.address || '',
+              nomorTelepon: res.patient.phone || '',
+              tanggalLahir: res.patient.birth_date || '',
+              rekamMedis: res.patient.disease_histories || '',
+            });
+          }
+        }
+      } catch (err) {
+        // Biarkan kosong jika gagal
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!patientId) return;
+    try {
+      const payload = {
+        full_name: formData.namaLengkap,
+        age: formData.usia,
+        gender: formData.jenisKelamin,
+        address: formData.alamat,
+        phone: formData.nomorTelepon,
+        birth_date: formData.tanggalLahir,
+        disease_histories: formData.rekamMedis,
+      };
+      const res = await patientService.submitPersonalDataForm(patientId, payload);
+      if (res.success) {
+        setIsEditing(false);
+        alert('Data berhasil disimpan!');
+      } else {
+        alert('Gagal menyimpan data!');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan saat menyimpan data!');
+    }
   };
 
   const handleEdit = () => {
     setIsEditing(true); 
   };
+
+  if (loading) return <div className="profil-container"><p>Loading...</p></div>;
 
   return (
     <div className="profil-container">
@@ -54,7 +108,7 @@ const Profil = () => {
           <div className="profil-form-group">
             <label htmlFor="tanggalLahir">Tanggal Lahir<span className="required-star">*</span></label>
             <input
-              type="date" // Menggunakan type="date" untuk pemilih kalender
+              type="date"
               id="tanggalLahir"
               name="tanggalLahir"
               value={formData.tanggalLahir}
@@ -64,17 +118,15 @@ const Profil = () => {
             />
           </div>
 
-          {/* Anda bisa memilih untuk menampilkan usia atau menghitungnya dari tanggal lahir */}
           <div className="profil-form-group">
-            <label htmlFor="usia">Usia</label> {/* Usia tidak lagi required jika dihitung */}
+            <label htmlFor="usia">Usia</label>
             <input
               type="number"
               id="usia"
               name="usia"
-              value={formData.usia} // Anda bisa menghitung ini otomatis dari tanggalLahir
+              value={formData.usia}
               onChange={handleChange}
               disabled={!isEditing}
-              // Hapus 'required' jika usia dihitung atau tidak wajib
             />
           </div>
 
@@ -93,11 +145,11 @@ const Profil = () => {
               <option value="Perempuan">Perempuan</option>
             </select>
           </div>
-          
+
           <div className="profil-form-group">
             <label htmlFor="nomorTelepon">Nomor Telepon<span className="required-star">*</span></label>
             <input
-              type="tel" // Menggunakan type="tel" untuk input nomor telepon
+              type="tel"
               id="nomorTelepon"
               name="nomorTelepon"
               value={formData.nomorTelepon}
@@ -121,7 +173,6 @@ const Profil = () => {
             />
           </div>
 
-          {/* Pertimbangkan apakah rekam medis harus di sini atau di halaman terpisah */}
           <div className="profil-form-group">
             <label htmlFor="rekamMedis">Riwayat Kesehatan Singkat</label>
             <textarea
@@ -131,7 +182,6 @@ const Profil = () => {
               value={formData.rekamMedis}
               onChange={handleChange}
               disabled={!isEditing}
-              // Jika ini adalah ringkasan riwayat, mungkin tidak perlu required
             ></textarea>
           </div>
 
@@ -139,9 +189,9 @@ const Profil = () => {
             <button type="submit" className="btn-primary profil-btn">Simpan</button>
           )}
         </form>
-        
+
         {!isEditing && (
-          <button type="button" onClick={handleEdit} className="btn-secondary profil-btn">Edit Data</button>
+          <button type="button" onClick={() => setIsEditing(true)} className="btn-secondary profil-btn">Edit Data</button>
         )}
       </div>
     </div>

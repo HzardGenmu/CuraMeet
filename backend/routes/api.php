@@ -1,3 +1,5 @@
+
+
 <?php
 
 use App\Http\Controllers\AuthController;
@@ -5,6 +7,7 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RoomController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -14,6 +17,9 @@ Route::get('/test', function () {
     ]);
 });
 
+Route::prefix('rooms')->group(function () {
+    Route::get('/list', [RoomController::class, 'listRooms']);
+});
 // Auth routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -37,6 +43,7 @@ Route::prefix('patient')->group(function () {
 // Doctor routes
 Route::prefix('doctor')->group(function () {
     Route::post('/tambah-rekaman', [DoctorController::class, 'tambahRekamanMedis']);
+    Route::get('/list', [DoctorController::class, 'listDoctors']);
     Route::post('/tambah-resep', [DoctorController::class, 'tambahResep']);
     Route::get('/rekaman-medis', [DoctorController::class, 'lihatRekamanMedis']);
     Route::put('/ubah-jadwal/{appointmentId}', [DoctorController::class, 'ubahJadwalPengecekan']);
@@ -44,6 +51,7 @@ Route::prefix('doctor')->group(function () {
     Route::get('/export-patient/{patientId}', [DoctorController::class, 'exportPatientData']);
     Route::put('/bulk-appointments', [DoctorController::class, 'bulkUpdateAppointments']);
     Route::put('/update-schedule', [DoctorController::class, 'updateDoctorSchedule']);
+    Route::get('/appointments', [DoctorController::class, 'getAppointments']);
 });
 
 // Admin routes

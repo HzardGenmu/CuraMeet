@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { doctorService } from '../../../services/doctorService';
 import '../../JanjiTemu/JanjiTemu.css'; // Menggunakan CSS yang sama
 import { IoTrash } from 'react-icons/io5'; // Untuk ikon hapus
 
@@ -9,99 +10,155 @@ import ConfirmationModal from '../../../components/ConfirmationModal/Confirmatio
 
 // --- DUMMY DATA ---
 // Anggap ID Dokter yang sedang login adalah 'DR001'
+// --- KONSTAN SEMENTARA ---
+// TODO: Ambil dari context/auth user login
 const CURRENT_DOCTOR_ID = 'DR001';
 const CURRENT_DOCTOR_NAME = 'Dr. Budi Santoso'; // Nama dokter yang login
 
-const allAppointments = [
-  { id: 1, tanggal: '2025-10-31', jam: '20:30', dokterId: 'DR001', dokter: 'Dr. Budi Santoso', ruang: 'Ruang A.6', pasien: 'Pasien A' },
-  { id: 2, tanggal: '2025-11-09', jam: '09:20', dokterId: 'DR002', dokter: 'Dr. Anisa Putri', ruang: 'Ruang B.8', pasien: 'Pasien B' },
-  { id: 3, tanggal: '2025-11-15', jam: '14:00', dokterId: 'DR001', dokter: 'Dr. Budi Santoso', ruang: 'Ruang C.1', pasien: 'Pasien C' },
-  { id: 4, tanggal: '2025-11-20', jam: '10:00', dokterId: 'DR001', dokter: 'Dr. Budi Santoso', ruang: 'Ruang A.6', pasien: 'Pasien D' },
-  { id: 5, tanggal: '2025-11-22', jam: '11:00', dokterId: 'DR002', dokter: 'Dr. Anisa Putri', ruang: 'Ruang B.8', pasien: 'Pasien E' },
-];
-
+// Dummy doctors & rooms hanya jika API belum ada
 const dummyDoctors = [
   { id: 'DR001', nama: 'Dr. Budi Santoso', spesialis: 'Jantung' },
-  { id: 'DR002', nama: 'Dr. Anisa Putri', spesialis: 'Anak' },
-  { id: 'DR003', nama: 'Dr. Candra Wijaya', spesialis: 'Gigi' },
 ];
-
 const dummyRooms = [
   { id: 1, nama: 'Ruang A.6' },
-  { id: 2, nama: 'Ruang B.8' },
-  { id: 3, nama: 'Ruang C.1' },
 ];
 
 const DoctorJanjiTemu = () => {
   // Filter janji temu agar hanya yang relevan dengan dokter yang login
-  const [appointments, setAppointments] = useState(
-    allAppointments.filter(app => app.dokterId === CURRENT_DOCTOR_ID)
-  );
+    const [appointments, setAppointments] = useState([]);
+  const [doctors, setDoctors] = useState([]); // Akan di-fetch dari API
+  const [rooms, setRooms] = useState(dummyRooms); // Tetap dummy, belum ada endpoint
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  const [isListModalOpen, setIsListModalOpen] = useState(false); // Modal untuk "Lihat Semua" (daftar)
-  const [isEditFormModalOpen, setIsEditFormModalOpen] = useState(false); // Modal untuk form edit
-  const [currentAppointment, setCurrentAppointment] = useState(null); // Janji temu yang sedang diedit
-
-  const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] = useState(false); // Modal konfirmasi hapus
-  const [appointmentToDelete, setAppointmentToDelete] = useState(null); // Janji temu yang akan dihapus
+    const [isListModalOpen, setIsListModalOpen] = useState(false);
+    const [isEditFormModalOpen, setIsEditFormModalOpen] = useState(false);
+    const [currentAppointment, setCurrentAppointment] = useState(null);
+    const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] = useState(false);
+    const [appointmentToDelete, setAppointmentToDelete] = useState(null); 
 
   // --- Fungsi untuk Modal Daftar Janji Temu ---
-  const handleOpenListModal = () => {
-    setIsListModalOpen(true);
-  };
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await doctorService.getAppointments
+          ? await doctorService.getAppointments(CURRENT_DOCTOR_ID)
+          : await doctorService.getMedicalRecords(CURRENT_DOCTOR_ID); // fallback
+        if (response.success && response.appointments) {
+          setAppointments(response.appointments);
+        } else if (response.success && response.records) {
+          setAppointments(response.records);
+        } else {
+          setAppointments([]);
+        }
+      } catch (err) {
+        setError('Gagal memuat data janji temu.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleCloseListModal = () => {
-    setIsListModalOpen(false);
-  };
+    // Fetch daftar dokter dari API (sementara pakai endpoint pasien/search)
+    const fetchDoctors = async () => {
+      try {
+        const res = await fetch('http://localhost:9000/api/patient/search?name=');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setDoctors(data);
+        } else if (Array.isArray(data.patients)) {
+          setDoctors(data.patients);
+        }
+      } catch (err) {
+        // Biarkan kosong jika gagal
+        setDoctors([]);
+      }
+    };
 
-  // --- Fungsi untuk Modal Form Edit Janji Temu ---
-  const handleOpenEditForm = (appointment) => {
-    setCurrentAppointment(appointment);
-    setIsEditFormModalOpen(true);
-  };
+    fetchAppointments();
+    fetchDoctors();
+    // rooms tetap dummy, jika ada endpoint tinggal tambahkan fetchRooms()
+  }, []);
 
-  const handleCloseEditFormModal = () => {
-    setIsEditFormModalOpen(false);
-    setCurrentAppointment(null);
-  };
+    // --- Fungsi untuk Modal --- (fungsi buka/tutup tidak berubah)
+    const handleOpenListModal = () => setIsListModalOpen(true);
+    const handleCloseListModal = () => setIsListModalOpen(false);
+    const handleOpenEditForm = (appointment) => {
+        setCurrentAppointment(appointment);
+        setIsEditFormModalOpen(true);
+    };
+    const handleCloseEditFormModal = () => {
+        setIsEditFormModalOpen(false);
+        setCurrentAppointment(null);
+    };
 
-  const handleSaveChanges = (formData) => {
-    // Di aplikasi nyata, Anda akan mengirim ini ke server
-    console.log("Menyimpan perubahan untuk:", formData);
+    // 2. Fungsi untuk menyimpan perubahan ke API
+    const handleSaveChanges = async (formData) => {
+      try {
+        const newTime = `${formData.tanggal} ${formData.jam}`;
+        const response = await doctorService.updateAppointmentSchedule(
+          formData.id,
+          newTime,
+          CURRENT_DOCTOR_ID
+        );
+        if (response.success) {
+          setAppointments(prevApps => prevApps.map(app =>
+            app.id === formData.id ? { ...app, ...formData } : app
+          ));
+          alert("Perubahan berhasil disimpan!");
+          handleCloseEditFormModal();
+        } else {
+          alert("Gagal menyimpan perubahan.");
+        }
+      } catch (err) {
+        alert("Terjadi kesalahan saat menyimpan perubahan.");
+        console.error(err);
+      }
+    };
+
+    // --- Fungsi untuk Hapus/Batal Janji Temu ---
+    const handleDeleteClick = (appointmentId, e) => {
+        e.stopPropagation();
+        setAppointmentToDelete(appointmentId);
+        setIsDeleteConfirmModalOpen(true);
+    };
     
-    // Update state appointments (local dummy update)
-    setAppointments(prevApps => prevApps.map(app => 
-      app.id === formData.id ? { ...app, ...formData } : app
-    ));
+    // 3. Fungsi untuk membatalkan janji temu ke API
+    const confirmDelete = async () => {
+      if (!appointmentToDelete) return;
+      try {
+        const response = await doctorService.cancelSchedule(
+          appointmentToDelete,
+          'Dibatalkan oleh dokter',
+          CURRENT_DOCTOR_ID
+        );
+        if (response.success) {
+          setAppointments(prevApps => prevApps.filter(app => app.id !== appointmentToDelete));
+          alert("Janji temu berhasil dibatalkan!");
+        } else {
+          alert("Gagal membatalkan janji temu.");
+        }
+      } catch (err) {
+        alert("Terjadi kesalahan saat membatalkan janji temu.");
+        console.error(err);
+      } finally {
+        setIsDeleteConfirmModalOpen(false);
+        setAppointmentToDelete(null);
+      }
+    };
 
-    alert("Perubahan berhasil disimpan!");
-    handleCloseEditFormModal(); // Tutup modal edit setelah menyimpan
-  };
+    const cancelDelete = () => {
+        setIsDeleteConfirmModalOpen(false);
+        setAppointmentToDelete(null);
+    };
 
-  // --- Fungsi untuk Hapus/Batal Janji Temu ---
-  const handleDeleteClick = (appointmentId, e) => {
-    e.stopPropagation(); // Mencegah klik menyebar ke kartu (membuka modal edit)
-    setAppointmentToDelete(appointmentId);
-    setIsDeleteConfirmModalOpen(true);
-  };
+    // Tampilan loading dan error
+    if (isLoading) return <p>Loading...</p>;
+    if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
-  const confirmDelete = () => {
-    // Di aplikasi nyata, Anda akan mengirim permintaan DELETE ke server
-    console.log("Menghapus janji temu dengan ID:", appointmentToDelete);
-    setAppointments(prevApps => prevApps.filter(app => app.id !== appointmentToDelete));
-    alert("Janji temu berhasil dibatalkan/dihapus!");
-    setIsDeleteConfirmModalOpen(false);
-    setAppointmentToDelete(null);
-    handleCloseEditFormModal(); // Tutup modal edit jika yang dihapus sedang dibuka
-  };
-
-  const cancelDelete = () => {
-    setIsDeleteConfirmModalOpen(false);
-    setAppointmentToDelete(null);
-  };
-
-  // Tampilkan 2 janji temu terdekat di dashboard utama
-  const upcomingAppointmentsDisplay = appointments.slice(0, 2);
+    const upcomingAppointmentsDisplay = appointments.slice(0, 2);
 
   return (
     <>
@@ -178,8 +235,8 @@ const DoctorJanjiTemu = () => {
           onClose={handleCloseEditFormModal}
           title="Edit Janji Temu"
           appointmentData={currentAppointment}
-          doctors={dummyDoctors.filter(d => d.id === CURRENT_DOCTOR_ID)} // Hanya dokter yang login
-          rooms={dummyRooms}
+          doctors={doctors.length > 0 ? doctors.filter(d => d.id === CURRENT_DOCTOR_ID) : dummyDoctors}
+          rooms={rooms}
           onSave={handleSaveChanges}
           isDoctorView={true} // Memberi tahu modal bahwa ini untuk tampilan dokter
         />

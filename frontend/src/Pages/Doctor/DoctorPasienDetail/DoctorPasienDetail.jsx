@@ -2,99 +2,69 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './DoctorPasienDetail.css';
 import { IoPersonCircleOutline, IoCalendarOutline, IoPhonePortraitOutline, IoMailOutline, IoLocationOutline, IoFlaskOutline, IoChatbubblesOutline } from 'react-icons/io5';
+import { patientService } from '../../../services/patientService';
+import { doctorService } from '../../../services/doctorService';
+import { authService } from '../../../services/authService';
 
 // Impor modal untuk menambah catatan medis
 import AddMedicalRecordModal from '../../../components/AddMedicalRecordModal/AddMedicalRecordModal';
 
-// --- DUMMY DATA ---
-// Sesuaikan dengan data dari DoctorDaftarPasien
-const allPatientsData = [
-  { 
-    id: 'P001', 
-    nama: 'Budi Hartono', 
-    foto: 'https://via.placeholder.com/150/007bff/ffffff?text=BH', 
-    deskripsiSingkat: 'Pasien aktif, riwayat alergi obat.',
-    alamat: 'Jl. Melati No. 10, Jakarta',
-    tanggalLahir: '1990-05-15',
-    jenisKelamin: 'Laki-laki',
-    telepon: '081234567890',
-    email: 'budi.h@example.com',
-  },
-  { 
-    id: 'P002', 
-    nama: 'Siti Aminah', 
-    foto: 'https://via.placeholder.com/150/28a745/ffffff?text=SA', 
-    deskripsiSingkat: 'Memiliki riwayat diabetes tipe 2.',
-    alamat: 'Jl. Kenanga No. 5, Bandung',
-    tanggalLahir: '1978-11-20',
-    jenisKelamin: 'Perempuan',
-    telepon: '085678901234',
-    email: 'siti.a@example.com',
-  },
-];
 
-// Dummy Rekam Medis (misal: hasil lab, rontgen)
-const dummyRekamMedis = [
-  { id: 1, pasienId: 'P001', judul: 'Hasil Tes Darah Lengkap', tanggal: '2025-09-20', fileUrl: 'link_ke_file_darah.pdf', type: 'Lab' },
-  { id: 2, pasienId: 'P001', judul: 'Foto Rontgen Dada', tanggal: '2025-08-10', fileUrl: 'link_ke_file_rontgen.jpg', type: 'Radiologi' },
-  { id: 3, pasienId: 'P002', judul: 'Pemeriksaan Gula Darah', tanggal: '2025-10-01', fileUrl: 'link_ke_file_guladarah.pdf', type: 'Lab' },
-];
-
-// Dummy Catatan Medis (disimpan di state agar bisa ditambahkan)
-const initialDummyCatatanMedis = [
-  { 
-    id: 1, pasienId: 'P001', dokter: 'Dr. Budi Santoso', tanggal: '2025-10-23', 
-    diagnosis: 'Pasien datang dengan keluhan batuk berdahak selama 5 hari, disertai demam ringan. Pemeriksaan fisik menunjukkan adanya sedikit ronki di paru-paru bagian bawah.',
-    resepObat: 'Amoxicillin 500mg (2x sehari), Paracetamol 500mg (3x sehari jika demam).'
-  },
-  { 
-    id: 2, pasienId: 'P001', dokter: 'Dr. Budi Santoso', tanggal: '2025-09-19', 
-    diagnosis: 'Kontrol batuk, sudah membaik. Dada bersih. Resep obat dilanjutkan sampai habis.',
-    resepObat: 'Amoxicillin 500mg (2x sehari).'
-  },
-  { 
-    id: 3, pasienId: 'P002', dokter: 'Dr. Budi Santoso', tanggal: '2025-10-05', 
-    diagnosis: 'Pasien mengeluh pusing dan lemas. Riwayat diabetes. Cek gula darah sewaktu: 300 mg/dL. Edukasi diet dan pentingnya kepatuhan obat.',
-    resepObat: 'Metformin 500mg (2x sehari), resep insulin jika diperlukan (sesuai dosis).'
-  },
-];
 
 
 const DoctorPasienDetail = () => {
-  const { pasienId } = useParams(); // Ambil ID pasien dari URL
+  const { pasienId } = useParams();
   const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
   const [patientMedicalRecords, setPatientMedicalRecords] = useState([]);
-  const [patientMedicalNotes, setPatientMedicalNotes] = useState([]); // State untuk catatan medis
+  const [patientMedicalNotes, setPatientMedicalNotes] = useState([]);
+  const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
 
-  const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false); // State untuk modal tambah catatan
+  // Ambil ID dokter dari authService
+  const CURRENT_DOCTOR_ID = authService.getCurrentUser()?.id || '';
 
   useEffect(() => {
-    // --- Ambil Data Pasien ---
-    // Di aplikasi nyata, ini akan menjadi panggilan API: /api/pasien/${pasienId}
-    const foundPatient = allPatientsData.find(p => p.id === pasienId);
-    if (foundPatient) {
-      setPatient(foundPatient);
-      // --- Ambil Rekam Medis Pasien ---
-      // Di aplikasi nyata: /api/rekam-medis?pasienId=${pasienId}
-      const filteredRecords = dummyRekamMedis.filter(rec => rec.pasienId === pasienId);
-      setPatientMedicalRecords(filteredRecords);
-      // --- Ambil Catatan Medis Pasien ---
-      // Di aplikasi nyata: /api/catatan-medis?pasienId=${pasienId}&dokterId=${CURRENT_DOCTOR_ID}
-      // Kita asumsikan semua catatan medis di initialDummyCatatanMedis adalah dari dokter yang login
-      const filteredNotes = initialDummyCatatanMedis.filter(note => note.pasienId === pasienId);
-      setPatientMedicalNotes(filteredNotes);
+    const fetchData = async () => {
+      try {
+        // Ambil data pasien
+        const patientData = await patientService.getPatientById(pasienId);
+        if (!patientData || !patientData.success) {
+          navigate('/dokter/pasien');
+          alert('Pasien tidak ditemukan.');
+          return;
+        }
+        setPatient({
+          id: patientData.patient?.id || pasienId,
+          nama: patientData.patient?.nama || '-',
+          foto: patientData.patient?.foto || 'https://via.placeholder.com/150/007bff/ffffff?text=PS',
+          deskripsiSingkat: patientData.patient?.deskripsi_singkat || '',
+          alamat: patientData.patient?.alamat || '',
+          tanggalLahir: patientData.patient?.tanggal_lahir || '',
+          jenisKelamin: patientData.patient?.jenis_kelamin || '',
+          telepon: patientData.patient?.telepon || '',
+          email: patientData.patient?.email || '',
+        });
 
-    } else {
-      // Jika pasien tidak ditemukan, arahkan kembali ke daftar pasien
-      navigate('/dokter/pasien');
-      alert('Pasien tidak ditemukan.');
-    }
-  }, [pasienId, navigate]); // Dependensi pasienId dan navigate
+        // Ambil rekam medis digital (hasil lab, rontgen, dll)
+        const recordsRes = await patientService.getMedicalRecords(pasienId);
+        setPatientMedicalRecords(Array.isArray(recordsRes.records) ? recordsRes.records : []);
+
+        // Ambil catatan medis dokter untuk pasien ini
+        const notesRes = await doctorService.getMedicalRecords(CURRENT_DOCTOR_ID, pasienId);
+        setPatientMedicalNotes(Array.isArray(notesRes.records) ? notesRes.records : []);
+      } catch (err) {
+        console.error('Gagal memuat data pasien/detail:', err);
+        navigate('/dokter/pasien');
+        alert('Gagal memuat data pasien.');
+      }
+    };
+    fetchData();
+  }, [pasienId, navigate, CURRENT_DOCTOR_ID]);
 
   if (!patient) {
     return <div className="loading-message">Memuat data pasien...</div>;
   }
+
 
   // --- Fungsi untuk Tambah Catatan Medis ---
   const handleOpenAddNoteModal = () => {
@@ -105,18 +75,29 @@ const DoctorPasienDetail = () => {
     setIsAddNoteModalOpen(false);
   };
 
-  const handleSaveNewNote = ({ diagnosa, resepObat }) => {
-    const newNote = {
-      id: patientMedicalNotes.length + 1, // ID dummy
-      pasienId: patient.id,
-      dokter: 'Dr. Budi Santoso', // Sesuaikan dengan dokter yang login
-      tanggal: new Date().toISOString().slice(0, 10), // Tanggal hari ini
-      diagnosis: diagnosa,
-      resepObat: resepObat,
-    };
-    setPatientMedicalNotes(prevNotes => [...prevNotes, newNote]);
-    alert('Catatan medis berhasil ditambahkan!');
-    // Di aplikasi nyata: Kirim newNote ke API POST /api/catatan-medis
+  const handleSaveNewNote = async ({ diagnosa, resepObat }) => {
+    if (!patient) return;
+    try {
+      const newNote = {
+        patient_id: patient.id,
+        doctor_id: CURRENT_DOCTOR_ID,
+        diagnosis: diagnosa,
+        resep_obat: resepObat,
+        tanggal: new Date().toISOString().slice(0, 10),
+      };
+      const res = await doctorService.addMedicalRecord(newNote);
+      if (res.success) {
+        // Refresh catatan medis setelah tambah
+        const notesRes = await doctorService.getMedicalRecords(CURRENT_DOCTOR_ID, patient.id);
+        setPatientMedicalNotes(Array.isArray(notesRes.records) ? notesRes.records : []);
+        alert('Catatan medis berhasil ditambahkan!');
+      } else {
+        alert('Gagal menambah catatan medis.');
+      }
+    } catch (err) {
+      alert('Gagal menambah catatan medis.');
+    }
+    setIsAddNoteModalOpen(false);
   };
 
 

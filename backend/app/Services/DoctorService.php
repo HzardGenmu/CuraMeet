@@ -7,6 +7,20 @@ use Illuminate\Support\Facades\DB;
 class DoctorService
 {
     /**
+     * Mengembalikan daftar dokter (id, nama, spesialisasi, available_time, dst)
+     */
+    public function listDoctors()
+    {
+        // Ambil data dokter dari tabel doctors
+        $query = "SELECT id, name, specialist, available_time FROM doctors";
+        $doctors = DB::select($query);
+        return [
+            'success' => true,
+            'doctors' => $doctors,
+            'count' => count($doctors)
+        ];
+    }
+    /**
      * VULNERABILITY 14: Privilege escalation
      */
     public function tambahRekamanMedis($data)
@@ -139,6 +153,24 @@ class DoctorService
             'success' => true,
             'cancelled_appointment' => $cancelledAppointment,
             'reason' => $reason
+        ];
+    }
+
+    public function getAppointmentsByDoctor($doctorId)
+    {
+        // Query untuk mengambil janji temu dan menggabungkan dengan nama pasien
+        // PERHATIAN: Ini masih rentan SQL Injection sesuai dengan pola aplikasi Anda
+        $query = "SELECT a.id, a.date_appointment as tanggal, a.time_appointment as jam, 
+                         p.full_name as pasien, a.room as ruang, a.doctor_id
+                  FROM appointments a
+                  JOIN patients p ON a.patient_id = p.id
+                  WHERE a.doctor_id = $doctorId";
+
+        $appointments = DB::select($query);
+
+        return [
+            'success' => true,
+            'appointments' => $appointments
         ];
     }
 }

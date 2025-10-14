@@ -1,66 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DoctorDaftarPasien.css';
+import { doctorService } from '../../../services/doctorService';
+import { authService } from '../../../services/authService';
 
-// --- DUMMY DATA ---
-const CURRENT_DOCTOR_ID = 'DR001'; 
-
-const allPatients = [
-  { 
-    id: 'P001', 
-    nama: 'Budi Hartono', 
-    foto: 'https://via.placeholder.com/150/007bff/ffffff?text=BH', 
-    deskripsiSingkat: 'Pasien aktif, riwayat alergi obat.',
-    alamat: 'Jl. Melati No. 10, Jakarta',
-    tanggalLahir: '1990-05-15',
-    jenisKelamin: 'Laki-laki',
-    telepon: '081234567890',
-    email: 'budi.h@example.com',
-    janjiTemuDokterIds: ['DR001', 'DR002'] // Dokter yang pernah menangani
-  },
-  { 
-    id: 'P002', 
-    nama: 'Siti Aminah', 
-    foto: 'https://via.placeholder.com/150/28a745/ffffff?text=SA', 
-    deskripsiSingkat: 'Memiliki riwayat diabetes tipe 2.',
-    alamat: 'Jl. Kenanga No. 5, Bandung',
-    tanggalLahir: '1978-11-20',
-    jenisKelamin: 'Perempuan',
-    telepon: '085678901234',
-    email: 'siti.a@example.com',
-    janjiTemuDokterIds: ['DR001'] // Dokter yang pernah menangani
-  },
-  { 
-    id: 'P003', 
-    nama: 'Rudi Santoso', 
-    foto: 'https://via.placeholder.com/150/ffc107/333333?text=RS', 
-    deskripsiSingkat: 'Pasien baru, keluhan nyeri sendi.',
-    alamat: 'Jl. Anggrek No. 22, Surabaya',
-    tanggalLahir: '1995-03-01',
-    jenisKelamin: 'Laki-laki',
-    telepon: '087812345678',
-    email: 'rudi.s@example.com',
-    janjiTemuDokterIds: ['DR003'] // Dokter yang pernah menangani
-  },
-];
+// Ambil ID dokter dari auth (atau context)
+const CURRENT_DOCTOR_ID = authService.getCurrentUser()?.id || 'DR001';
 
 const DoctorDaftarPasien = () => {
   const navigate = useNavigate();
-  // Filter pasien yang pernah janji temu dengan dokter yang sedang login
+
   const [myPatients, setMyPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Di sini Anda akan fetch data dari API jika ada database
-    // Untuk dummy, kita filter langsung
-    const filteredPatients = allPatients.filter(patient => 
-      patient.janjiTemuDokterIds.includes(CURRENT_DOCTOR_ID)
-    );
-    setMyPatients(filteredPatients);
-  }, []); // Hanya berjalan sekali saat komponen dimount
+    const fetchPatients = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Ambil janji temu dokter dari backend
+        const response = await doctorService.getAppointments(CURRENT_DOCTOR_ID);
+        if (response.success && Array.isArray(response.appointments)) {
+          // Map janji temu ke data pasien unik
+          const patientsMap = {};
+          response.appointments.forEach(app => {
+            if (app.pasien_id && !patientsMap[app.pasien_id]) {
+              patientsMap[app.pasien_id] = {
+                id: app.pasien_id,
+                nama: app.pasien,
+                foto: '', // Tambahkan jika backend support foto
+                deskripsiSingkat: app.catatan || '',
+                alamat: app.alamat || '',
+                tanggalLahir: app.tanggal_lahir || '',
+                jenisKelamin: app.jenis_kelamin || '',
+                telepon: app.telepon || '',
+                email: app.email || '',
+              };
+            }
+          });
+          setMyPatients(Object.values(patientsMap));
+        } else {
+          setMyPatients([]);
+        }
+      } catch (err) {
+        setError('Gagal memuat data pasien.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPatients();
+  }, []);
 
   const handlePatientCardClick = (patientId) => {
     navigate(`/dokter/pasien/${patientId}`);
   };
+
+  if (loading) return <div className="doctor-daftar-pasien-container"><p>Loading...</p></div>;
+  if (error) return <div className="doctor-daftar-pasien-container"><p style={{color:'red'}}>{error}</p></div>;
 
   return (
     <div className="doctor-daftar-pasien-container">
@@ -75,7 +72,7 @@ const DoctorDaftarPasien = () => {
               className="patient-card"
               onClick={() => handlePatientCardClick(patient.id)}
             >
-              <img src={patient.foto} alt={patient.nama} className="patient-photo" />
+              <img src={patient.foto || 'https://via.placeholder.com/150/007bff/ffffff?text=PS'} alt={patient.nama} className="patient-photo" />
               <div className="patient-info">
                 <h3 className="patient-name">{patient.nama}</h3>
                 <p className="patient-description">{patient.deskripsiSingkat}</p>
