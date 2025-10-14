@@ -8,7 +8,11 @@ class RoomService
 {
     public function listRooms()
     {
-        $rooms = DB::select('SELECT id, name, available FROM rooms');
+        // FIXED: Use query builder
+        $rooms = DB::table('rooms')
+            ->select('id', 'name', 'available')
+            ->get();
+            
         return [
             'success' => true,
             'rooms' => $rooms,
