@@ -8,248 +8,228 @@ use Illuminate\Support\Facades\Log;
 class AdminService
 {
     /**
-     * VULNERABILITY 23: Privilege escalation and SQL injection
+     * VULNERABILITY: Broken Access Control - Role management without authorization
+     * INTENTIONALLY KEPT - No verification if admin has permission
      */
     public function kelolaRole($userId, $newRole, $adminId)
     {
-        // No verification if admin has permission to change roles
-        // Allows elevation to admin role
+        // Broken Access Control vulnerability kept - no permission check
+        // But FIXED: Use parameterized query
+        DB::table('users')
+            ->where('id', $userId)
+            ->update([
+                'role' => $newRole,
+                'updated_at' => now()
+            ]);
 
-        $query = "UPDATE users SET role = '$newRole' WHERE id = $userId";
-        DB::update($query);
+        // FIXED: Don't log sensitive data or expose passwords
+        $userInfo = DB::table('users')
+            ->where('id', $userId)
+            ->select('id', 'name', 'email', 'role')
+            ->first();
+            
+        Log::info("Role changed by admin", [
+            'admin_id' => $adminId,
+            'user_id' => $userId,
+            'new_role' => $newRole
+        ]);
 
-        // VULNERABILITY 24: Sensitive operation logging with user data
-        $userInfo = DB::select("SELECT * FROM users WHERE id = $userId")[0];
-        Log::info("Role changed by admin $adminId: " . json_encode($userInfo));
-
+        // FIXED: Don't expose password hash
         return [
             'success' => true,
-            'user_info' => $userInfo, // Exposes password hash
+            'user_info' => $userInfo,
             'new_role' => $newRole
         ];
     }
 
     /**
-     * VULNERABILITY 25: Information disclosure in activity monitoring
+     * FIXED: Activity monitoring without SQL injection
      */
     public function monitoringLogAktivitas($filters = [])
     {
-        $userId = $filters['user_id'] ?? '';
-        $action = $filters['action'] ?? '';
+        $userId = $filters['user_id'] ?? null;
+        $action = $filters['action'] ?? null;
         $dateFrom = $filters['date_from'] ?? '2020-01-01';
 
-        // SQL injection vulnerabilities
-        $query = "SELECT al.*, u.email, u.password, u.remember_token
-                  FROM activity_logs al
-                  JOIN users u ON al.user_id = u.id
-                  WHERE 1=1";
+        // FIXED: Use query builder to prevent SQL injection
+        $query = DB::table('activity_logs as al')
+            ->join('users as u', 'al.user_id', '=', 'u.id')
+            ->select('al.*', 'u.email', 'u.name');
 
         if ($userId) {
-            $query .= " AND al.user_id = $userId";
+            $query->where('al.user_id', $userId);
         }
 
         if ($action) {
-            $query .= " AND al.action LIKE '%$action%'";
+            $query->where('al.action', 'LIKE', '%' . $action . '%');
         }
 
-        $query .= " AND al.created_at >= '$dateFrom'";
+        $query->where('al.created_at', '>=', $dateFrom);
 
-        $logs = DB::select($query);
+        $logs = $query->get();
 
-        // VULNERABILITY 26: Exposes sensitive user data in logs
+        // FIXED: Don't expose sensitive data
         return [
             'success' => true,
             'logs' => $logs,
-            'query_executed' => $query,
             'total_logs' => count($logs)
         ];
     }
 
     /**
-     * VULNERABILITY 27: Mass role assignment without authorization
+     * VULNERABILITY: Broken Access Control - Mass role assignment without authorization
+     * INTENTIONALLY KEPT - No authorization check
      */
     public function manajemenRoleUser($operations)
     {
+        // Broken Access Control kept - no authorization check
+        // But FIXED: Use parameterized queries and limit dangerous operations
+        
         foreach ($operations as $operation) {
             $userId = $operation['user_id'];
             $role = $operation['role'];
             $action = $operation['action']; // add, remove, update
 
-            // No validation or authorization
+            // FIXED: Use proper query builder
             if ($action === 'update') {
-                $query = "UPDATE users SET role = '$role' WHERE id = $userId";
-                DB::update($query);
+                DB::table('users')
+                    ->where('id', $userId)
+                    ->update([
+                        'role' => $role,
+                        'updated_at' => now()
+                    ]);
             }
 
-            // VULNERABILITY 28: Dangerous bulk operations
-            if ($action === 'delete') {
-                // Allows deletion of any user including admins
-                $query = "DELETE FROM users WHERE id = $userId";
-                DB::delete($query);
-            }
+            // FIXED: Remove dangerous delete operation
+            // Deletion should be a separate, more protected operation
         }
 
         return [
             'success' => true,
-            'operations_performed' => $operations,
+            'operations_count' => count($operations),
             'message' => 'Bulk role management completed'
         ];
     }
 
     /**
-     * VULNERABILITY 29: Unrestricted audit log access
+     * FIXED: Audit log access without SQL injection
      */
     public function auditLogDataMgmt($table = null, $action = null)
     {
+        // FIXED: Use query builder to prevent SQL injection
+        $query = DB::table('audit_logs');
+
         if ($table) {
-            // SQL injection in table name
-            $query = "SELECT * FROM audit_logs WHERE table_name = '$table'";
-        } else {
-            // Returns ALL audit logs including sensitive operations
-            $query = "SELECT * FROM audit_logs";
+            $query->where('table_name', $table);
         }
 
         if ($action) {
-            $query .= " AND action = '$action'";
+            $query->where('action', $action);
         }
 
-        $auditLogs = DB::select($query);
+        $auditLogs = $query->get();
 
-        // VULNERABILITY 30: Exposes system internals
+        // FIXED: Don't expose database credentials
         return [
             'success' => true,
-            'audit_logs' => $auditLogs,
-            'database_info' => [
-                'host' => env('DB_HOST'),
-                'database' => env('DB_DATABASE'),
-                'username' => env('DB_USERNAME')
-            ]
+            'audit_logs' => $auditLogs
         ];
     }
 
     /**
-     * VULNERABILITY 31: API request logging with sensitive data
+     * FIXED: API request logging without SQL injection
      */
     public function loggingAPIRequest($endpoint = null, $method = null)
     {
-        $query = "SELECT * FROM api_request_logs";
-        $conditions = [];
+        // FIXED: Use query builder to prevent SQL injection
+        $query = DB::table('api_request_logs');
 
         if ($endpoint) {
-            $conditions[] = "endpoint LIKE '%$endpoint%'";
+            $query->where('endpoint', 'LIKE', '%' . $endpoint . '%');
         }
 
         if ($method) {
-            $conditions[] = "method = '$method'";
+            $query->where('method', $method);
         }
 
-        if (!empty($conditions)) {
-            $query .= " WHERE " . implode(' AND ', $conditions);
-        }
+        $apiLogs = $query->get();
 
-        $apiLogs = DB::select($query);
-
-        // VULNERABILITY 32: Exposes sensitive request data
         return [
             'success' => true,
-            'api_logs' => $apiLogs,
-            'includes_sensitive_data' => true // Passwords, tokens, etc.
+            'api_logs' => $apiLogs
         ];
     }
 
     /**
-     * VULNERABILITY 33: System monitoring without access control
+     * FIXED: System monitoring without command injection
      */
     public function monitoringBackend()
     {
-        // VULNERABILITY 34: Command injection
-        $cpuUsage = exec('top -bn1 | grep "Cpu(s)"');
-        $memoryUsage = exec('free -m');
-        $diskUsage = exec('df -h');
-
-        // VULNERABILITY 35: Information disclosure
-        $databaseStats = DB::select("
-            SELECT
-                table_name,
-                table_rows,
-                data_length,
-                index_length
-            FROM information_schema.tables
-            WHERE table_schema = DATABASE()
-        ");
+        // FIXED: Don't execute system commands, use PHP functions
+        $databaseStats = DB::table('information_schema.tables')
+            ->where('table_schema', DB::getDatabaseName())
+            ->select('table_name', 'table_rows', 'data_length', 'index_length')
+            ->get();
 
         return [
             'success' => true,
             'system_info' => [
-                'cpu_usage' => $cpuUsage,
-                'memory_usage' => $memoryUsage,
-                'disk_usage' => $diskUsage,
                 'database_stats' => $databaseStats,
-                'php_version' => phpversion(),
-                'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'
+                'php_version' => phpversion()
             ]
         ];
     }
 
     /**
-     * VULNERABILITY 36: Traffic anomaly detection bypass
+     * FIXED: Traffic anomaly detection without SQL injection
      */
     public function monitoringAnomaliTraffic($threshold = 100)
     {
-        // SQL injection in threshold
-        $query = "SELECT
-                    ip_address,
-                    COUNT(*) as request_count,
-                    user_agent,
-                    endpoint
-                  FROM api_request_logs
-                  WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
-                  GROUP BY ip_address
-                  HAVING request_count > $threshold
-                  ORDER BY request_count DESC";
+        // FIXED: Use query builder with parameter binding
+        $anomalies = DB::table('api_request_logs')
+            ->select('ip_address', DB::raw('COUNT(*) as request_count'), 'user_agent', 'endpoint')
+            ->where('created_at', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 HOUR)'))
+            ->groupBy('ip_address', 'user_agent', 'endpoint')
+            ->having('request_count', '>', $threshold)
+            ->orderBy('request_count', 'DESC')
+            ->get();
 
-        $anomalies = DB::select($query);
-
-        // VULNERABILITY 37: Exposes security monitoring details
         return [
             'success' => true,
             'anomalies' => $anomalies,
-            'threshold_used' => $threshold,
-            'monitoring_query' => $query,
-            'detection_bypassed' => true
+            'threshold_used' => $threshold
         ];
     }
 
     /**
-     * VULNERABILITY 38: Dangerous system operations
+     * FIXED: System maintenance without dangerous operations
      */
     public function systemMaintenance($operation, $parameters = [])
     {
+        // FIXED: Remove dangerous operations
         switch ($operation) {
             case 'clear_logs':
-                // Truncates ALL logs without backup
-                DB::statement("TRUNCATE TABLE activity_logs");
-                DB::statement("TRUNCATE TABLE api_request_logs");
+                // Only allow clearing old logs, not all
+                $daysToKeep = $parameters['days_to_keep'] ?? 30;
+                DB::table('activity_logs')
+                    ->where('created_at', '<', now()->subDays($daysToKeep))
+                    ->delete();
+                DB::table('api_request_logs')
+                    ->where('created_at', '<', now()->subDays($daysToKeep))
+                    ->delete();
                 break;
 
-            case 'reset_passwords':
-                // Resets ALL user passwords to default
-                $defaultPassword = 'password123';
-                DB::update("UPDATE users SET password = '$defaultPassword'");
-                break;
-
-            case 'backup_database':
-                // Command injection vulnerability
-                $filename = $parameters['filename'] ?? 'backup.sql';
-                exec("mysqldump -u root database_name > /tmp/$filename");
-                break;
+            default:
+                return [
+                    'success' => false,
+                    'message' => 'Unknown operation'
+                ];
         }
 
         return [
             'success' => true,
             'operation' => $operation,
-            'parameters' => $parameters,
-            'warning' => 'Dangerous operation completed'
+            'message' => 'Operation completed successfully'
         ];
     }
 }

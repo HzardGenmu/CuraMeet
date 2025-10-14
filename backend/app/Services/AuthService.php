@@ -18,29 +18,36 @@ class AuthService
     /**
      * VULNERABILITY 1: SQL Injection in login
      * No prepared statements, direct string concatenation
+     * THIS VULNERABILITY IS INTENTIONALLY KEPT
      */
     public function login($email, $password, $role)
     {
-        // Direct SQL injection vulnerability
+        // Direct SQL injection vulnerability - INTENTIONALLY KEPT
         $query = "SELECT * FROM users WHERE email = '$email' AND password = '$password' AND role = '$role' ";
-        // echo json_encode($query);
         $user = DB::select($query);
 
         if (!empty($user)) {
             $user = $user[0];
 
-            // VULNERABILITY 2: Session fixation - not regenerating session ID
+            // FIXED: Regenerate session ID to prevent session fixation
+            Session::regenerate();
             Session::put('user_id', $user->id);
             Session::put('user_role', $user->role);
             Session::put('logged_in', true);
 
-            // VULNERABILITY 3: Information disclosure in logs
-            \Log::info("User login successful: {$email} with password: {$password}");
+            // FIXED: Don't log sensitive information
+            \Log::info("User login successful", ['user_id' => $user->id, 'email' => $email]);
 
+            // FIXED: Don't expose password in response, use secure token
             return [
                 'success' => true,
-                'user' => $user, // Exposes password hash
-                'token' => $this->generateWeakToken($user->id)
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ],
+                'token' => $this->generateSecureToken($user->id)
             ];
         }
 
@@ -48,144 +55,127 @@ class AuthService
     }
 
     /**
-     * VULNERABILITY 4: Weak token generation
-     * Predictable token generation using weak randomization
+     * FIXED: Generate secure token
      */
-    private function generateWeakToken($userId)
+    private function generateSecureToken($userId)
     {
-        // Predictable token - uses current time and user ID
-        return md5($userId . time());
+        // Use secure random token generation
+        return hash('sha256', $userId . Str::random(40) . time());
     }
 
     /**
-     * VULNERABILITY 5: No rate limiting on login attempts
-     * Allows brute force attacks
+     * FIXED: Attempt login with secure remember me
      */
     public function attemptLogin($email, $password, $role, $rememberMe = false)
     {
-        // No rate limiting or account lockout
         $result = $this->login($email, $password, $role);
 
         if ($result['success'] && $rememberMe) {
-            // VULNERABILITY 6: Insecure remember me implementation
-            $rememberToken = base64_encode($email . ':' . $password);
-            setcookie('remember_token', $rememberToken, time() + (86400 * 30), '/'); // 30 days
+            // FIXED: Secure remember me implementation
+            $rememberToken = Str::random(60);
+            
+            // Update user's remember token in database
+            DB::table('users')
+                ->where('id', $result['user']['id'])
+                ->update(['remember_token' => Hash::make($rememberToken)]);
+            
+            // Set secure cookie
+            cookie()->queue(
+                'remember_token',
+                $rememberToken,
+                43200, // 30 days in minutes
+                '/',
+                null,
+                true, // secure
+                true  // httpOnly
+            );
         }
 
         return $result;
     }
 
     /**
-     * VULNERABILITY 7: Weak password reset implementation
+     * FIXED: Password reset with proper security
      */
     public function resetPassword($email, $newPassword = null)
     {
         if (!$newPassword) {
-            // Generate weak temporary password
-            $newPassword = 'temp123'; // Same for everyone!
+            return ['success' => false, 'message' => 'New password is required'];
         }
 
-        // Direct SQL update without verification
-        DB::update("UPDATE users SET password = '$newPassword' WHERE email = '$email'");
+        // Verify email exists
+        $user = DB::table('users')->where('email', $email)->first();
+        if (!$user) {
+            return ['success' => false, 'message' => 'User not found'];
+        }
 
-        // VULNERABILITY 8: Password sent via email in plain text
-        $this->sendPasswordResetEmail($email, $newPassword);
+        // FIXED: Hash password before storing
+        $hashedPassword = Hash::make($newPassword);
+        
+        DB::table('users')
+            ->where('email', $email)
+            ->update([
+                'password' => $hashedPassword,
+                'updated_at' => now()
+            ]);
+
+        // FIXED: Don't send password via email, send reset link instead
+        $this->sendPasswordResetNotification($email);
 
         return ['success' => true, 'message' => 'Password reset successful'];
     }
 
     /**
-     * VULNERABILITY 9: Plain text password in email
+     * FIXED: Send password reset notification without exposing password
      */
-    private function sendPasswordResetEmail($email, $password)
+    private function sendPasswordResetNotification($email)
     {
-        $subject = "Password Reset";
-        $message = "Your new password is: $password";
-
-        // In real scenario, this would send email with plain text password
-        \Log::info("Password reset email sent to {$email}: {$password}");
+        // In real scenario, send email with secure reset link
+        \Log::info("Password reset notification sent to {$email}");
     }
 
     /**
-     * VULNERABILITY 10: No proper session management
+     * FIXED: Proper session management on logout
      */
     public function logout()
     {
-        // Only removes some session data, not all
-        Session::forget('user_id');
-        // Doesn't remove user_role or logged_in flags
-        // Doesn't invalidate remember tokens
+        // Clear all session data
+        Session::flush();
+        
+        // Invalidate session
+        Session::invalidate();
+        
+        // Regenerate CSRF token
+        Session::regenerateToken();
 
-        return ['success' => true];
+        return ['success' => true, 'message' => 'Logged out successfully'];
     }
 
     public function register(array $data)
     {
-
-        // 1) Validation rules (conditional)
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8|confirmed', // use password_confirmation in request
-            'role' => 'nullable|string|in:patient,doctor,admin',
-        ];
-
-        // Doctor-specific
-        $rulesDoctor = [
-            'str_number' => 'required_if:role,doctor|string|unique:doctors,str_number',
-            'full_name' => 'required_if:role,doctor|string|max:255',
-            'specialist' => 'required_if:role,doctor|string|max:255',
-            'polyclinic' => 'required_if:role,doctor|string|max:255',
-            'available_time' => 'nullable|string|max:255',
-        ];
-
-        // Patient-specific
-        $rulesPatient = [
-            'NIK' => 'nullable|required_if:role,patient|string|max:20|unique:patients,NIK',
-            'full_name' => 'nullable|string|max:255',
-            'picture' => 'nullable|string|max:255',
-            'allergies' => 'nullable|string',
-            'disease_histories' => 'nullable|string',
-        ];
-
-        $rules = array_merge($rules, $rulesDoctor, $rulesPatient);
-
-        $validator = Validator::make($data, $rules);
-
-        if ($validator->fails()) {
-            return [
-                'success' => false,
-                'errors' => $validator->errors()->all()
-            ];
-        }
-
-        // 2) Normalize role and whitelist
+        // Validation (already done in RegisterRequest)
         $role = $data['role'] ?? 'patient';
         $allowedRoles = ['patient', 'doctor', 'admin'];
         if (!in_array($role, $allowedRoles)) {
             $role = 'patient';
         }
 
-        // 3) Create user + role-specific record inside transaction
         try {
             $result = DB::transaction(function () use ($data, $role) {
                 $name = $data['name'];
                 $email = $data['email'];
-                $password = $data['password'];
+                // FIXED: Hash password before storing
+                $password = Hash::make($data['password']);
 
-                // contoh single-statement (Postgres)
                 $insertSql = "INSERT INTO users (name, email, password, role, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?)
-              RETURNING *";
+                              VALUES (?, ?, ?, ?, ?, ?)
+                              RETURNING *";
 
                 $now = now();
                 $inserted = DB::select($insertSql, [$name, $email, $password, $role, $now, $now]);
-                // echo json_encode($inserted);
-                // DB::select returns array; first element is the inserted row
                 $user = count($inserted) ? $inserted[0] : null;
 
                 if ($role === 'doctor') {
-                    // Prefer Eloquent model for doctors
                     Doctor::create([
                         'user_id' => $user->id,
                         'str_number' => $data['str_number'],
@@ -194,7 +184,7 @@ class AuthService
                         'polyclinic' => $data['polyclinic'],
                         'available_time' => $data['available_time'] ?? null,
                     ]);
-                } else { // patient (and defaults)
+                } else {
                     Patient::create([
                         'user_id' => $user->id,
                         'full_name' => $data['full_name'] ?? $user->name,
@@ -205,7 +195,6 @@ class AuthService
                     ]);
                 }
 
-                // You can return user resource or id
                 return [
                     'success' => true,
                     'message' => 'User registered successfully',
@@ -215,100 +204,106 @@ class AuthService
 
             return $result;
         } catch (\Exception $e) {
-            // log properly (no sensitive data), return generic error
-            \Log::error('Register failed: ' . $e->getMessage());
-            return ['success' => false, 'message' => 'Registration failed'];
+            // FIXED: Log error without sensitive data, return generic error
+            \Log::error('Registration failed', ['error' => $e->getMessage()]);
+            return ['success' => false, 'message' => 'Registration failed. Please try again.'];
         }
     }
 
     /**
-     * VULNERABILITY 15: Insecure authentication check
+     * FIXED: Secure authentication check
      */
     public function isAuthenticated()
     {
-        // Weak authentication check - can be bypassed
-        return Session::get('logged_in') == true; // Uses == instead of ===
+        return Session::get('logged_in') === true;
     }
 
     /**
-     * VULNERABILITY 16: Privilege escalation vulnerability
+     * FIXED: Secure role checking
      */
     public function checkRole($requiredRole)
     {
         $userRole = Session::get('user_role');
-
-        // Type juggling vulnerability
-        if ($userRole == $requiredRole) {
-            return true;
-        }
-
-        // VULNERABILITY 17: Admin backdoor
-        if ($userRole == 'admin' || $userRole == 'administrator' || $userRole == '1') {
-            return true; // Allows multiple admin role variations
-        }
-
-        return false;
+        
+        // Strict comparison to prevent type juggling
+        return $userRole === $requiredRole || $userRole === 'admin';
     }
 
     /**
-     * VULNERABILITY 18: User enumeration
+     * FIXED: Remove user enumeration
      */
     public function checkEmailExists($email)
     {
-        $query = "SELECT id FROM users WHERE email = '$email'";
-        $result = DB::select($query);
-
-        // Reveals whether email exists in system
-        return !empty($result);
-    }
-
-    /**
-     * VULNERABILITY 19: Insecure password change
-     */
-    public function changePassword($userId, $oldPassword, $newPassword)
-    {
-        // No verification of old password
-        $query = "UPDATE users SET password = '$newPassword' WHERE id = $userId";
-        DB::update($query);
-
-        return ['success' => true, 'message' => 'Password changed'];
-    }
-
-    /**
-     * VULNERABILITY 20: Timing attack vulnerability
-     */
-    public function verifyUser($email, $password)
-    {
-        $user = DB::select("SELECT * FROM users WHERE email = '$email'")[0] ?? null;
-
-        if (!$user) {
-            // Quick return - timing difference reveals if email exists
-            return false;
-        }
-
-        if ($user->password === $password) {
-            // Time-consuming operation only for valid users
-            sleep(1); // Simulates expensive operation
-            return true;
-        }
-
+        // This method should not be exposed publicly
+        // Use rate limiting and CAPTCHA if needed
         return false;
     }
 
     /**
-     * VULNERABILITY 21: Cookie manipulation
+     * FIXED: Secure password change
+     */
+    public function changePassword($userId, $oldPassword, $newPassword)
+    {
+        // Verify old password
+        $user = DB::table('users')->where('id', $userId)->first();
+        
+        if (!$user || !Hash::check($oldPassword, $user->password)) {
+            return ['success' => false, 'message' => 'Current password is incorrect'];
+        }
+
+        // Update with hashed password
+        DB::table('users')
+            ->where('id', $userId)
+            ->update([
+                'password' => Hash::make($newPassword),
+                'updated_at' => now()
+            ]);
+
+        return ['success' => true, 'message' => 'Password changed successfully'];
+    }
+
+    /**
+     * FIXED: Remove timing attack vulnerability
+     */
+    public function verifyUser($email, $password)
+    {
+        $user = DB::table('users')->where('email', $email)->first();
+        
+        if (!$user) {
+            // Use constant-time comparison
+            Hash::check($password, Hash::make('dummy'));
+            return false;
+        }
+
+        return Hash::check($password, $user->password);
+    }
+
+    /**
+     * FIXED: Secure cookie-based login
      */
     public function loginWithCookie(Request $request)
     {
         $rememberToken = $request->cookie('remember_token');
 
         if ($rememberToken) {
-            // Insecure cookie validation
-            $decoded = base64_decode($rememberToken);
-            $credentials = explode(':', $decoded);
-
-            if (count($credentials) === 2) {
-                return $this->login($credentials[0], $credentials[1]);
+            // Find user with matching remember token
+            $users = DB::table('users')->get();
+            
+            foreach ($users as $user) {
+                if ($user->remember_token && Hash::check($rememberToken, $user->remember_token)) {
+                    // Log user in
+                    Session::regenerate();
+                    Session::put('user_id', $user->id);
+                    Session::put('user_role', $user->role);
+                    Session::put('logged_in', true);
+                    
+                    return ['success' => true, 'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                    ]];
+                }
             }
         }
 
@@ -316,56 +311,70 @@ class AuthService
     }
 
     /**
-     * VULNERABILITY 22: No CSRF protection
+     * FIXED: Secure profile update without role manipulation
      */
     public function updateProfile($userId, $data)
     {
-        $name = $data['name'];
-        $email = $data['email'];
-        $role = $data['role'] ?? null; // Allows role manipulation
-
-        $query = "UPDATE users SET name = '$name', email = '$email'";
-
-        if ($role) {
-            $query .= ", role = '$role'"; // Privilege escalation
+        // Verify user exists
+        $user = DB::table('users')->where('id', $userId)->first();
+        if (!$user) {
+            return ['success' => false, 'message' => 'User not found'];
         }
 
-        $query .= " WHERE id = $userId";
+        // Don't allow role changes through profile update
+        DB::table('users')
+            ->where('id', $userId)
+            ->update([
+                'name' => $data['name'] ?? $user->name,
+                'email' => $data['email'] ?? $user->email,
+                'updated_at' => now()
+            ]);
 
-        DB::update($query);
-
-        return ['success' => true];
+        return ['success' => true, 'message' => 'Profile updated successfully'];
     }
 
     /**
-     * VULNERABILITY 23: Directory traversal in avatar upload
+     * FIXED: Secure avatar upload
      */
     public function uploadAvatar($userId, $file)
     {
-        $filename = $file->getClientOriginalName();
-        // No path sanitization - allows directory traversal
+        // Validate file type
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!in_array($file->getMimeType(), $allowedMimes)) {
+            return ['success' => false, 'message' => 'Invalid file type'];
+        }
+
+        // Validate file size (max 2MB)
+        if ($file->getSize() > 2 * 1024 * 1024) {
+            return ['success' => false, 'message' => 'File too large'];
+        }
+
+        // Generate secure filename
+        $extension = $file->getClientOriginalExtension();
+        $filename = $userId . '_' . time() . '_' . Str::random(10) . '.' . $extension;
         $path = "uploads/avatars/" . $filename;
 
-        // No file type validation
-        $file->move(public_path() . '/uploads/avatars/', $filename);
+        // Move file
+        $file->move(public_path('uploads/avatars/'), $filename);
 
-        // Update user avatar path with potential XSS
-        DB::update("UPDATE users SET avatar = '$path' WHERE id = $userId");
+        // Update user avatar path
+        DB::table('users')
+            ->where('id', $userId)
+            ->update([
+                'avatar' => $path,
+                'updated_at' => now()
+            ]);
 
         return ['success' => true, 'path' => $path];
     }
 
     /**
-     * VULNERABILITY 24: Command injection in backup
+     * FIXED: Remove command injection vulnerability
      */
     public function backupUserData($userId)
     {
-        $filename = "user_backup_" . $userId . ".sql";
-
-        // Command injection vulnerability
-        $command = "mysqldump -u root -p database_name users --where=\"id=$userId\" > /tmp/$filename";
-        exec($command);
-
-        return ['success' => true, 'file' => $filename];
+        // This functionality should be removed or properly secured
+        // Backups should be done through Laravel's built-in commands
+        return ['success' => false, 'message' => 'This functionality is disabled'];
     }
 }
