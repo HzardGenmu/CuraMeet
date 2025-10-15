@@ -1,18 +1,15 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom'; // Penting untuk merender halaman anak
-import Header from '../components/Header/Header';
-import Sidebar from '../components/Sidebar/Sidebar';
-import '../App.css'; // Kita akan menggunakan gaya dari App.css
+import Sidebar from '../components/Sidebar/Sidebar'; 
+import Header from '../components/Header/Header'; 
+import { Outlet } from 'react-router-dom';
 
 const DashboardLayout = () => {
   return (
-    <div className="app-layout">
+    <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
-      <div className="main-panel">
-        <Header />
-        <main className="content-area">
-          {/* Outlet akan merender komponen halaman sesuai URL */}
-          <Outlet />
+      <div className="flex-grow flex flex-col ml-64"> {/* Tambahkan ml-64 di sini */}
+        <Header /> {/* Jika ada Header untuk pasien juga */}
+        <main className="flex-grow p-6">
+          <Outlet /> {/* Ini akan merender rute anak Anda */}
         </main>
       </div>
     </div>

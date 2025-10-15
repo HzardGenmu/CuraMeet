@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import './DoctorPasienDetail.css';
+
 import { IoPersonCircleOutline, IoCalendarOutline, IoPhonePortraitOutline, IoMailOutline, IoLocationOutline, IoFlaskOutline, IoChatbubblesOutline } from 'react-icons/io5';
 import { patientService } from '../../../services/patientService';
 import { doctorService } from '../../../services/doctorService';
 import { authService } from '../../../services/authService';
 
-// Impor modal untuk menambah catatan medis
+
 import AddMedicalRecordModal from '../../../components/AddMedicalRecordModal/AddMedicalRecordModal';
-
-
-
 
 const DoctorPasienDetail = () => {
   const { pasienId } = useParams();
@@ -62,9 +59,8 @@ const DoctorPasienDetail = () => {
   }, [pasienId, navigate, CURRENT_DOCTOR_ID]);
 
   if (!patient) {
-    return <div className="loading-message">Memuat data pasien...</div>;
+    return <div className="p-8 text-center text-gray-600 text-lg">Memuat data pasien...</div>;
   }
-
 
   // --- Fungsi untuk Tambah Catatan Medis ---
   const handleOpenAddNoteModal = () => {
@@ -103,88 +99,118 @@ const DoctorPasienDetail = () => {
 
   return (
     <>
-      <div className="doctor-pasien-detail-container">
-        <h1 className="page-title">Profil Pasien: {patient.nama}</h1>
-        
+      <div className="p-8 bg-gray-50 min-h-screen">
+        <h1 className="text-3xl font-semibold mb-8 text-gray-800">Profil Pasien: {patient.nama}</h1>
+
         {/* Bagian Profil Pasien */}
-        <div className="patient-profile-section">
-          <div className="profile-header">
-            <img src={patient.foto} alt={patient.nama} className="profile-photo-detail" />
-            <div className="profile-main-info">
-              <h2>{patient.nama}</h2>
-              <p className="profile-short-desc">{patient.deskripsiSingkat}</p>
+        <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
+          <div className="flex items-center border-b border-gray-200 pb-6 mb-6">
+            <img
+              src={patient.foto}
+              alt={patient.nama}
+              className="w-24 h-24 rounded-full object-cover mr-6 border-4 border-emerald-600 shadow-md"
+            />
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800 m-0">{patient.nama}</h2>
+              <p className="mt-1 text-gray-600 italic text-lg">{patient.deskripsiSingkat}</p>
             </div>
           </div>
-          <div className="profile-details-grid">
-            <div className="detail-item">
-              <IoCalendarOutline size={20} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center bg-gray-50 p-3 rounded-lg text-gray-700 text-base">
+              <IoCalendarOutline size={20} className="mr-3 text-emerald-600" />
               <span>Tanggal Lahir: {patient.tanggalLahir}</span>
             </div>
-            <div className="detail-item">
-              <IoPersonCircleOutline size={20} />
+            <div className="flex items-center bg-gray-50 p-3 rounded-lg text-gray-700 text-base">
+              <IoPersonCircleOutline size={20} className="mr-3 text-emerald-600" />
               <span>Jenis Kelamin: {patient.jenisKelamin}</span>
             </div>
-            <div className="detail-item">
-              <IoPhonePortraitOutline size={20} />
+            <div className="flex items-center bg-gray-50 p-3 rounded-lg text-gray-700 text-base">
+              <IoPhonePortraitOutline size={20} className="mr-3 text-emerald-600" />
               <span>Telepon: {patient.telepon}</span>
             </div>
-            <div className="detail-item">
-              <IoMailOutline size={20} />
+            <div className="flex items-center bg-gray-50 p-3 rounded-lg text-gray-700 text-base">
+              <IoMailOutline size={20} className="mr-3 text-emerald-600" />
               <span>Email: {patient.email}</span>
             </div>
-            <div className="detail-item full-width">
-              <IoLocationOutline size={20} />
+            <div className="flex items-center bg-gray-50 p-3 rounded-lg text-gray-700 text-base md:col-span-2">
+              <IoLocationOutline size={20} className="mr-3 text-emerald-600" />
               <span>Alamat: {patient.alamat}</span>
             </div>
           </div>
         </div>
 
-        {/* Bagian Rekam Medis (Hasil Lab, Rontgen, dll.) */}
-        <div className="section-header">
-          <IoFlaskOutline size={25} />
-          <h2 className="section-title">Rekam Medis Digital</h2>
+        {/* Bagian Rekam Medis Digital (Hasil Lab, Rontgen, dll.) */}
+        <div className="flex items-center mt-12 mb-6 text-emerald-600">
+          <IoFlaskOutline size={25} className="mr-3" />
+          <h2 className="text-2xl font-semibold text-gray-800 m-0">Rekam Medis Digital</h2>
         </div>
-        <div className="rekam-medis-grid">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
           {patientMedicalRecords.length > 0 ? (
             patientMedicalRecords.map(record => (
-              <div key={record.id} className="rekam-medis-card">
-                <h3>{record.judul}</h3>
-                <p>Tanggal: {record.tanggal}</p>
-                <p>Tipe: {record.type}</p>
-                {/* Di sini Anda bisa menambahkan tombol untuk melihat/mengunduh file */}
-                <a href={record.fileUrl} target="_blank" rel="noopener noreferrer" className="btn-view-record">
+              <div key={record.id} className="bg-white rounded-xl shadow-md p-5 flex flex-col justify-between
+                                           hover:transform hover:translate-y-[-3px] hover:shadow-lg transition duration-200 ease-in-out">
+                <div>
+                  <h3 className="text-xl font-semibold mb-2 text-gray-800">{record.judul}</h3>
+                  <p className="text-gray-600 text-sm mb-1">Tanggal: {record.tanggal}</p>
+                  <p className="text-gray-600 text-sm">Tipe: {record.type}</p>
+                </div>
+                <a
+                  href={record.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 block bg-emerald-600 text-white py-2 px-4 rounded-lg text-center text-sm font-medium
+                             hover:bg-emerald-700 transition duration-200 ease-in-out"
+                >
                   Lihat Rekam Medis
                 </a>
               </div>
             ))
           ) : (
-            <p className="no-records-message">Tidak ada rekam medis digital untuk pasien ini.</p>
+            <p className="col-span-full text-center text-gray-600 italic p-5 bg-gray-100 rounded-lg mb-8">
+              Tidak ada rekam medis digital untuk pasien ini.
+            </p>
           )}
         </div>
 
         {/* Bagian Catatan Medis Dokter */}
-        <div className="section-header">
-          <IoChatbubblesOutline size={25} />
-          <h2 className="section-title">Catatan Medis Anda untuk Pasien Ini</h2>
+        <div className="flex items-center mt-12 mb-6 text-emerald-600">
+          <IoChatbubblesOutline size={25} className="mr-3" />
+          <h2 className="text-2xl font-semibold text-gray-800 m-0">Catatan Medis Anda untuk Pasien Ini</h2>
         </div>
-        <div className="catatan-medis-grid">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
           {patientMedicalNotes.length > 0 ? (
             patientMedicalNotes.map(note => (
-              <div key={note.id} className="catatan-card-detail"> {/* Gunakan gaya card berbeda jika perlu */}
-                <p className="note-date"><strong>Tanggal:</strong> {note.tanggal}</p>
-                <p><strong>Dokter:</strong> {note.dokter}</p>
-                <p><strong>Diagnosa:</strong> {note.diagnosis}</p>
-                {note.resepObat && <p><strong>Resep Obat:</strong> {note.resepObat}</p>}
+              <div key={note.id} className="bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-5">
+                <p className="text-sm text-gray-500 mb-4 pb-2 border-b border-dashed border-gray-200">
+                  <strong className="text-gray-600">Tanggal:</strong> {note.tanggal}
+                </p>
+                <p className="text-gray-700 text-base mb-2">
+                  <strong className="text-emerald-600">Dokter:</strong> {note.dokter}
+                </p>
+                <p className="text-gray-700 text-base mb-2">
+                  <strong className="text-emerald-600">Diagnosa:</strong> {note.diagnosis}
+                </p>
+                {note.resepObat && (
+                  <p className="text-gray-700 text-base">
+                    <strong className="text-emerald-600">Resep Obat:</strong> {note.resepObat}
+                  </p>
+                )}
               </div>
             ))
           ) : (
-            <p className="no-records-message">Belum ada catatan medis dari Anda untuk pasien ini.</p>
+            <p className="col-span-full text-center text-gray-600 italic p-5 bg-gray-100 rounded-lg mb-8">
+              Belum ada catatan medis dari Anda untuk pasien ini.
+            </p>
           )}
         </div>
 
         {/* Tombol Tambah Catatan Medis */}
-        <div className="add-note-action">
-          <button className="btn-primary" onClick={handleOpenAddNoteModal}>
+        <div className="text-center mt-12 mb-8">
+          <button
+            className="px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg
+                       hover:bg-blue-700 transition duration-300 ease-in-out"
+            onClick={handleOpenAddNoteModal}
+          >
             Tambahkan Catatan Medis Baru
           </button>
         </div>
