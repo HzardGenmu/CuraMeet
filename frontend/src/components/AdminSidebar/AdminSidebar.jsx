@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { IoShieldOutline, IoPeopleOutline, IoLogOutOutline, IoDocumentTextOutline, IoAnalyticsOutline, IoServer } from 'react-icons/io5'; // Pastikan ikon ini terinstal
-import '../Sidebar/Sidebar.css'; // INI PENTING: Menggunakan CSS yang sama
+import { IoShieldOutline, IoPeopleOutline, IoLogOutOutline, IoDocumentTextOutline, IoAnalyticsOutline, IoServer } from 'react-icons/io5';
 import ConfirmationModal from '../ConfirmationModal/ConfirmationModal';
 
 const AdminSidebar = () => {
@@ -13,8 +12,8 @@ const AdminSidebar = () => {
   };
 
   const confirmLogout = () => {
-    localStorage.removeItem('adminAuthToken'); 
-    navigate('/login'); 
+    localStorage.removeItem('adminAuthToken');
+    navigate('/login');
     setShowLogoutModal(false);
   };
 
@@ -24,43 +23,74 @@ const AdminSidebar = () => {
 
   return (
     <>
-      <aside className="sidebar"> {/* Kelas CSS utama */}
-        <div className="sidebar-profile"> {/* Kelas CSS profil */}
-          <IoShieldOutline size={60} className="profile-avatar" /> {/* Ikon & kelas avatar */}
-          <h3 className="profile-title">Admin</h3> {/* Kelas judul profil */}
+      {/* Tambahkan 'fixed', 'top-0', 'left-0', dan 'z-40' (atau nilai z-index yang sesuai) */}
+      <aside className="w-64 bg-slate-800 text-white flex flex-col h-screen shadow-lg fixed top-0 left-0 z-40">
+        {/* Profile Section (fixed at top) */}
+        <div className="flex flex-col items-center justify-center p-6 border-b border-slate-700">
+          <IoShieldOutline size={72} className="text-slate-300 mb-3" />
+          <h3 className="text-xl font-semibold text-white">Admin</h3>
         </div>
-        <nav className="sidebar-nav"> {/* Kelas navigasi */}
-          <ul>
+
+        {/* Navigation Section (scrollable, fills remaining space) */}
+        <nav className="flex-grow p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800">
+          <ul className="space-y-2">
             <li>
-              {/* Pastikan struktur NavLink konsisten, termasuk ikon jika digunakan di sidebar lain */}
-              <NavLink to="/admin/kelola-role">
-                <IoPeopleOutline size={22} className="nav-icon" /> Kelola Role
+              <NavLink
+                to="/admin/kelola-role"
+                className={({ isActive }) =>
+                  `flex items-center p-3 rounded-lg text-lg hover:bg-slate-700 transition-colors duration-200
+                  ${isActive ? 'bg-slate-700 font-bold text-teal-300' : 'text-slate-100'}`
+                }
+              >
+                <IoPeopleOutline size={22} className="mr-3" /> Kelola Role
               </NavLink>
             </li>
             <li>
-                <NavLink to="/admin/log-viewer">
-                    <IoDocumentTextOutline size={22} className="nav-icon" /> Log Aktivitas
-                </NavLink>
-            </li>
-             <li>
-              
-              <NavLink to="/admin/system-monitoring">
-                <IoAnalyticsOutline className="nav-icon" /> Monitoring Sistem
+              <NavLink
+                to="/admin/log-viewer"
+                className={({ isActive }) =>
+                  `flex items-center p-3 rounded-lg text-lg hover:bg-slate-700 transition-colors duration-200
+                  ${isActive ? 'bg-slate-700 font-bold text-teal-300' : 'text-slate-100'}`
+                }
+              >
+                <IoDocumentTextOutline size={22} className="mr-3" /> Log Aktivitas
               </NavLink>
             </li>
             <li>
-              
-              <NavLink to="/admin/data-management">
-                <IoServer className="nav-icon" /> Manajemen Data
+              <NavLink
+                to="/admin/system-monitoring"
+                className={({ isActive }) =>
+                  `flex items-center p-3 rounded-lg text-lg hover:bg-slate-700 transition-colors duration-200
+                  ${isActive ? 'bg-slate-700 font-bold text-teal-300' : 'text-slate-100'}`
+                }
+              >
+                <IoAnalyticsOutline size={22} className="mr-3" /> Monitoring Sistem
               </NavLink>
             </li>
             <li>
-              <button onClick={handleLogout} className="logout-button"> {/* Kelas tombol logout */}
-                <IoLogOutOutline size={22} className="logout-icon" /> Logout
-              </button>
+              <NavLink
+                to="/admin/data-management"
+                className={({ isActive }) =>
+                  `flex items-center p-3 rounded-lg text-lg hover:bg-slate-700 transition-colors duration-200
+                  ${isActive ? 'bg-slate-700 font-bold text-teal-300' : 'text-slate-100'}`
+                }
+              >
+                <IoServer size={22} className="mr-3" /> Manajemen Data
+              </NavLink>
             </li>
+            {/* Tambahkan item navigasi lainnya di sini jika ada */}
           </ul>
         </nav>
+
+        {/* Logout Section (fixed at bottom) */}
+        <div className="p-4 border-t border-slate-700 mt-auto">
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full p-3 rounded-lg text-lg text-red-300 hover:bg-red-700 hover:text-white transition-colors duration-200"
+          >
+            <IoLogOutOutline size={22} className="mr-3" /> Logout
+          </button>
+        </div>
       </aside>
       <ConfirmationModal
         show={showLogoutModal}

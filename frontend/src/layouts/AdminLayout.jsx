@@ -1,17 +1,19 @@
-// src/layouts/AdminLayout.js
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import Header from '../components/Header/Header'; // Impor Header
 import AdminSidebar from '../components/AdminSidebar/AdminSidebar';
-import '../App.css'; // Impor gaya layout utama
+import Header from '../components/Header/Header'; // Pastikan path ini benar
+import { Outlet } from 'react-router-dom';
 
 const AdminLayout = () => {
   return (
-    <div className="app-layout"> {/* Gunakan kelas layout yang sama */}
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar tetap fixed di kiri */}
       <AdminSidebar />
-      <div className="main-panel"> {/* Gunakan panel utama yang sama */}
-        <Header /> {/* Tambahkan Header di sini */}
-        <main className="content-area"> {/* Area konten yang sama */}
+
+      
+      <div className="flex-grow flex flex-col ml-64"> 
+        
+        <Header /> 
+
+        <main className="flex-grow p-6"> 
           <Outlet />
         </main>
       </div>

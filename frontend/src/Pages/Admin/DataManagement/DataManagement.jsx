@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import './DataManagement.css';
 import { IoSearchOutline, IoAddCircleOutline, IoPencilOutline, IoTrashOutline } from 'react-icons/io5';
-import ConfirmationModal from '../../../components/ConfirmationModal/ConfirmationModal'; // Pastikan path benar
-import DataFormModal from '../../../components/DataFormModal/DataFormModal'; // Impor modal baru
+import ConfirmationModal from '../../../components/ConfirmationModal/ConfirmationModal'; 
+import DataFormModal from '../../../components/DataFormModal/DataFormModal'; 
 
 // --- DUMMY DATA ---
 const initialPatients = [
@@ -107,120 +106,145 @@ const DataManagement = () => {
   };
 
   return (
-    <div className="data-management-container">
-      <h1 className="page-title">Manajemen Data Pasien</h1>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
+        <h1 className="text-3xl font-semibold mb-8 text-gray-800 text-center">Manajemen Data Pasien</h1>
 
-      <div className="controls-section">
-        <div className="search-filter-group">
-          <div className="search-bar">
-            <IoSearchOutline size={20} className="search-icon" />
-            <input
-              type="text"
-              placeholder="Cari pasien (ID, Nama, Email, Telepon)..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-          </div>
-          <select value={filterStatus} onChange={(e) => {setFilterStatus(e.target.value); setCurrentPage(1);}} className="filter-select">
-            <option value="Semua">Semua Status</option>
-            <option value="Aktif">Aktif</option>
-            <option value="Nonaktif">Nonaktif</option>
-          </select>
-        </div>
-        <button className="btn-primary add-data-btn" onClick={handleAddItem}>
-          <IoAddCircleOutline /> Tambah Pasien Baru
-        </button>
-      </div>
-
-      <div className="data-table-wrapper">
-        {currentData.length > 0 ? (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ID Pasien</th>
-                <th>Nama</th>
-                <th>Email</th>
-                <th>Telepon</th>
-                <th>Status</th>
-                <th className="action-column">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentData.map(item => (
-                <tr key={item.id}>
-                  <td>{item.id}</td>
-                  <td>{item.name}</td>
-                  <td>{item.email}</td>
-                  <td>{item.phone}</td>
-                  <td>
-                    <span className={`status-badge ${item.status.toLowerCase()}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="action-column">
-                    <button className="btn-action edit" onClick={() => handleEditItem(item)}>
-                      <IoPencilOutline />
-                    </button>
-                    <button className="btn-action delete" onClick={() => handleDeleteItem(item)}>
-                      <IoTrashOutline />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="no-data-message">Tidak ada data pasien yang ditemukan.</p>
-        )}
-      </div>
-
-      {filteredData.length > DATA_PER_PAGE && (
-        <div className="pagination-controls">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="pagination-btn"
-          >
-            Previous
-          </button>
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => handlePageChange(index + 1)}
-              className={`pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-grow w-full md:w-auto">
+            <div className="flex items-center bg-white border border-gray-300 rounded-lg py-2 px-4 shadow-sm flex-grow min-w-[250px] focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all duration-200">
+              <IoSearchOutline size={20} className="text-gray-500 mr-3" />
+              <input
+                type="text"
+                placeholder="Cari pasien (ID, Nama, Email, Telepon)..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="flex-grow border-none outline-none text-base text-gray-700 placeholder-gray-400"
+              />
+            </div>
+            <select
+              value={filterStatus}
+              onChange={(e) => {setFilterStatus(e.target.value); setCurrentPage(1);}}
+              className="p-2.5 border border-gray-300 rounded-lg text-base bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 min-w-[150px]"
             >
-              {index + 1}
-            </button>
-          ))}
+              <option value="Semua">Semua Status</option>
+              <option value="Aktif">Aktif</option>
+              <option value="Nonaktif">Nonaktif</option>
+            </select>
+          </div>
           <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="pagination-btn"
+            className="flex items-center gap-2 bg-emerald-600 text-white
+                       py-2.5 px-6 rounded-lg font-medium text-base w-full md:w-auto
+                       hover:bg-emerald-700 transition-all duration-300 ease-in-out"
+            onClick={handleAddItem}
           >
-            Next
+            <IoAddCircleOutline className="text-xl" /> Tambah Pasien Baru
           </button>
         </div>
-      )}
 
-      {/* Confirmation Modal */}
-      <ConfirmationModal
-        show={showConfirmationModal}
-        title="Konfirmasi Hapus Data"
-        message={`Apakah Anda yakin ingin menghapus data pasien "${itemToDelete?.name}" (${itemToDelete?.id})?`}
-        onConfirm={confirmDelete}
-        onCancel={cancelDelete}
-      />
+        <div className="max-h-[600px] overflow-y-auto border border-gray-200 rounded-xl bg-white shadow-md mb-8">
+          {currentData.length > 0 ? (
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 bg-gray-50 z-10">
+                <tr>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">ID Pasien</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Nama</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Email</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Telepon</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Status</th>
+                  <th className="py-3 px-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200 w-[120px]">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentData.map(item => (
+                  <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-150 ease-in-out">
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">{item.id}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">{item.name}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">{item.email}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">{item.phone}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white min-w-[70px] inline-block text-center
+                                      ${item.status.toLowerCase() === 'aktif' ? 'bg-green-600' : 'bg-gray-500'}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center text-sm text-gray-800 border-b border-gray-100 whitespace-nowrap">
+                      <button
+                        className="text-blue-600 hover:bg-blue-100 p-2 rounded-md transition-colors duration-200 mx-1"
+                        onClick={() => handleEditItem(item)}
+                      >
+                        <IoPencilOutline size={18} />
+                      </button>
+                      <button
+                        className="text-red-600 hover:bg-red-100 p-2 rounded-md transition-colors duration-200 mx-1"
+                        onClick={() => handleDeleteItem(item)}
+                      >
+                        <IoTrashOutline size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-center p-8 text-gray-600 italic text-base">Tidak ada data pasien yang ditemukan.</p>
+          )}
+        </div>
 
-      {/* Data Form Modal (Add/Edit) */}
-      <DataFormModal
-        show={showFormModal}
-        onClose={() => setShowFormModal(false)}
-        onSave={handleSaveData}
-        initialData={dataToEdit}
-      />
+        {filteredData.length > DATA_PER_PAGE && (
+          <div className="flex justify-center items-center mt-6">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="py-2 px-4 border border-gray-300 rounded-lg mx-1
+                         bg-white text-gray-700 text-sm cursor-pointer
+                         hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              Previous
+            </button>
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => handlePageChange(index + 1)}
+                className={`py-2 px-4 border border-gray-300 rounded-lg mx-1 text-sm
+                            ${currentPage === index + 1 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-700 hover:bg-gray-100'}
+                            transition-all duration-200`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="py-2 px-4 border border-gray-300 rounded-lg mx-1
+                         bg-white text-gray-700 text-sm cursor-pointer
+                         hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              Next
+            </button>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          show={showConfirmationModal}
+          title="Konfirmasi Hapus Data"
+          message={`Apakah Anda yakin ingin menghapus data pasien "${itemToDelete?.name}" (${itemToDelete?.id})?`}
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
+
+        {/* Data Form Modal (Add/Edit) */}
+        <DataFormModal
+          show={showFormModal}
+          onClose={() => setShowFormModal(false)}
+          onSave={handleSaveData}
+          initialData={dataToEdit}
+        />
+      </div>
     </div>
   );
 };

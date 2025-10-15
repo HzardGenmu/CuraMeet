@@ -64,7 +64,7 @@ function App() {
         </Route>
 
         {/* Rute Default saat membuka root */}
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to="/register" />} />
       </Routes>
     </div>
   );

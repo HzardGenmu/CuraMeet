@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
-import "./Login.css";
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -34,7 +34,6 @@ const Login = () => {
     }
   };
 
-  // Ganti baris 20-35 dengan ini:
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -51,7 +50,6 @@ const Login = () => {
       console.log("Login response:", response); // 🔍 Debug log
 
       if (response.success === true) {
-        // ✅ Perbaikan kondisi
         // Store both user and token
         if (response.user) {
           localStorage.setItem("userInfo", JSON.stringify(response.user));
@@ -85,25 +83,35 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <h1 className="main-title">CuraMeet</h1>
-      <div className="login-card">
-        <h2 className="card-title">Login</h2>
+    
+    <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-300 p-4 box-border"> {/* Warna hijau muda disesuaikan */}
+     
+      <h1 className="text-6xl font-bold text-emerald-800 mb-8 mt-12 md:mt-0">CuraMeet</h1> {/* Ukuran dan warna disesuaikan */}
+
+      
+      <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-10 text-center custom-shadow"> {/* custom-shadow akan dibuat di tailwind.config.js */}
+        
+        <h2 className="text-3xl font-semibold text-gray-800 mb-6">Login</h2> {/* Ukuran dan warna disesuaikan */}
+
         <form
           onSubmit={handleSubmit}
-          className="login-form"
+          className="space-y-6" 
           aria-disabled={loading}
         >
           {error && (
-            <div className="error-message" role="alert" tabIndex={-1}>
+            
+            <div className="bg-red-100 text-red-700 border border-red-700 px-4 py-2 rounded mb-4 text-sm flex items-center" role="alert" tabIndex={-1}>
               <span>⚠️ {error}</span>
             </div>
           )}
 
-          <div className="form-group">
-            <label htmlFor="email">
-              Email<span className="required-star">*</span>
+          
+          <div>
+            
+            <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-700 text-left">
+              Email<span className="text-red-500">*</span>
             </label>
+           
             <input
               type="email"
               id="email"
@@ -113,12 +121,13 @@ const Login = () => {
               disabled={loading}
               autoComplete="username"
               placeholder="Enter your email"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">
-              Password<span className="required-star">*</span>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-700 text-left">
+              Password<span className="text-red-500">*</span>
             </label>
             <input
               type="password"
@@ -129,12 +138,13 @@ const Login = () => {
               disabled={loading}
               autoComplete="current-password"
               placeholder="Enter your password"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="role">
-              Role<span className="required-star">*</span>
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium mb-2 text-gray-700 text-left">
+              Role<span className="text-red-500">*</span>
             </label>
             <select
               id="role"
@@ -142,6 +152,7 @@ const Login = () => {
               onChange={(e) => setRole(e.target.value)}
               required
               disabled={loading}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             >
               <option value="patient">Patient</option>
               <option value="doctor">Doctor</option>
@@ -149,38 +160,48 @@ const Login = () => {
             </select>
           </div>
 
-          <div className="form-group checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                disabled={loading}
-              />
-              Remember me
-            </label>
+          
+          <div className="flex items-center text-left"> {/* text-left ditambahkan untuk label */}
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              disabled={loading}
+              className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label className="text-sm text-gray-700">Remember me</label>
           </div>
 
-          <button type="submit" className="login-button" disabled={loading}>
+         
+          <button
+            type="submit"
+            className="w-full py-3 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition ease-in-out duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg" // Ukuran font dan transisi disesuaikan
+            disabled={loading}
+          >
             {loading ? (
               <span>
-                <span className="spinner" /> Logging in...
+                
+                <span className="inline-block w-5 h-5 mr-3 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin align-middle" /> Logging in...
               </span>
             ) : (
               "Login"
             )}
           </button>
         </form>
-        <Link to="/register" className="login-link" tabIndex={loading ? -1 : 0}>
-          Don't have an account? Register
-        </Link>
-        <Link
-          to="/reset-password"
-          className="login-link"
-          tabIndex={loading ? -1 : 0}
-        >
-          Forgot password?
-        </Link>
+
+        <div className="flex flex-col items-center mt-6 space-y-3"> {/* space-y-2 menjadi space-y-3 dan mt-4 menjadi mt-6 */}
+          
+          <Link to="/register" className="text-blue-600 hover:underline text-base font-medium" tabIndex={loading ? -1 : 0}>
+            Don't have an account? Register
+          </Link>
+          <Link
+            to="/reset-password"
+            className="text-blue-600 hover:underline text-base font-medium"
+            tabIndex={loading ? -1 : 0}
+          >
+            Forgot password?
+          </Link>
+        </div>
       </div>
     </div>
   );

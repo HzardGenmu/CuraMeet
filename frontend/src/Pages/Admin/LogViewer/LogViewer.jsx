@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import './LogViewer.css';
+// Hapus import './LogViewer.css';
 import { IoSearchOutline, IoDownloadOutline, IoFilterOutline } from 'react-icons/io5';
 import DatePicker from 'react-datepicker'; // Untuk pemilih tanggal
-import 'react-datepicker/dist/react-datepicker.css'; // Gaya default datepicker
+import 'react-datepicker/dist/react-datepicker.css'; // Gaya default datepicker (tetap dipertahankan)
 import { format } from 'date-fns'; // Untuk format tanggal
 
 // --- DUMMY DATA ---
@@ -121,155 +121,184 @@ const LogViewer = () => {
 
 
   return (
-    <div className="log-viewer-container">
-      <h1 className="page-title">Monitoring Log & Audit Aktivitas</h1>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
+        <h1 className="text-3xl font-semibold mb-8 text-gray-800 text-center">Monitoring Log & Audit Aktivitas</h1>
 
-      <div className="filters-section">
-        <div className="filter-group">
-          <label>Periode Waktu</label>
-          <div className="date-range-picker">
-            <DatePicker
-              selected={startDate}
-              onChange={(date) => setStartDate(date)}
-              selectsStart
-              startDate={startDate}
-              endDate={endDate}
-              placeholderText="Dari Tanggal"
-              className="date-input"
-              dateFormat="dd/MM/yyyy"
-              isClearable
-            />
-            <DatePicker
-              selected={endDate}
-              onChange={(date) => setEndDate(date)}
-              selectsEnd
-              startDate={startDate}
-              endDate={endDate}
-              minDate={startDate}
-              placeholderText="Sampai Tanggal"
-              className="date-input"
-              dateFormat="dd/MM/yyyy"
-              isClearable
-            />
+        <div className="flex flex-wrap gap-x-6 gap-y-4 mb-8 p-6 bg-gray-50 rounded-lg shadow-inner justify-between items-end">
+          <div className="flex flex-col flex-1 min-w-[200px] sm:min-w-[220px]">
+            <label htmlFor="date-start" className="block mb-2 font-medium text-gray-600 text-sm">Periode Waktu</label>
+            <div className="flex flex-wrap gap-2">
+              <DatePicker
+                selected={startDate}
+                onChange={(date) => {setStartDate(date); setCurrentPage(1);}}
+                selectsStart
+                startDate={startDate}
+                endDate={endDate}
+                placeholderText="Dari Tanggal"
+                className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                dateFormat="dd/MM/yyyy"
+                isClearable
+                id="date-start"
+              />
+              <DatePicker
+                selected={endDate}
+                onChange={(date) => {setEndDate(date); setCurrentPage(1);}}
+                selectsEnd
+                startDate={startDate}
+                endDate={endDate}
+                minDate={startDate}
+                placeholderText="Sampai Tanggal"
+                className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                dateFormat="dd/MM/yyyy"
+                isClearable
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="filter-group">
-          <label>Filter Jenis Log</label>
-          <select value={filterType} onChange={(e) => {setFilterType(e.target.value); setCurrentPage(1);}} className="filter-select">
-            <option value="Semua">Semua Log</option>
-            <option value="activity">Log Aktivitas Pengguna</option>
-            <option value="audit">Log Audit & Keamanan</option>
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label>Filter Aksi</label>
-          <select value={filterAction} onChange={(e) => {setFilterAction(e.target.value); setCurrentPage(1);}} className="filter-select">
-            <option value="Semua">Semua Aksi</option>
-            {ALL_LOG_TYPES.map(type => (
-              <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label>Filter Pengguna</label>
-          <select value={filterUser} onChange={(e) => {setFilterUser(e.target.value); setCurrentPage(1);}} className="filter-select">
-            {ALL_USERS_FOR_FILTER.map(user => (
-              <option key={user} value={user}>{user}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="search-group">
-          <label>Cari (Pengguna, Aksi, IP...)</label>
-          <div className="search-input-wrapper">
-            <IoSearchOutline className="search-icon" />
-            <input
-              type="text"
-              placeholder="Cari log..."
-              value={searchTerm}
-              onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}}
-              className="search-input"
-            />
+          <div className="flex flex-col flex-1 min-w-[150px]">
+            <label htmlFor="filter-type" className="block mb-2 font-medium text-gray-600 text-sm">Filter Jenis Log</label>
+            <select
+              id="filter-type"
+              value={filterType}
+              onChange={(e) => {setFilterType(e.target.value); setCurrentPage(1);}}
+              className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+            >
+              <option value="Semua">Semua Log</option>
+              <option value="activity">Log Aktivitas Pengguna</option>
+              <option value="audit">Log Audit & Keamanan</option>
+            </select>
           </div>
-        </div>
-      </div>
 
-      <div className="log-table-wrapper">
-        {currentLogs.length > 0 ? (
-          <table className="log-table">
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Pengguna</th>
-                <th>Aksi</th>
-                <th>Detail</th>
-                <th>Status</th>
-                <th>IP Address</th>
-                <th>Tipe</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentLogs.map(log => (
-                <tr key={log.id}>
-                  <td>{format(log.timestamp, 'yyyy-MM-dd HH:mm:ss')}</td>
-                  <td>{log.user}</td>
-                  <td>{log.action.replace(/_/g, ' ')}</td>
-                  <td>{log.detail}</td>
-                  <td>
-                    <span className={`log-status ${log.status.toLowerCase()}`}>
-                      {log.status}
-                    </span>
-                  </td>
-                  <td>{log.ipAddress}</td>
-                  <td>
-                    <span className={`log-type ${log.type}`}>
-                      {log.type === 'activity' ? 'Aktivitas' : 'Audit'}
-                    </span>
-                  </td>
-                </tr>
+          <div className="flex flex-col flex-1 min-w-[150px]">
+            <label htmlFor="filter-action" className="block mb-2 font-medium text-gray-600 text-sm">Filter Aksi</label>
+            <select
+              id="filter-action"
+              value={filterAction}
+              onChange={(e) => {setFilterAction(e.target.value); setCurrentPage(1);}}
+              className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+            >
+              <option value="Semua">Semua Aksi</option>
+              {ALL_LOG_TYPES.map(type => (
+                <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>
               ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="no-logs-message">Tidak ada log yang ditemukan dengan kriteria ini.</p>
-        )}
-      </div>
-
-      <div className="table-footer">
-        {filteredAndSearchedLogs.length > 0 && (
-          <div className="pagination-controls">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="pagination-btn"
-            >
-              Previous
-            </button>
-            {[...Array(totalPages)].map((_, index) => (
-              <button
-                key={index + 1}
-                onClick={() => handlePageChange(index + 1)}
-                className={`pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="pagination-btn"
-            >
-              Next
-            </button>
+            </select>
           </div>
-        )}
 
-        <button onClick={handleExportLogs} className="btn-export">
-          <IoDownloadOutline className="export-icon" /> Ekspor Data
-        </button>
+          <div className="flex flex-col flex-1 min-w-[150px]">
+            <label htmlFor="filter-user" className="block mb-2 font-medium text-gray-600 text-sm">Filter Pengguna</label>
+            <select
+              id="filter-user"
+              value={filterUser}
+              onChange={(e) => {setFilterUser(e.target.value); setCurrentPage(1);}}
+              className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+            >
+              {ALL_USERS_FOR_FILTER.map(user => (
+                <option key={user} value={user}>{user}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col flex-2 min-w-[250px] sm:min-w-[300px]">
+            <label htmlFor="search-log" className="block mb-2 font-medium text-gray-600 text-sm">Cari (Pengguna, Aksi, IP...)</label>
+            <div className="flex items-center border border-gray-300 rounded-lg px-3 bg-white focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all duration-200">
+              <IoSearchOutline className="text-gray-500 mr-2" />
+              <input
+                id="search-log"
+                type="text"
+                placeholder="Cari log..."
+                value={searchTerm}
+                onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}}
+                className="flex-grow p-2 border-none outline-none text-sm placeholder-gray-400"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="max-h-[600px] overflow-y-auto border border-gray-200 rounded-xl bg-white shadow-md mb-8">
+          {currentLogs.length > 0 ? (
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 bg-gray-50 z-10">
+                <tr>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Timestamp</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Pengguna</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Aksi</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Detail</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Status</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">IP Address</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Tipe</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentLogs.map(log => (
+                  <tr key={log.id} className="hover:bg-gray-50 transition-colors duration-150 ease-in-out">
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">{format(log.timestamp, 'yyyy-MM-dd HH:mm:ss')}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">{log.user}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">{log.action.replace(/_/g, ' ')}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">{log.detail}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">
+                      <span className={`px-2 py-1 rounded-md text-xs font-semibold text-white
+                                      ${log.status.toLowerCase() === 'sukses' ? 'bg-green-600' : 'bg-red-600'}`}>
+                        {log.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">{log.ipAddress}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 border-b border-gray-100">
+                      <span className={`px-2 py-1 rounded-md text-xs font-medium
+                                      ${log.type === 'activity' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                        {log.type === 'activity' ? 'Aktivitas' : 'Audit'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-center p-8 text-gray-600 italic text-base">Tidak ada log yang ditemukan dengan kriteria ini.</p>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-6">
+          {filteredAndSearchedLogs.length > 0 && (
+            <div className="flex justify-center items-center mb-4 sm:mb-0">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="py-2 px-4 border border-gray-300 rounded-lg mx-1
+                           bg-white text-gray-700 text-sm cursor-pointer
+                           hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                Previous
+              </button>
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={`py-2 px-4 border border-gray-300 rounded-lg mx-1 text-sm
+                              ${currentPage === index + 1 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-700 hover:bg-gray-100'}
+                              transition-all duration-200`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="py-2 px-4 border border-gray-300 rounded-lg mx-1
+                           bg-white text-gray-700 text-sm cursor-pointer
+                           hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          <button onClick={handleExportLogs} className="flex items-center gap-2 bg-blue-600 text-white
+                                                    py-2.5 px-6 rounded-lg font-medium text-base
+                                                    hover:bg-blue-700 transition-all duration-300 ease-in-out">
+            <IoDownloadOutline className="text-xl" /> Ekspor Data
+          </button>
+        </div>
       </div>
     </div>
   );
