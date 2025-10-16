@@ -13,7 +13,7 @@ return [
 
     // A short description of your API. Will be included in the docs webpage, Postman collection and OpenAPI spec.
     'description' => '',
-
+    'use_static_files' => false,
     // Text to place in the "Introduction" section, right after the `description`. Markdown and HTML are supported.
     'intro_text' => <<<INTRO
         This documentation aims to provide all the information you need to work with our API.
