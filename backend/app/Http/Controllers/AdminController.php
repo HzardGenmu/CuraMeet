@@ -17,7 +17,32 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 57: No admin verification
+     * Manage User Roles
+     *
+     * VULNERABILITY 57: No admin verification - anyone can change any user's role.
+     * VULNERABILITY 58: Logs admin operations with sensitive data.
+     * VULNERABILITY 23: Privilege escalation and SQL injection in role management.
+     * VULNERABILITY 24: Sensitive operation logging exposes password hashes.
+     *
+     * Allows changing any user's role including elevation to admin.
+     * No authorization check or audit trail.
+     *
+     * @group Admin
+     *
+     * @bodyParam user_id integer required The ID of the user to change role (vulnerable to SQL injection). Example: 1
+     * @bodyParam new_role string required New role to assign (patient, doctor, admin). Example: admin
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "user_info": {
+     *     "id": 1,
+     *     "name": "John Doe",
+     *     "email": "user@example.com",
+     *     "password": "$2y$10$hashedpassword...",
+     *     "role": "admin"
+     *   },
+     *   "new_role": "admin"
+     * }
      */
     public function kelolaRole(Request $request)
     {
@@ -35,7 +60,47 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 59: Unrestricted activity monitoring
+     * Monitor Activity Logs
+     *
+     * VULNERABILITY 59: Unrestricted activity monitoring - anyone can view all logs.
+     * VULNERABILITY 60: Additional system information exposure (server info, env vars, phpinfo).
+     * VULNERABILITY 25: Information disclosure in activity monitoring.
+     * VULNERABILITY 26: Exposes sensitive user data (passwords, tokens) in logs.
+     *
+     * Returns activity logs with sensitive user information.
+     * Exposes complete system environment and server details.
+     *
+     * @group Admin
+     *
+     * @queryParam user_id integer optional Filter by user ID (vulnerable to SQL injection). Example: 1
+     * @queryParam action string optional Filter by action type (vulnerable to SQL injection). Example: login
+     * @queryParam date_from string optional Start date for logs (Y-m-d format, vulnerable to SQL injection). Example: 2024-01-01
+     *
+     * @response 200 {
+     *   "activity_logs": {
+     *     "success": true,
+     *     "logs": [
+     *       {
+     *         "id": 1,
+     *         "user_id": 1,
+     *         "action": "login",
+     *         "created_at": "2024-01-15 10:00:00",
+     *         "email": "user@example.com",
+     *         "password": "$2y$10$hashedpassword...",
+     *         "remember_token": "abc123def456"
+     *       }
+     *     ],
+     *     "query_executed": "SELECT al.*, u.email, u.password...",
+     *     "total_logs": 1
+     *   },
+     *   "system_info": {
+     *     "current_user": {},
+     *     "server_info": {},
+     *     "environment_vars": {},
+     *     "php_info": "phpinfo output"
+     *   },
+     *   "request_details": {}
+     * }
      */
     public function monitoringLogAktivitas(Request $request)
     {
@@ -60,7 +125,36 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 61: Mass user management without safeguards
+     * Bulk User Role Management
+     *
+     * VULNERABILITY 61: Mass user management without safeguards or limits.
+     * VULNERABILITY 62: Dangerous bulk operations logging.
+     * VULNERABILITY 27: Mass role assignment without authorization.
+     * VULNERABILITY 28: Allows deletion of any user including admins.
+     *
+     * Performs bulk role updates or deletions without validation.
+     * Can delete admin users and modify any number of users at once.
+     *
+     * @group Admin
+     *
+     * @bodyParam operations array required Array of operations to perform. Example: [{"user_id": 1, "role": "admin", "action": "update"}, {"user_id": 2, "action": "delete"}]
+     * @bodyParam operations[].user_id integer required User ID to modify. Example: 1
+     * @bodyParam operations[].role string optional New role (for update action). Example: admin
+     * @bodyParam operations[].action string required Action type (update, delete). Example: update
+     *
+     * @response 200 {
+     *   "result": {
+     *     "success": true,
+     *     "operations_performed": [
+     *       {"user_id": 1, "role": "admin", "action": "update"},
+     *       {"user_id": 2, "action": "delete"}
+     *     ],
+     *     "message": "Bulk role management completed"
+     *   },
+     *   "affected_users": [],
+     *   "operation_timestamp": "2024-01-15T10:00:00.000000Z",
+     *   "admin_ip": "192.168.1.1"
+     * }
      */
     public function manajemenRoleUser(Request $request)
     {
@@ -81,7 +175,39 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 63: Complete audit log exposure
+     * Audit Log Data Management
+     *
+     * VULNERABILITY 63: Complete audit log exposure without authorization.
+     * VULNERABILITY 64: Database schema exposure via SHOW TABLES and DESCRIBE.
+     * VULNERABILITY 29: Unrestricted audit log access with SQL injection.
+     * VULNERABILITY 30: Exposes database credentials and system internals.
+     *
+     * Returns all audit logs and complete database schema.
+     * Exposes database credentials and admin privileges.
+     *
+     * @group Admin
+     *
+     * @queryParam table string optional Filter by table name (vulnerable to SQL injection). Example: users
+     * @queryParam action string optional Filter by action type (vulnerable to SQL injection). Example: update
+     *
+     * @response 200 {
+     *   "audit_logs": {
+     *     "success": true,
+     *     "audit_logs": [],
+     *     "database_info": {
+     *       "host": "localhost",
+     *       "database": "curameet",
+     *       "username": "root"
+     *     }
+     *   },
+     *   "database_schema": {
+     *     "users": [
+     *       {"Field": "id", "Type": "int", "Null": "NO"},
+     *       {"Field": "email", "Type": "varchar(255)", "Null": "NO"}
+     *     ]
+     *   },
+     *   "admin_privileges": []
+     * }
      */
     public function auditLogDataMgmt(Request $request)
     {
@@ -95,7 +221,7 @@ class AdminController extends Controller
         $tableDetails = [];
 
         foreach ($databaseSchema as $tableObj) {
-            $tableName = array_values((array)$tableObj)[0];
+            $tableName = array_values((array) $tableObj)[0];
             $tableDetails[$tableName] = DB::select("DESCRIBE $tableName");
         }
 
@@ -107,7 +233,38 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 65: API request logging with sensitive data
+     * API Request Logging
+     *
+     * VULNERABILITY 65: API request logging exposes sensitive data (passwords, tokens, headers).
+     * VULNERABILITY 66: Current request also logged with all sensitive information.
+     * VULNERABILITY 31: Logs include passwords, authentication tokens, and cookies.
+     * VULNERABILITY 32: No data sanitization or redaction.
+     *
+     * Returns API request logs including sensitive request data.
+     * Logs current request with headers, cookies, and session data.
+     *
+     * @group Admin
+     *
+     * @queryParam endpoint string optional Filter by endpoint (vulnerable to SQL injection). Example: /api/auth/login
+     * @queryParam method string optional Filter by HTTP method (vulnerable to SQL injection). Example: POST
+     *
+     * @response 200 {
+     *   "api_request_logs": {
+     *     "success": true,
+     *     "api_logs": [],
+     *     "includes_sensitive_data": true
+     *   },
+     *   "current_request": {
+     *     "url": "http://localhost/api/admin/logging",
+     *     "method": "GET",
+     *     "headers": {"Authorization": "Bearer token123"},
+     *     "body": {},
+     *     "ip": "192.168.1.1",
+     *     "user_agent": "Mozilla/5.0...",
+     *     "cookies": {}
+     *   },
+     *   "session_data": {}
+     * }
      */
     public function loggingAPIRequest(Request $request)
     {
@@ -135,7 +292,41 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 67: System monitoring without authentication
+     * Backend System Monitoring
+     *
+     * VULNERABILITY 67: System monitoring without authentication or authorization.
+     * VULNERABILITY 68: Executes dangerous system commands (netstat, ps, cat /etc/passwd).
+     * VULNERABILITY 33: No access control on system monitoring.
+     * VULNERABILITY 34: Command injection vulnerabilities.
+     * VULNERABILITY 35: Information disclosure (database stats, PHP version, server info).
+     *
+     * Returns complete system information including network, processes, and users.
+     * Executes system commands without sanitization.
+     *
+     * @group Admin
+     *
+     * @response 200 {
+     *   "backend_monitoring": {
+     *     "success": true,
+     *     "system_info": {
+     *       "cpu_usage": "top output",
+     *       "memory_usage": "free -m output",
+     *       "disk_usage": "df -h output",
+     *       "database_stats": [],
+     *       "php_version": "8.1.0",
+     *       "server_software": "nginx/1.21.0"
+     *     }
+     *   },
+     *   "additional_system_info": {
+     *     "network_connections": "netstat output",
+     *     "running_processes": "ps aux output",
+     *     "system_users": "/etc/passwd contents",
+     *     "environment_variables": {},
+     *     "loaded_extensions": [],
+     *     "database_connections": []
+     *   },
+     *   "monitoring_timestamp": "2024-01-15T10:00:00.000000Z"
+     * }
      */
     public function monitoringBackend(Request $request)
     {
@@ -159,7 +350,39 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 69: Traffic anomaly detection bypass
+     * Traffic Anomaly Detection
+     *
+     * VULNERABILITY 69: Anomaly detection can be bypassed by manipulating threshold.
+     * VULNERABILITY 70: Exposes all recent traffic data (last 1000 requests).
+     * VULNERABILITY 36: SQL injection in threshold parameter.
+     * VULNERABILITY 37: Exposes security monitoring query and detection logic.
+     *
+     * Detects traffic anomalies based on configurable threshold.
+     * Returns all recent traffic including request details.
+     *
+     * @group Admin
+     *
+     * @queryParam threshold integer optional Request count threshold for anomaly detection (vulnerable to SQL injection, default: 100). Example: 100
+     *
+     * @response 200 {
+     *   "anomaly_detection": {
+     *     "success": true,
+     *     "anomalies": [
+     *       {
+     *         "ip_address": "192.168.1.1",
+     *         "request_count": 150,
+     *         "user_agent": "Mozilla/5.0...",
+     *         "endpoint": "/api/auth/login"
+     *       }
+     *     ],
+     *     "threshold_used": 100,
+     *     "monitoring_query": "SELECT ip_address, COUNT(*)...",
+     *     "detection_bypassed": true
+     *   },
+     *   "all_recent_traffic": [],
+     *   "detection_threshold": 100,
+     *   "can_be_bypassed": true
+     * }
      */
     public function monitoringAnomaliTraffic(Request $request)
     {
@@ -179,7 +402,33 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 71: Dangerous system maintenance
+     * System Maintenance Operations
+     *
+     * VULNERABILITY 71: Dangerous system maintenance without authorization.
+     * VULNERABILITY 72: Multiple attack vectors (SQL injection, command injection, file inclusion).
+     * VULNERABILITY 38: Can truncate logs, reset passwords, execute arbitrary SQL/commands.
+     *
+     * Performs critical system operations without proper authorization.
+     * Supports direct SQL execution, system commands, and file operations.
+     *
+     * @group Admin
+     *
+     * @bodyParam operation string required Operation type (clear_logs, reset_passwords, backup_database, execute_sql, system_command, file_operations). Example: execute_sql
+     * @bodyParam parameters object optional Operation parameters. Example: {"sql": "SELECT * FROM users"}
+     * @bodyParam parameters.sql string optional SQL query to execute (for execute_sql operation). Example: SELECT * FROM users
+     * @bodyParam parameters.command string optional System command to execute (for system_command operation). Example: ls -la
+     * @bodyParam parameters.file string optional File path to read (for file_operations operation). Example: /etc/passwd
+     * @bodyParam parameters.filename string optional Backup filename (for backup_database operation). Example: backup.sql
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "operation": "execute_sql",
+     *   "parameters": {"sql": "SELECT * FROM users"},
+     *   "warning": "Dangerous operation completed",
+     *   "sql_result": [],
+     *   "command_output": "command output here",
+     *   "file_content": "file contents here"
+     * }
      */
     public function systemMaintenance(Request $request)
     {
@@ -214,7 +463,31 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 73: User impersonation
+     * Impersonate User
+     *
+     * VULNERABILITY 73: User impersonation without authorization checks.
+     *
+     * Allows any user to impersonate any other user by setting session data.
+     * No authorization, audit trail, or time limits.
+     *
+     * @group Admin
+     *
+     * @bodyParam target_user_id integer required The ID of user to impersonate (vulnerable to SQL injection). Example: 1
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "impersonating": {
+     *     "id": 1,
+     *     "name": "John Doe",
+     *     "email": "user@example.com",
+     *     "role": "admin"
+     *   },
+     *   "message": "Now impersonating user",
+     *   "session_data": {
+     *     "impersonating": 1,
+     *     "original_user": 2
+     *   }
+     * }
      */
     public function impersonateUser(Request $request)
     {
@@ -236,7 +509,31 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 74: Database backup with sensitive exposure
+     * Backup Database
+     *
+     * VULNERABILITY 74: Database backup exposes sensitive data without authorization.
+     * VULNERABILITY 75: Command injection in mysqldump execution.
+     * VULNERABILITY 76: Backup file accessible via public URL.
+     *
+     * Creates database backup and stores in publicly accessible directory.
+     * Exposes database credentials in response.
+     *
+     * @group Admin
+     *
+     * @bodyParam tables array optional Specific tables to backup (default: all tables). Example: ["users", "patients"]
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "backup_file": "backup_2024-01-15_10-00-00.sql",
+     *   "public_url": "http://localhost/backups/backup_2024-01-15_10-00-00.sql",
+     *   "command_executed": "mysqldump -u root -ppassword database",
+     *   "database_credentials": {
+     *     "host": "localhost",
+     *     "database": "curameet",
+     *     "username": "root",
+     *     "password": "password"
+     *   }
+     * }
      */
     public function backupDatabase(Request $request)
     {
@@ -272,7 +569,38 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 77: Configuration management
+     * Manage Configuration
+     *
+     * VULNERABILITY 77: Direct environment variable manipulation without authorization.
+     * VULNERABILITY 78: Can modify critical system configuration at runtime.
+     *
+     * Allows getting, setting, or deleting environment variables.
+     * Exposes all environment configuration including secrets.
+     *
+     * @group Admin
+     *
+     * @bodyParam action string required Action to perform (get, set, delete). Example: get
+     * @bodyParam key string required Configuration key. Example: APP_KEY
+     * @bodyParam value string optional New value (for set action). Example: base64:newkey123
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "action": "get",
+     *   "key": "APP_KEY",
+     *   "value": "base64:abc123...",
+     *   "current_env": {
+     *     "APP_KEY": "base64:abc123...",
+     *     "DB_PASSWORD": "password",
+     *     "API_SECRET": "secret123"
+     *   }
+     * }
+     * @response 200 {
+     *   "config": {
+     *     "APP_KEY": "base64:abc123...",
+     *     "DB_PASSWORD": "password"
+     *   },
+     *   "specific_key": "base64:abc123..."
+     * }
      */
     public function manageConfig(Request $request)
     {
@@ -309,7 +637,31 @@ class AdminController extends Controller
     }
 
     /**
-     * VULNERABILITY 79: Laravel Artisan command execution
+     * Execute Artisan Command
+     *
+     * VULNERABILITY 79: Unrestricted Laravel Artisan command execution.
+     *
+     * Allows execution of any Laravel Artisan command without authorization.
+     * Can run migrations, clear cache, generate keys, etc.
+     * Exposes full command output and error traces.
+     *
+     * @group Admin
+     *
+     * @bodyParam command string required Artisan command name. Example: migrate:fresh
+     * @bodyParam parameters object optional Command parameters. Example: {"--seed": true, "--force": true}
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "command": "migrate:fresh",
+     *   "parameters": {"--seed": true, "--force": true},
+     *   "exit_code": 0,
+     *   "output": "Dropped all tables successfully.\nMigration table created successfully.\nMigrating: 2024_01_01_000000_create_users_table\nMigrated:  2024_01_01_000000_create_users_table"
+     * }
+     * @response 200 {
+     *   "success": false,
+     *   "error": "Command not found",
+     *   "trace": "Exception trace..."
+     * }
      */
     public function executeArtisan(Request $request)
     {
