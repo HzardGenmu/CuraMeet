@@ -1,22 +1,30 @@
 <?php
-
 namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
 {
+    /**
+     * The application's global HTTP middleware stack.
+     */
     protected $middleware = [
-        // Add custom CORS middleware
         \App\Http\Middleware\CorsMiddleware::class,
-        // ... other middleware
+        // \App\Http\Middleware\TrustProxies::class,
+        // \Illuminate\Http\Middleware\HandleCors::class, // Disable, kita pakai custom CORS
+        // \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
+        // \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+        // \App\Http\Middleware\TrimStrings::class, // DISABLED - Allow spaces for SQL injection
+        // \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class, // DISABLED - Allow empty strings
     ];
 
+    /**
+     * The application's route middleware groups.
+     */
     protected $middlewareGroups = [
+
         'api' => [
-            // Remove HandleCors to avoid duplication
-            // \Illuminate\Http\Middleware\HandleCors::class,
-            'throttle:api',
+            // 'throttle:api', // DISABLED - No rate limiting (allows brute force)
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -24,13 +32,14 @@ class Kernel extends HttpKernel
     /**
      * The application's middleware aliases.
      *
-     * @var array
+     * VULNERABILITY NOTES:
+     * - 'auth' middleware is WEAK - only checks token validity, no session management
+     * - 'is.admin' middleware is WEAK - simple role check, no additional verification
+     * - No XSS protection middleware
+     * - No input sanitization middleware
+     * - No SQL injection protection middleware
      */
     protected $middlewareAliases = [
         'auth' => \App\Http\Middleware\Authenticate::class,
-        // ... alias bawaan Laravel lainnya
-
-        // PINDAHKAN is.admin DARI $middlewareGroups KE SINI
-        'is.admin' => \App\Http\Middleware\IsAdminMiddleware::class,
     ];
 }

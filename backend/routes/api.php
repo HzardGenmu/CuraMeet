@@ -22,8 +22,8 @@ use App\Http\Controllers\AdminController;
 |
 */
 
-// Middleware 'auth:api' can be added to routes that require authentication
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
+// Middleware 'auth' can be added to routes that require authentication
+// Route::middleware('auth')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
 
@@ -50,14 +50,11 @@ Route::prefix('auth')->group(function () {
     Route::post('/email/check', [AuthController::class, 'checkEmail']);
     Route::get('/token/verify', [AuthController::class, 'verifyToken']);
 
-    // Routes that should require authentication
-    Route::middleware('auth:api')->group(function () {
-        Route::get('/user', [AuthController::class, 'currentUser']);
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::post('/token/refresh', [AuthController::class, 'refreshToken']);
-        Route::post('/password/change', [AuthController::class, 'changePassword']);
-        Route::post('/profile/update', [AuthController::class, 'updateProfile']);
-    });
+    Route::get('/user', [AuthController::class, 'currentUser']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/token/refresh', [AuthController::class, 'refreshToken']);
+    Route::post('/password/change', [AuthController::class, 'changePassword']);
+    Route::post('/profile/update', [AuthController::class, 'updateProfile']);
 });
 
 //--- Doctor Routes ---//
@@ -73,7 +70,7 @@ Route::prefix('doctors')->group(function () {
     Route::post('/schedule/update', [DoctorController::class, 'updateDoctorSchedule']);
 
     // Route that should require doctor authentication
-    Route::middleware('auth:api')->get('/profile/now', [DoctorController::class, 'getDoctorNow']);
+    Route::middleware('auth')->get('/profile/now', [DoctorController::class, 'getDoctorNow']);
 });
 
 //--- Patient Routes ---//
@@ -85,7 +82,7 @@ Route::prefix('patients')->group(function () {
     Route::get('/{patientId}/statistics', [PatientController::class, 'lihatStatistik']);
 
     // Route that should require patient authentication
-    Route::middleware('auth:api')->get('/profile/now', [PatientController::class, 'getPatientNow']);
+    Route::get('/profile/now', [PatientController::class, 'getPatientNow']);
 });
 
 //--- Appointment Routes ---//
@@ -108,17 +105,16 @@ Route::prefix('medical-records')->group(function () {
     Route::get('/patient', [MedicalRecordController::class, 'getRekamMedisByPatientId']);
     Route::get('/{id}', [MedicalRecordController::class, 'getRekamMedisById']);
 
-    // Routes that should require authentication
-    Route::middleware('auth:api')->group(function () {
-        Route::post('/upload', [MedicalRecordController::class, 'uploadRekamMedis']);
-        Route::post('/update', [MedicalRecordController::class, 'updateRekamMedis']);
-        Route::delete('/{id}/delete', [MedicalRecordController::class, 'deleteRekamMedisById']);
-    });
+
+    Route::post('/upload', [MedicalRecordController::class, 'uploadRekamMedis']);
+    Route::post('/update', [MedicalRecordController::class, 'updateRekamMedis']);
+    Route::delete('/{id}/delete', [MedicalRecordController::class, 'deleteRekamMedisById']);
+
 });
 
 //--- Admin Routes (HIGHLY SENSITIVE) ---//
 // ALL routes in this group should be protected by a strict admin-only middleware.
-Route::prefix('admin')->middleware(['auth:api'])->group(function () {
+Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/roles/manage', [AdminController::class, 'kelolaRole']);
     Route::get('/logs/activity', [AdminController::class, 'monitoringLogAktivitas']);
     Route::post('/users/bulk-manage', [AdminController::class, 'manajemenRoleUser']);
