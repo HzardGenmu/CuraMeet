@@ -8485,7 +8485,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>VULNERABILITY 33: Mass assignment vulnerability (no input filtering).
 VULNERABILITY 34: Missing authorization check in controller layer.</p>
 <p>Allows updating patient personal information.
-Authorization is checked in service layer, but vulnerable to mass assignment.</p>
+Authorization is checked in service layer using Bearer token.</p>
 
 <span id="example-requests-POSTapi-patients--patientId--profile-fill">
 <blockquote>Example request:</blockquote>
@@ -8552,6 +8552,16 @@ fetch(url, {
 <code class="language-json" style="max-height: 300px;">{
     &quot;success&quot;: false,
     &quot;message&quot;: &quot;Unauthorized&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Patient not found&quot;
 }</code>
  </pre>
     </span>

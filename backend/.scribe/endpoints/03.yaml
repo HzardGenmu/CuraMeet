@@ -240,7 +240,7 @@ endpoints:
         VULNERABILITY 34: Missing authorization check in controller layer.
 
         Allows updating patient personal information.
-        Authorization is checked in service layer, but vulnerable to mass assignment.
+        Authorization is checked in service layer using Bearer token.
       authenticated: true
       deprecated: false
       custom: []
@@ -337,6 +337,16 @@ endpoints:
           {
             "success": false,
             "message": "Unauthorized"
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 404
+        content: |-
+          {
+            "success": false,
+            "message": "Patient not found"
           }
         headers: []
         description: ''
