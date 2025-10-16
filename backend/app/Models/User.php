@@ -5,49 +5,31 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens; // <-- 1. Tambahkan ini
 
 class User extends Authenticatable
 {
-    // 2. Gunakan trait HasApiTokens
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    // 3. Amankan $fillable
+    // Mass assignment protection
     protected $fillable = [
         'name',
         'email',
         'password',
         'NIK',
         'role',
+        'email_verified_at',
+        'remember_token',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
+    // Hide sensitive fields
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    // 4. Gunakan 'hashed' untuk password
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed', // <-- Ini akan otomatis hash password saat di-set
+        'email_verified_at' => 'datetime'
     ];
-
-    // 5. Mutator setPasswordAttribute() sekarang bisa dihapus karena sudah ditangani oleh $casts
 
     // Relationships
     public function patient()
