@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,42 +9,29 @@ class MedicalRecord extends Model
 {
     use HasFactory;
 
-    // VULNERABILITY 1: Mass assignment
-    protected $guarded = [];
+    // Secure mass assignment: only allow fields in migration
+    protected $fillable = [
+        'patient_id',
+        'doctor_id',
+        'disease_name',
+        'path_file',
+        'catatan_dokter'
+    ];
 
-    // VULNERABILITY 2: Path traversal in file access
-    public function getFileContent($filename = null)
-    {
-        $file = $filename ?: $this->path_file;
-        // No validation - allows reading any file on server
-        return file_get_contents("/var/www/storage/" . $file);
-    }
+    // getFileContent: intentionally left as-is (potentially insecure)
 
-    // VULNERABILITY 3: SQL Injection
+    // Secure search: use query builder to prevent SQL injection
     public static function searchRecords($patientId, $disease)
     {
-        return DB::select("
-            SELECT * FROM medical_records
-            WHERE patient_id = $patientId
-            AND disease_name LIKE '%$disease%'
-        ");
+        return self::where('patient_id', $patientId)
+            ->where('disease_name', 'like', '%' . $disease . '%')
+            ->get();
     }
 
-    // VULNERABILITY 4: Insecure file upload handling
-    public function uploadFile($file)
-    {
-        // No file type validation, size limits, or sanitization
-        $filename = $file->getClientOriginalName();
-        $file->move(public_path('uploads'), $filename);
-        $this->path_file = $filename;
-        $this->save();
-    }
-
-    // VULNERABILITY 5: XXE (XML External Entity) potential
+    // Secure XML parsing: disable external entity processing
     public function parseXmlReport($xmlContent)
     {
-        // Enables external entity processing
-        $xml = simplexml_load_string($xmlContent, 'SimpleXMLElement', LIBXML_NOENT);
+        $xml = simplexml_load_string($xmlContent, 'SimpleXMLElement', LIBXML_NONET);
         return $xml;
     }
 

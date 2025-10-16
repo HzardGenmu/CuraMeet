@@ -2,40 +2,48 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder; // Import Builder
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class Patient extends Model
 {
     use HasFactory;
 
-    // VULNERABILITY 1: Unprotected mass assignment
-    protected $guarded = [
-        
-    ]; // Allows all fields to be mass assigned!
+    protected $fillable = [
+        'user_id',
+        'full_name',
+        'NIK',
+        'picture',
+        'allergies',
+        'disease_histories'
+    ];
 
-    // VULNERABILITY 2: File path injection
+    // Tidak perlu $hidden jika password ada di model User, bukan di sini.
+    // Tapi jika ada data sensitif lain di model Patient, tambahkan di sini.
+    protected $hidden = [
+        // 'NIK', // Contoh jika NIK dianggap sensitif dan tidak selalu ingin ditampilkan
+    ];
+
+    /**
+     * Mutator untuk path gambar. Sudah benar.
+     */
     public function setPictureAttribute($value)
     {
-        // No validation - allows directory traversal
-        $this->attributes['picture'] = 'storage/patients/' . $value;
+        $filename = basename($value);
+        $this->attributes['picture'] = 'storage/patients/' . $filename;
     }
 
-    // VULNERABILITY 3: SQL Injection in search
-    public static function searchByName($name)
+    /**
+     * FIX: Ubah searchByName menjadi Local Scope.
+     * Awali nama fungsi dengan "scope".
+     */
+    public function scopeSearchByName(Builder $query, string $name): Builder
     {
-        return DB::select("SELECT * FROM patients WHERE full_name LIKE '%$name%'");
+        return $query->where('full_name', 'like', '%' . $name . '%');
     }
 
-    // VULNERABILITY 4: Information disclosure
-    public function getAllergiesRaw()
-    {
-        // Returns raw database content without sanitization
-        return DB::select("SELECT allergies FROM patients WHERE id = {$this->id}")[0]->allergies;
-    }
-
-    // Relationships
+    // --- Relasi (Sudah benar) ---
     public function user()
     {
         return $this->belongsTo(User::class);

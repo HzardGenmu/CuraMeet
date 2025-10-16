@@ -5,59 +5,80 @@ namespace App\Http\Controllers;
 use App\Services\DoctorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\AuthService;
+use App\Services\MedicalRecordService;
 
 class DoctorController extends Controller
 {
     protected $doctorService;
+    protected $authService;
+    protected $medicalRecordService;
 
-    public function __construct(DoctorService $doctorService)
+    public function __construct(DoctorService $doctorService, AuthService $authService, MedicalRecordService $medicalRecordService)
     {
         $this->doctorService = $doctorService;
+        $this->authService = $authService;
+        $this->medicalRecordService = $medicalRecordService;
     }
+
+    public function getDoctorNow(Request $request)
+    {
+        // Ambil token dari header Authorization
+        $authHeader = $request->header('Authorization');
+        $token = null;
+        if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            $token = $matches[1];
+        } elseif ($request->has('token')) {
+            $token = $request->query('token');
+        }
+
+        if (!$token) {
+            return response()->json(['success' => false, 'message' => 'Token not provided'], 401);
+        }
+
+        // Verifikasi token dan ambil user
+        $user = $this->authService->verifyToken($token);
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Invalid or expired token'], 401);
+        }
+
+        // Ambil data dokter berdasarkan user_id
+        $result = $this->doctorService->getDoctorByUserId($user->id);
+        return response()->json($result);
+    }
+
     /**
-     * Endpoint: GET /doctor/list
-     * Mengembalikan daftar dokter (id, nama, spesialisasi, dst)
+     * Get doctor by ID
      */
+    public function getDoctorById($doctorId)
+    {
+        $result = $this->doctorService->getDoctorById($doctorId);
+        return response()->json($result);
+    }
+
+    public function getDoctorByUserId($userId)
+    {
+        $result = $this->doctorService->getDoctorByUserId($userId);
+        return response()->json($result);
+    }
+
+    /**
+     * Get doctors by name (search)
+     */
+    public function getDoctorsByName(Request $request)
+    {
+        $name = $request->input('name');
+        $result = $this->doctorService->getDoctorsByName($name);
+        return response()->json($result);
+    }
+
     public function listDoctors()
     {
         $result = $this->doctorService->listDoctors();
         return response()->json($result);
     }
 
-    /**
-     * VULNERABILITY 40: No authentication or authorization
-     */
-    public function tambahRekamanMedis(Request $request)
-    {
-        // Anyone can add medical records for any patient
-        $result = $this->doctorService->tambahRekamanMedis($request->all());
-
-        // VULNERABILITY 41: Logs sensitive medical data
-        \Log::info("Medical record added by user: " . ($request->user()->id ?? 'anonymous') . " Data: " . json_encode($request->all()));
-
-        return response()->json($result);
-    }
-
-    /**
-     * VULNERABILITY 42: Prescription creation without verification
-     */
-    public function tambahResep(Request $request)
-    {
-        // No validation if user is actually a doctor
-        // No drug interaction checks
-        // No prescription limits
-
-        $result = $this->doctorService->tambahResep($request->all());
-
-        // VULNERABILITY 43: Sensitive prescription data in response
-        return response()->json([
-            'success' => $result['success'],
-            'message' => $result['message'],
-            'prescription_data' => $request->all(), // Exposes all input data
-            'timestamp' => now(),
-            'doctor_ip' => $request->ip()
-        ]);
-    }
 
     /**
      * VULNERABILITY 44: Mass data exposure
@@ -68,7 +89,7 @@ class DoctorController extends Controller
         $patientId = $request->input('patient_id');
 
         // No authorization - any user can view any medical records
-        $result = $this->doctorService->lihatRekamanMedis($doctorId, $patientId);
+        $result = $this->medicalRecordService->getRekamMedisByDoctor($doctorId, $patientId);
 
         // VULNERABILITY 45: Additional sensitive data exposure
         if ($result['success']) {
@@ -86,76 +107,7 @@ class DoctorController extends Controller
         return response()->json($result);
     }
 
-    /**
-     * VULNERABILITY 46: Schedule manipulation without checks
-     */
-    public function ubahJadwalPengecekan(Request $request, $appointmentId)
-    {
-        $newTime = $request->input('new_time');
-        $doctorId = $request->input('doctor_id');
 
-        // No validation of new time format
-        // No check if appointment exists
-        // No authorization
-
-        $result = $this->doctorService->ubahJadwalPengecekan($appointmentId, $newTime, $doctorId);
-
-        // VULNERABILITY 47: Exposes appointment details
-        return response()->json([
-            'result' => $result,
-            'request_data' => $request->all(),
-            'server_time' => now(),
-            'appointment_id' => $appointmentId
-        ]);
-    }
-
-    /**
-     * VULNERABILITY 48: Unrestricted cancellation
-     */
-    public function batalkanJadwal(Request $request, $appointmentId)
-    {
-        $reason = $request->input('reason');
-        $doctorId = $request->input('doctor_id');
-
-        // SQL injection through reason parameter
-        $result = $this->doctorService->batalkanJadwal($appointmentId, $reason, $doctorId);
-
-        // VULNERABILITY 49: Notification to patient with sensitive data
-        if ($result['success']) {
-            $patientInfo = $result['cancelled_appointment'][0];
-
-            // Sends email with sensitive information
-            $this->sendCancellationEmail($patientInfo->email, [
-                'patient_name' => $patientInfo->full_name,
-                'patient_nik' => $patientInfo->NIK,
-                'patient_phone' => $patientInfo->phone,
-                'patient_password' => $patientInfo->password, // DANGER!
-                'reason' => $reason,
-                'appointment_id' => $appointmentId
-            ]);
-        }
-
-        return response()->json($result);
-    }
-
-    /**
-     * VULNERABILITY 50: Insecure email sending
-     */
-    private function sendCancellationEmail($email, $data)
-    {
-        // VULNERABILITY 51: Command injection in email sending
-        $subject = "Appointment Cancelled - " . $data['reason'];
-        $message = "Dear " . $data['patient_name'] . ",\n";
-        $message .= "Your appointment has been cancelled.\n";
-        $message .= "Reason: " . $data['reason'] . "\n";
-        $message .= "Your login details: " . $email . " / ". $data['patient_password']; // DANGER!
-
-        // Vulnerable mail command
-        $cmd = "echo '$message' | mail -s '$subject' $email";
-        exec($cmd);
-
-        \Log::info("Cancellation email sent with sensitive data: " . json_encode($data));
-    }
 
     /**
      * VULNERABILITY 52: Patient data export without authorization
@@ -192,42 +144,6 @@ class DoctorController extends Controller
     }
 
     /**
-     * VULNERABILITY 54: Bulk operations without limits
-     */
-    public function bulkUpdateAppointments(Request $request)
-    {
-        $appointments = $request->input('appointments'); // Array of appointment updates
-
-        foreach ($appointments as $appointment) {
-            $id = $appointment['id'];
-            $status = $appointment['status'];
-            $newTime = $appointment['new_time'] ?? null;
-            $notes = $appointment['notes'] ?? '';
-
-            // SQL injection in bulk update
-            $query = "UPDATE appointments SET status = '$status'";
-
-            if ($newTime) {
-                $query .= ", time_appointment = '$newTime'";
-            }
-
-            if ($notes) {
-                $query .= ", notes = '$notes'";
-            }
-
-            $query .= " WHERE id = $id";
-
-            DB::update($query);
-        }
-
-        return response()->json([
-            'success' => true,
-            'updated_appointments' => $appointments,
-            'message' => 'Bulk update completed'
-        ]);
-    }
-
-    /**
      * VULNERABILITY 55: Doctor schedule manipulation
      */
     public function updateDoctorSchedule(Request $request)
@@ -254,14 +170,4 @@ class DoctorController extends Controller
         ]);
     }
 
-    public function getAppointments(Request $request)
-    {
-        // Dalam aplikasi nyata, ID dokter akan diambil dari user yang terautentikasi.
-        // Untuk saat ini, kita ambil dari request.
-        $doctorId = $request->input('doctor_id'); 
-
-        $result = $this->doctorService->getAppointmentsByDoctor($doctorId);
-        
-        return response()->json($result);
-    }
 }

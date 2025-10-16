@@ -1,71 +1,123 @@
-
-
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\PatientController;
-use App\Http\Controllers\DoctorController;
-use App\Http\Controllers\AdminController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RoomController;
 
-Route::get('/test', function () {
-    return response()->json([
-        'success' => true,
-        'message' => 'Backend is working!',
-        'timestamp' => now()
-    ]);
+// Import all the controllers
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\PatientController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\MedicalRecordController;
+use App\Http\Controllers\AdminController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
+|
+*/
+
+// Middleware 'auth:api' can be added to routes that require authentication
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+Route::get('/', function () {
+    // Kode ini baru akan dieksekusi saat user mengunjungi '/'
+    return response()->json(['message' => 'Welcome']);
+});
+//--- Authentication Routes ---//
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+    Route::post('/email/check', [AuthController::class, 'checkEmail']);
+    Route::get('/token/verify', [AuthController::class, 'verifyToken']);
+
+    // Routes that should require authentication
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/user', [AuthController::class, 'currentUser']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/token/refresh', [AuthController::class, 'refreshToken']);
+        Route::post('/password/change', [AuthController::class, 'changePassword']);
+        Route::post('/profile/update', [AuthController::class, 'updateProfile']);
+    });
 });
 
-Route::prefix('rooms')->group(function () {
-    Route::get('/list', [RoomController::class, 'listRooms']);
-});
-// Auth routes
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/logout', [AuthController::class, 'logout']);
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+//--- Doctor Routes ---//
+Route::prefix('doctors')->group(function () {
+    Route::get('/', [DoctorController::class, 'listDoctors']);
+    Route::get('/search', [DoctorController::class, 'getDoctorsByName']);
+    Route::get('/{doctorId}', [DoctorController::class, 'getDoctorById']);
+    Route::get('/user/{userId}', [DoctorController::class, 'getDoctorByUserId']);
 
-// Patient routes
-Route::prefix('patient')->group(function () {
+    // Vulnerable endpoints
+    Route::post('/medical-records/view', [DoctorController::class, 'lihatRekamanMedis']);
+    Route::post('/patients/{patientId}/export', [DoctorController::class, 'exportPatientData']);
+    Route::post('/schedule/update', [DoctorController::class, 'updateDoctorSchedule']);
+
+    // Route that should require doctor authentication
+    Route::middleware('auth:api')->get('/profile/now', [DoctorController::class, 'getDoctorNow']);
+});
+
+//--- Patient Routes ---//
+Route::prefix('patients')->group(function () {
     Route::get('/search', [PatientController::class, 'getPatientsByName']);
-    Route::get('/{patientId}', [PatientController::class, 'getPatientById'])
-        ->where('patientId', '[0-9]+');
-    Route::post('/upload-rekam-medis', [PatientController::class, 'uploadRekamMedis']);
-    Route::post('/form-rekam-medis', [PatientController::class, 'isiFormRekamMedis']);
-    Route::put('/data-diri/{patientId}', [PatientController::class, 'isiFormDataDiri']);
-    Route::get('/catatan-medis/{patientId}', [PatientController::class, 'lihatCatatanMedis']);
-    Route::get('/statistik/{patientId}', [PatientController::class, 'lihatStatistik']);
-    Route::post('/daftar-pengecekan', [PatientController::class, 'daftarPengecekanBaru']);
-    Route::put('/batalkan-pengecekan/{appointmentId}', [PatientController::class, 'batalkanPengecekan']);
+    Route::get('/{patientId}', [PatientController::class, 'getPatientById']);
+    Route::get('/user/{userId}', [PatientController::class, 'getPatientByUserId']);
+    Route::post('/{patientId}/profile/fill', [PatientController::class, 'isiFormDataDiri']);
+    Route::get('/{patientId}/statistics', [PatientController::class, 'lihatStatistik']);
+
+    // Route that should require patient authentication
+    Route::middleware('auth:api')->get('/profile/now', [PatientController::class, 'getPatientNow']);
 });
 
-// Doctor routes
-Route::prefix('doctor')->group(function () {
-    Route::post('/tambah-rekaman', [DoctorController::class, 'tambahRekamanMedis']);
-    Route::get('/list', [DoctorController::class, 'listDoctors']);
-    Route::post('/tambah-resep', [DoctorController::class, 'tambahResep']);
-    Route::get('/rekaman-medis', [DoctorController::class, 'lihatRekamanMedis']);
-    Route::put('/ubah-jadwal/{appointmentId}', [DoctorController::class, 'ubahJadwalPengecekan']);
-    Route::put('/batalkan-jadwal/{appointmentId}', [DoctorController::class, 'batalkanJadwal']);
-    Route::get('/export-patient/{patientId}', [DoctorController::class, 'exportPatientData']);
-    Route::put('/bulk-appointments', [DoctorController::class, 'bulkUpdateAppointments']);
-    Route::put('/update-schedule', [DoctorController::class, 'updateDoctorSchedule']);
-    Route::get('/appointments', [DoctorController::class, 'getAppointments']);
+//--- Appointment Routes ---//
+Route::prefix('appointments')->group(function () {
+    Route::post('/new', [AppointmentController::class, 'newAppointment']);
+    Route::post('/{appointmentId}/cancel', [AppointmentController::class, 'cancelAppointment']);
+    Route::post('/cancel-by-doctor', [AppointmentController::class, 'cancelAppointmentByDoctorId']); // Original method
+    Route::get('/doctor', [AppointmentController::class, 'getAppointmentsByDoctor']);
+    Route::get('/patient', [AppointmentController::class, 'getAppointmentByPatient']);
+
+    // Vulnerable endpoints
+    Route::post('/change-schedule/doctor', [AppointmentController::class, 'changeScheduleByDoctor']);
+    Route::post('/cancel/doctor', [AppointmentController::class, 'cancelAppointmentByDoctor']); // Vulnerable method
+    Route::post('/change-schedule/patient', [AppointmentController::class, 'changeAppointmentByPatient']);
+    Route::post('/bulk-update', [AppointmentController::class, 'bulkUpdateAppointments']);
 });
 
-// Admin routes
-Route::prefix('admin')->group(function () {
-    Route::put('/kelola-role', [AdminController::class, 'kelolaRole']);
-    Route::get('/monitoring-log', [AdminController::class, 'monitoringLogAktivitas']);
-    Route::post('/manajemen-role', [AdminController::class, 'manajemenRoleUser']);
-    Route::get('/audit-log', [AdminController::class, 'auditLogDataMgmt']);
-    Route::get('/api-logs', [AdminController::class, 'loggingAPIRequest']);
-    Route::get('/monitoring-backend', [AdminController::class, 'monitoringBackend']);
-    Route::get('/monitoring-anomali', [AdminController::class, 'monitoringAnomaliTraffic']);
-    Route::post('/system-maintenance', [AdminController::class, 'systemMaintenance']);
-    Route::post('/impersonate', [AdminController::class, 'impersonateUser']);
-    Route::post('/backup-database', [AdminController::class, 'backupDatabase']);
-    Route::post('/manage-config', [AdminController::class, 'manageConfig']);
-    Route::post('/execute-artisan', [AdminController::class, 'executeArtisan']);
+//--- Medical Record Routes ---//
+Route::prefix('medical-records')->group(function () {
+    Route::get('/patient', [MedicalRecordController::class, 'getRekamMedisByPatientId']);
+    Route::get('/{id}', [MedicalRecordController::class, 'getRekamMedisById']);
+
+    // Routes that should require authentication
+    Route::middleware('auth:api')->group(function () {
+        Route::post('/upload', [MedicalRecordController::class, 'uploadRekamMedis']);
+        Route::post('/update', [MedicalRecordController::class, 'updateRekamMedis']);
+        Route::delete('/{id}/delete', [MedicalRecordController::class, 'deleteRekamMedisById']);
+    });
+});
+
+//--- Admin Routes (HIGHLY SENSITIVE) ---//
+// ALL routes in this group should be protected by a strict admin-only middleware.
+Route::prefix('admin')->middleware(['auth:api', 'is.admin'])->group(function () {
+    Route::post('/roles/manage', [AdminController::class, 'kelolaRole']);
+    Route::get('/logs/activity', [AdminController::class, 'monitoringLogAktivitas']);
+    Route::post('/users/bulk-manage', [AdminController::class, 'manajemenRoleUser']);
+    Route::get('/logs/audit', [AdminController::class, 'auditLogDataMgmt']);
+    Route::get('/logs/api-requests', [AdminController::class, 'loggingAPIRequest']);
+    Route::get('/monitoring/backend', [AdminController::class, 'monitoringBackend']);
+    Route::get('/monitoring/traffic-anomaly', [AdminController::class, 'monitoringAnomaliTraffic']);
+    Route::post('/system/maintenance', [AdminController::class, 'systemMaintenance']);
+    Route::post('/users/impersonate', [AdminController::class, 'impersonateUser']);
+    Route::post('/database/backup', [AdminController::class, 'backupDatabase']);
+    Route::post('/config/manage', [AdminController::class, 'manageConfig']);
+    Route::post('/artisan/execute', [AdminController::class, 'executeArtisan']);
 });
