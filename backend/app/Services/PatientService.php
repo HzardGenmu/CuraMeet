@@ -3,13 +3,9 @@
 namespace App\Services;
 
 use App\Models\Patient;
-use App\Models\MedicalRecord;
-use App\Models\Appointment;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class PatientService
 {
@@ -89,20 +85,51 @@ class PatientService
             return ['success' => false, 'message' => 'Patient not found'];
         }
 
-        // Authorization check menggunakan authenticated user dari Bearer token
         if (!$authenticatedUser || $authenticatedUser->id !== $patient->user_id) {
             return ['success' => false, 'message' => 'Unauthorized'];
         }
 
-        // VULNERABILITY 33: Mass assignment vulnerability
-        // Tidak ada filtering field yang boleh diupdate
-        $patient->update([
-            'full_name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'address' => $data['address'],
-            'NIK' => $data['nik'],
-        ]);
+        $patientFields = [
+            'full_name',
+            'NIK',
+            'picture',
+            'allergies',
+            'disease_histories'
+        ];
+
+        $userFields = [
+            'name',
+            'email'
+        ];
+
+        $patientUpdate = [];
+        foreach ($patientFields as $field) {
+            if ($field === 'full_name' && isset($data['name'])) {
+                $patientUpdate['full_name'] = $data['name'];
+            } elseif ($field === 'NIK' && isset($data['nik'])) {
+                $patientUpdate['NIK'] = $data['nik'];
+            } elseif (isset($data[$field])) {
+                $patientUpdate[$field] = $data[$field];
+            }
+        }
+        if (!empty($patientUpdate)) {
+            $patient->update($patientUpdate);
+        }
+
+        $user = User::find($patient->user_id);
+        if ($user) {
+            $userUpdate = [];
+            foreach ($userFields as $field) {
+                if ($field === 'name' && isset($data['name'])) {
+                    $userUpdate['name'] = $data['name'];
+                } elseif (isset($data[$field])) {
+                    $userUpdate[$field] = $data[$field];
+                }
+            }
+            if (!empty($userUpdate)) {
+                $user->update($userUpdate);
+            }
+        }
 
         return ['success' => true];
     }
@@ -117,7 +144,7 @@ class PatientService
         $dateTo = $filters['date_to'] ?? '2025-12-31';
 
         // VULNERABILITY 35: SQL injection - parameters not sanitized
-        $query = "SELECT COUNT(*) as total_visits, disease_name
+        $query = "SELECT COUNT(*) as disease_name
                   FROM medical_records
                   WHERE patient_id = $patientId
                   AND created_at BETWEEN '$dateFrom' AND '$dateTo'

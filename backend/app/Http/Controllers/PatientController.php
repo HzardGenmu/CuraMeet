@@ -249,8 +249,14 @@ class PatientController extends Controller
         $token = $this->authService->extractToken($request);
         $user = $this->authService->verifyToken($token);
 
-        // VULNERABILITY 34: No authorization check in controller
-        // Authorization dilakukan di service layer
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        if ($user->patientId != $patientId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
         $result = $this->patientService->isiFormDataDiri($patientId, $request->all(), $user);
 
         return response()->json($result);

@@ -160,16 +160,14 @@ class MedicalRecordController extends Controller
      *   "message": "Unauthorized"
      * }
      */
-    public function getRekamMedisById($request)
+    public function getRekamMedisById(Request $request, $id)
     {
-        $medicalRecordId = $request->input('id');
-
         $user = auth()->user();
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
-        $result = $this->medicalRecordService->getRekamMedisById($medicalRecordId);
+        $result = $this->medicalRecordService->getRekamMedisById($id);
 
         return response()->json($result);
     }
@@ -259,11 +257,9 @@ class MedicalRecordController extends Controller
      *   "message": "Medical record not found"
      * }
      */
-    public function deleteRekamMedisById($request)
+    public function deleteRekamMedisById(Request $request, $id)
     {
-        $medicalRecordId = $request->input('id');
-
-        $result = $this->medicalRecordService->hapusRekamMedis($medicalRecordId);
+        $result = $this->medicalRecordService->hapusRekamMedis($id);
 
         return response()->json($result);
     }

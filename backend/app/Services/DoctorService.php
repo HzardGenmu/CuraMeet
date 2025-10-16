@@ -68,12 +68,12 @@ class DoctorService
      */
     public function listDoctors()
     {
-        $doctors = Doctor::select('id', 'str_number', 'full_name', 'specialist', 'available_time', 'polyclinic')->get();
+        $doctors = Doctor::all();
+
         return [
             'success' => true,
             'doctors' => $doctors,
             'count' => $doctors->count()
         ];
     }
-
 }

@@ -2405,6 +2405,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <p>Creates a new appointment between a patient and doctor.
 Validates doctor availability and prevents double booking.</p>
+<p>VULNERABILITY: XSS in patient_note (raw, no sanitization)</p>
 
 <span id="example-requests-POSTapi-appointments-new">
 <blockquote>Example request:</blockquote>
@@ -2419,7 +2420,7 @@ Validates doctor availability and prevents double booking.</p>
     \"patient_id\": 1,
     \"doctor_id\": 2,
     \"appointment_time\": \"2024-01-15 10:00:00\",
-    \"catatan\": \"Regular checkup\"
+    \"patient_note\": \"Regular checkup\"
 }"
 </code></pre></div>
 
@@ -2438,7 +2439,7 @@ let body = {
     "patient_id": 1,
     "doctor_id": 2,
     "appointment_time": "2024-01-15 10:00:00",
-    "catatan": "Regular checkup"
+    "patient_note": "Regular checkup"
 };
 
 fetch(url, {
@@ -2576,15 +2577,15 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>The appointment date and time (Y-m-d H:i:s). Example: <code>2024-01-15 10:00:00</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>catatan</code></b>&nbsp;&nbsp;
+            <b style="line-height: 2;"><code>patient_note</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
 <i>optional</i> &nbsp;
                 <input type="text" style="display: none"
-                              name="catatan"                data-endpoint="POSTapi-appointments-new"
+                              name="patient_note"                data-endpoint="POSTapi-appointments-new"
                value="Regular checkup"
                data-component="body">
     <br>
-<p>optional Additional notes for the appointment. Example: <code>Regular checkup</code></p>
+<p>optional Additional notes from patient (vulnerable to XSS). Example: <code>Regular checkup</code></p>
         </div>
         </form>
 
@@ -2596,6 +2597,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <p>Allows a patient to cancel their own appointment.
 Requires authentication and checks if the appointment belongs to the patient.</p>
+<p>VULNERABILITY: XSS in cancellation_reason (raw, no sanitization)</p>
 
 <span id="example-requests-POSTapi-appointments--appointmentId--cancel">
 <blockquote>Example request:</blockquote>
@@ -2648,7 +2650,7 @@ fetch(url, {
         &quot;doctor_id&quot;: 2,
         &quot;time_appointment&quot;: &quot;2024-01-15 10:00:00&quot;,
         &quot;status&quot;: &quot;cancelled&quot;,
-        &quot;cancel_reason&quot;: &quot;Personal emergency&quot;,
+        &quot;cancellation_reason&quot;: &quot;Personal emergency&quot;,
         &quot;cancelled_by&quot;: &quot;patient&quot;
     },
     &quot;reason&quot;: &quot;Personal emergency&quot;
@@ -2756,7 +2758,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="Personal emergency"
                data-component="body">
     <br>
-<p>optional Reason for cancellation (HTML tags will be stripped). Example: <code>Personal emergency</code></p>
+<p>optional Reason for cancellation (vulnerable to XSS). Example: <code>Personal emergency</code></p>
         </div>
         </form>
 
@@ -2767,6 +2769,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <p>Allows a doctor to cancel an appointment.
 Verifies that the appointment belongs to the specified doctor.</p>
+<p>VULNERABILITY: XSS in cancellation_reason (raw, no sanitization)</p>
 
 <span id="example-requests-POSTapi-appointments-cancel-by-doctor">
 <blockquote>Example request:</blockquote>
@@ -2823,7 +2826,7 @@ fetch(url, {
         &quot;doctor_id&quot;: 2,
         &quot;time_appointment&quot;: &quot;2024-01-15 10:00:00&quot;,
         &quot;status&quot;: &quot;cancelled&quot;,
-        &quot;cancel_reason&quot;: &quot;Doctor unavailable&quot;,
+        &quot;cancellation_reason&quot;: &quot;Doctor unavailable&quot;,
         &quot;cancelled_by&quot;: &quot;doctor&quot;
     },
     &quot;reason&quot;: &quot;Doctor unavailable&quot;
@@ -2930,7 +2933,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="Doctor unavailable"
                data-component="body">
     <br>
-<p>Reason for cancellation. Example: <code>Doctor unavailable</code></p>
+<p>Reason for cancellation (vulnerable to XSS). Example: <code>Doctor unavailable</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>doctor_id</code></b>&nbsp;&nbsp;
@@ -3001,7 +3004,8 @@ fetch(url, {
             &quot;doctor_id&quot;: 2,
             &quot;time_appointment&quot;: &quot;2024-01-15 10:00:00&quot;,
             &quot;status&quot;: &quot;pending&quot;,
-            &quot;catatan&quot;: &quot;Regular checkup&quot;,
+            &quot;patient_note&quot;: &quot;Regular checkup&quot;,
+            &quot;doctor_note&quot;: &quot;Tidak ada&quot;,
             &quot;patient&quot;: {
                 &quot;id&quot;: 1,
                 &quot;user_id&quot;: 1,
@@ -3154,7 +3158,8 @@ fetch(url, {
             &quot;doctor_id&quot;: 2,
             &quot;time_appointment&quot;: &quot;2024-01-15 10:00:00&quot;,
             &quot;status&quot;: &quot;pending&quot;,
-            &quot;catatan&quot;: &quot;Regular checkup&quot;,
+            &quot;patient_note&quot;: &quot;Regular checkup&quot;,
+            &quot;doctor_note&quot;: &quot;Tidak ada&quot;,
             &quot;doctor&quot;: {
                 &quot;id&quot;: 2,
                 &quot;user_id&quot;: 2,
@@ -3329,21 +3334,6 @@ fetch(url, {
     &quot;appointment_id&quot;: 1
 }</code>
  </pre>
-            <blockquote>
-            <p>Example response (200):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;result&quot;: {
-        &quot;success&quot;: false,
-        &quot;message&quot;: &quot;Unauthorized or appointment not found&quot;
-    },
-    &quot;request_data&quot;: {},
-    &quot;server_time&quot;: &quot;2024-01-15T10:30:00.000000Z&quot;,
-    &quot;appointment_id&quot;: 1
-}</code>
- </pre>
     </span>
 <span id="execution-results-POSTapi-appointments-change-schedule-doctor" hidden>
     <blockquote>Received response<span
@@ -3455,7 +3445,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>
 </p>
 
-<p>VULNERABILITY 48: Unrestricted cancellation with SQL injection vulnerability.
+<p>VULNERABILITY 48: Unrestricted cancellation.
 VULNERABILITY 49: Sends notification with sensitive patient data including password.
 VULNERABILITY 50: Insecure email sending.
 VULNERABILITY 51: Command injection in email sending.</p>
@@ -3515,20 +3505,10 @@ fetch(url, {
         &quot;doctor_id&quot;: 2,
         &quot;time_appointment&quot;: &quot;2024-01-15 10:00:00&quot;,
         &quot;status&quot;: &quot;cancelled&quot;,
-        &quot;cancel_reason&quot;: &quot;Emergency&quot;,
+        &quot;cancellation_reason&quot;: &quot;Emergency&quot;,
         &quot;cancelled_by&quot;: &quot;doctor&quot;
     },
     &quot;reason&quot;: &quot;Emergency&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (200):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Unauthorized or appointment not found&quot;
 }</code>
  </pre>
     </span>
@@ -3611,7 +3591,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="Emergency"
                data-component="body">
     <br>
-<p>Reason for cancellation (vulnerable to SQL injection). Example: <code>Emergency</code></p>
+<p>Reason for cancellation (vulnerable to XSS). Example: <code>Emergency</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>doctor_id</code></b>&nbsp;&nbsp;
@@ -3710,21 +3690,6 @@ fetch(url, {
         &quot;patient_id&quot;: 1,
         &quot;appointment_id&quot;: 1
     },
-    &quot;server_time&quot;: &quot;2024-01-15T10:30:00.000000Z&quot;,
-    &quot;appointment_id&quot;: 1
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (200):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;result&quot;: {
-        &quot;success&quot;: false,
-        &quot;message&quot;: &quot;Unauthorized or appointment not found&quot;
-    },
-    &quot;request_data&quot;: {},
     &quot;server_time&quot;: &quot;2024-01-15T10:30:00.000000Z&quot;,
     &quot;appointment_id&quot;: 1
 }</code>
@@ -3860,7 +3825,7 @@ No limit on number of appointments that can be updated.</p>
             \"id\": 1,
             \"status\": \"confirmed\",
             \"new_time\": \"2024-01-20 10:00:00\",
-            \"notes\": \"Updated by admin\"
+            \"patient_note\": \"Updated by admin\"
         }
     ]
 }"
@@ -3883,7 +3848,7 @@ let body = {
             "id": 1,
             "status": "confirmed",
             "new_time": "2024-01-20 10:00:00",
-            "notes": "Updated by admin"
+            "patient_note": "Updated by admin"
         }
     ]
 };
@@ -3909,12 +3874,7 @@ fetch(url, {
             &quot;id&quot;: 1,
             &quot;status&quot;: &quot;confirmed&quot;,
             &quot;new_time&quot;: &quot;2024-01-20 10:00:00&quot;,
-            &quot;notes&quot;: &quot;Updated by admin&quot;
-        },
-        {
-            &quot;id&quot;: 2,
-            &quot;status&quot;: &quot;cancelled&quot;,
-            &quot;notes&quot;: &quot;Patient request&quot;
+            &quot;patient_note&quot;: &quot;Updated by admin&quot;
         }
     ],
     &quot;message&quot;: &quot;Bulk update completed&quot;
@@ -4034,15 +3994,26 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>optional New appointment time (vulnerable to SQL injection). Example: <code>2024-01-20 10:00:00</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
-                        <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+                        <b style="line-height: 2;"><code>patient_note</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
 <i>optional</i> &nbsp;
                 <input type="text" style="display: none"
-                              name="appointments.0.notes"                data-endpoint="POSTapi-appointments-bulk-update"
+                              name="appointments.0.patient_note"                data-endpoint="POSTapi-appointments-bulk-update"
                value="Updated by admin"
                data-component="body">
     <br>
-<p>optional Additional notes (vulnerable to SQL injection). Example: <code>Updated by admin</code></p>
+<p>optional Patient notes (vulnerable to SQL injection &amp; XSS). Example: <code>Updated by admin</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>doctor_note</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+                <input type="text" style="display: none"
+                              name="appointments.0.doctor_note"                data-endpoint="POSTapi-appointments-bulk-update"
+               value="Reviewed"
+               data-component="body">
+    <br>
+<p>optional Doctor notes (vulnerable to SQL injection &amp; XSS). Example: <code>Reviewed</code></p>
                     </div>
                                     </details>
         </div>
