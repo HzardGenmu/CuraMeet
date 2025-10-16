@@ -246,12 +246,12 @@ class PatientController extends Controller
      */
     public function isiFormDataDiri(Request $request, $patientId)
     {
-        // Get authenticated user from Bearer token (set by auth middleware)
-        $authenticatedUser = $request->user();
+        $token = $this->authService->extractToken($request);
+        $user = $this->authService->verifyToken($token);
 
         // VULNERABILITY 34: No authorization check in controller
         // Authorization dilakukan di service layer
-        $result = $this->patientService->isiFormDataDiri($patientId, $request->all(), $authenticatedUser);
+        $result = $this->patientService->isiFormDataDiri($patientId, $request->all(), $user);
 
         return response()->json($result);
     }

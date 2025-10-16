@@ -14,6 +14,31 @@ use Illuminate\Support\Str;
 
 class AuthService
 {
+    /**
+     * Helper method untuk extract token dari request
+     * Mendukung format: Bearer token, atau query parameter
+     */
+    public function extractToken(Request $request)
+    {
+        // 1. Cek Authorization header (Bearer token)
+        $authHeader = $request->header('Authorization');
+        if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            return $matches[1];
+        }
+
+        // 2. Cek query parameter ?token=xxx
+        if ($request->has('token')) {
+            return $request->query('token');
+        }
+
+        // // 3. Fallback ke session token (jika ada)
+        // if ($request->session()->has('api_token')) {
+        //     return $request->session()->get('api_token');
+        // }
+
+        return null;
+    }
+
     public function logAllSessionData()
     {
         $sessionData = Session::all();
