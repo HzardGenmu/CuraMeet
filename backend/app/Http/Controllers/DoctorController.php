@@ -21,6 +21,48 @@ class DoctorController extends Controller
         $this->medicalRecordService = $medicalRecordService;
     }
 
+    /**
+     * Get Current Doctor Profile
+     *
+     * Returns the authenticated doctor's profile information.
+     * Requires valid authentication token.
+     *
+     * @group Doctors
+     * @authenticated
+     *
+     * @header Authorization Bearer {token}
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "doctor": {
+     *     "id": 1,
+     *     "user_id": 2,
+     *     "str_number": "STR123456",
+     *     "full_name": "Dr. Jane Smith",
+     *     "specialist": "Cardiology",
+     *     "polyclinic": "Heart",
+     *     "available_time": "08:00-16:00",
+     *     "user": {
+     *       "id": 2,
+     *       "name": "Dr. Jane Smith",
+     *       "email": "doctor@test.com",
+     *       "role": "doctor"
+     *     }
+     *   }
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Token not provided"
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Invalid or expired token"
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Doctor not found"
+     * }
+     */
     public function getDoctorNow(Request $request)
     {
         // Ambil token dari header Authorization
@@ -49,7 +91,36 @@ class DoctorController extends Controller
     }
 
     /**
-     * Get doctor by ID
+     * Get Doctor by ID
+     *
+     * Retrieves doctor information by doctor ID.
+     *
+     * @group Doctors
+     *
+     * @urlParam doctorId integer required The ID of the doctor. Example: 1
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "doctor": {
+     *     "id": 1,
+     *     "user_id": 2,
+     *     "str_number": "STR123456",
+     *     "full_name": "Dr. Jane Smith",
+     *     "specialist": "Cardiology",
+     *     "polyclinic": "Heart",
+     *     "available_time": "08:00-16:00",
+     *     "user": {
+     *       "id": 2,
+     *       "name": "Dr. Jane Smith",
+     *       "email": "doctor@test.com",
+     *       "role": "doctor"
+     *     }
+     *   }
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Doctor not found"
+     * }
      */
     public function getDoctorById($doctorId)
     {
@@ -57,6 +128,38 @@ class DoctorController extends Controller
         return response()->json($result);
     }
 
+    /**
+     * Get Doctor by User ID
+     *
+     * Retrieves doctor information by user ID.
+     *
+     * @group Doctors
+     *
+     * @urlParam userId integer required The user ID of the doctor. Example: 2
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "doctor": {
+     *     "id": 1,
+     *     "user_id": 2,
+     *     "str_number": "STR123456",
+     *     "full_name": "Dr. Jane Smith",
+     *     "specialist": "Cardiology",
+     *     "polyclinic": "Heart",
+     *     "available_time": "08:00-16:00",
+     *     "user": {
+     *       "id": 2,
+     *       "name": "Dr. Jane Smith",
+     *       "email": "doctor@test.com",
+     *       "role": "doctor"
+     *     }
+     *   }
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Doctor not found"
+     * }
+     */
     public function getDoctorByUserId($userId)
     {
         $result = $this->doctorService->getDoctorByUserId($userId);
@@ -64,7 +167,29 @@ class DoctorController extends Controller
     }
 
     /**
-     * Get doctors by name (search)
+     * Search Doctors by Name
+     *
+     * Searches for doctors by their full name (partial match supported).
+     *
+     * @group Doctors
+     *
+     * @queryParam name string required Part or full name of the doctor to search. Example: Jane
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "doctors": [
+     *     {
+     *       "id": 1,
+     *       "user_id": 2,
+     *       "str_number": "STR123456",
+     *       "full_name": "Dr. Jane Smith",
+     *       "specialist": "Cardiology",
+     *       "polyclinic": "Heart",
+     *       "available_time": "08:00-16:00"
+     *     }
+     *   ],
+     *   "count": 1
+     * }
      */
     public function getDoctorsByName(Request $request)
     {
@@ -73,6 +198,36 @@ class DoctorController extends Controller
         return response()->json($result);
     }
 
+    /**
+     * List All Doctors
+     *
+     * Returns a list of all doctors with basic information.
+     *
+     * @group Doctors
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "doctors": [
+     *     {
+     *       "id": 1,
+     *       "str_number": "STR123456",
+     *       "full_name": "Dr. Jane Smith",
+     *       "specialist": "Cardiology",
+     *       "available_time": "08:00-16:00",
+     *       "polyclinic": "Heart"
+     *     },
+     *     {
+     *       "id": 2,
+     *       "str_number": "STR789012",
+     *       "full_name": "Dr. John Doe",
+     *       "specialist": "Dermatology",
+     *       "available_time": "09:00-17:00",
+     *       "polyclinic": "Skin"
+     *     }
+     *   ],
+     *   "count": 2
+     * }
+     */
     public function listDoctors()
     {
         $result = $this->doctorService->listDoctors();
@@ -81,7 +236,38 @@ class DoctorController extends Controller
 
 
     /**
-     * VULNERABILITY 44: Mass data exposure
+     * View Medical Records (Doctor)
+     *
+     * VULNERABILITY 44: Mass data exposure without authorization.
+     * VULNERABILITY 45: Additional sensitive data exposure (passwords, tokens).
+     *
+     * Allows viewing medical records without proper authorization.
+     * Exposes sensitive patient information including passwords.
+     *
+     * @group Doctors
+     *
+     * @queryParam doctor_id integer required The ID of the doctor. Example: 1
+     * @queryParam patient_id integer required The ID of the patient. Example: 1
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "records": [
+     *     {
+     *       "id": 1,
+     *       "patient_id": 1,
+     *       "doctor_id": 1,
+     *       "disease_name": "Hypertension",
+     *       "notes": "Regular checkup",
+     *       "created_at": "2024-01-15 10:00:00",
+     *       "sensitive_info": {
+     *         "password": "password123",
+     *         "remember_token": "abc123def456",
+     *         "allergies": "Peanuts",
+     *         "disease_histories": "Asthma"
+     *       }
+     *     }
+     *   ]
+     * }
      */
     public function lihatRekamanMedis(Request $request)
     {
@@ -110,7 +296,40 @@ class DoctorController extends Controller
 
 
     /**
-     * VULNERABILITY 52: Patient data export without authorization
+     * Export Patient Data
+     *
+     * VULNERABILITY 52: Patient data export without authorization.
+     * VULNERABILITY 53: Direct file system access with predictable paths.
+     *
+     * Exports all patient data including sensitive information (passwords, tokens).
+     * Creates file in /tmp with predictable naming pattern.
+     * No authorization or data minimization.
+     *
+     * @group Doctors
+     *
+     * @urlParam patientId integer required The ID of the patient to export. Example: 1
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "export_file": "patient_export_1_1705315200.json",
+     *   "file_path": "/tmp/patient_export_1_1705315200.json",
+     *   "patient_data": [
+     *     {
+     *       "id": 1,
+     *       "user_id": 1,
+     *       "NIK": "1234567890123456",
+     *       "full_name": "John Doe",
+     *       "email": "patient@example.com",
+     *       "password": "password123",
+     *       "remember_token": "abc123def456",
+     *       "allergies": "Peanuts",
+     *       "disease_histories": "Asthma",
+     *       "all_diseases": "Hypertension,Diabetes",
+     *       "all_notes": "Regular checkup,Follow-up appointment"
+     *     }
+     *   ],
+     *   "exported_at": "2024-01-15T10:00:00.000000Z"
+     * }
      */
     public function exportPatientData(Request $request, $patientId)
     {
@@ -144,7 +363,38 @@ class DoctorController extends Controller
     }
 
     /**
-     * VULNERABILITY 55: Doctor schedule manipulation
+     * Update Doctor Schedule
+     *
+     * VULNERABILITY 55: Doctor schedule manipulation without authorization.
+     * VULNERABILITY 56: Exposes doctor credentials (password) in response.
+     *
+     * Allows anyone to update any doctor's schedule without authorization.
+     * Returns sensitive doctor information including password.
+     *
+     * @group Doctors
+     *
+     * @bodyParam doctor_id integer required The ID of the doctor. Example: 1
+     * @bodyParam schedule string optional New schedule description. Example: Morning shift only
+     * @bodyParam available_time string required New available time range. Example: 08:00-12:00
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "doctor_info": [
+     *     {
+     *       "id": 1,
+     *       "user_id": 2,
+     *       "str_number": "STR123456",
+     *       "full_name": "Dr. Jane Smith",
+     *       "specialist": "Cardiology",
+     *       "polyclinic": "Heart",
+     *       "available_time": "08:00-12:00",
+     *       "email": "doctor@test.com",
+     *       "password": "password123"
+     *     }
+     *   ],
+     *   "new_schedule": "Morning shift only",
+     *   "updated_time": "08:00-12:00"
+     * }
      */
     public function updateDoctorSchedule(Request $request)
     {

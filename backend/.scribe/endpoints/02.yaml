@@ -1,0 +1,616 @@
+name: Doctors
+description: ''
+endpoints:
+  -
+    httpMethods:
+      - GET
+    uri: api/doctors
+    metadata:
+      groupName: Doctors
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List All Doctors'
+      description: 'Returns a list of all doctors with basic information.'
+      authenticated: false
+      deprecated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "doctors": [
+              {
+                "id": 1,
+                "str_number": "STR123456",
+                "full_name": "Dr. Jane Smith",
+                "specialist": "Cardiology",
+                "available_time": "08:00-16:00",
+                "polyclinic": "Heart"
+              },
+              {
+                "id": 2,
+                "str_number": "STR789012",
+                "full_name": "Dr. John Doe",
+                "specialist": "Dermatology",
+                "available_time": "09:00-17:00",
+                "polyclinic": "Skin"
+              }
+            ],
+            "count": 2
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - GET
+    uri: api/doctors/search
+    metadata:
+      groupName: Doctors
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Search Doctors by Name'
+      description: 'Searches for doctors by their full name (partial match supported).'
+      authenticated: false
+      deprecated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      name:
+        name: name
+        description: 'Part or full name of the doctor to search.'
+        required: true
+        example: Jane
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      name: Jane
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "doctors": [
+              {
+                "id": 1,
+                "user_id": 2,
+                "str_number": "STR123456",
+                "full_name": "Dr. Jane Smith",
+                "specialist": "Cardiology",
+                "polyclinic": "Heart",
+                "available_time": "08:00-16:00"
+              }
+            ],
+            "count": 1
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - GET
+    uri: 'api/doctors/{doctorId}'
+    metadata:
+      groupName: Doctors
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Doctor by ID'
+      description: 'Retrieves doctor information by doctor ID.'
+      authenticated: false
+      deprecated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      doctorId:
+        name: doctorId
+        description: 'The ID of the doctor.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      doctorId: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "doctor": {
+              "id": 1,
+              "user_id": 2,
+              "str_number": "STR123456",
+              "full_name": "Dr. Jane Smith",
+              "specialist": "Cardiology",
+              "polyclinic": "Heart",
+              "available_time": "08:00-16:00",
+              "user": {
+                "id": 2,
+                "name": "Dr. Jane Smith",
+                "email": "doctor@test.com",
+                "role": "doctor"
+              }
+            }
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 404
+        content: |-
+          {
+            "success": false,
+            "message": "Doctor not found"
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - GET
+    uri: 'api/doctors/user/{userId}'
+    metadata:
+      groupName: Doctors
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Doctor by User ID'
+      description: 'Retrieves doctor information by user ID.'
+      authenticated: false
+      deprecated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      userId:
+        name: userId
+        description: 'The user ID of the doctor.'
+        required: true
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      userId: 2
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "doctor": {
+              "id": 1,
+              "user_id": 2,
+              "str_number": "STR123456",
+              "full_name": "Dr. Jane Smith",
+              "specialist": "Cardiology",
+              "polyclinic": "Heart",
+              "available_time": "08:00-16:00",
+              "user": {
+                "id": 2,
+                "name": "Dr. Jane Smith",
+                "email": "doctor@test.com",
+                "role": "doctor"
+              }
+            }
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 404
+        content: |-
+          {
+            "success": false,
+            "message": "Doctor not found"
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - POST
+    uri: api/doctors/medical-records/view
+    metadata:
+      groupName: Doctors
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'View Medical Records (Doctor)'
+      description: |-
+        VULNERABILITY 44: Mass data exposure without authorization.
+        VULNERABILITY 45: Additional sensitive data exposure (passwords, tokens).
+
+        Allows viewing medical records without proper authorization.
+        Exposes sensitive patient information including passwords.
+      authenticated: false
+      deprecated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      doctor_id:
+        name: doctor_id
+        description: 'The ID of the doctor.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      patient_id:
+        name: patient_id
+        description: 'The ID of the patient.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      doctor_id: 1
+      patient_id: 1
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "records": [
+              {
+                "id": 1,
+                "patient_id": 1,
+                "doctor_id": 1,
+                "disease_name": "Hypertension",
+                "notes": "Regular checkup",
+                "created_at": "2024-01-15 10:00:00",
+                "sensitive_info": {
+                  "password": "password123",
+                  "remember_token": "abc123def456",
+                  "allergies": "Peanuts",
+                  "disease_histories": "Asthma"
+                }
+              }
+            ]
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - POST
+    uri: 'api/doctors/patients/{patientId}/export'
+    metadata:
+      groupName: Doctors
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Export Patient Data'
+      description: |-
+        VULNERABILITY 52: Patient data export without authorization.
+        VULNERABILITY 53: Direct file system access with predictable paths.
+
+        Exports all patient data including sensitive information (passwords, tokens).
+        Creates file in /tmp with predictable naming pattern.
+        No authorization or data minimization.
+      authenticated: false
+      deprecated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      patientId:
+        name: patientId
+        description: 'The ID of the patient to export.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      patientId: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "export_file": "patient_export_1_1705315200.json",
+            "file_path": "/tmp/patient_export_1_1705315200.json",
+            "patient_data": [
+              {
+                "id": 1,
+                "user_id": 1,
+                "NIK": "1234567890123456",
+                "full_name": "John Doe",
+                "email": "patient@example.com",
+                "password": "password123",
+                "remember_token": "abc123def456",
+                "allergies": "Peanuts",
+                "disease_histories": "Asthma",
+                "all_diseases": "Hypertension,Diabetes",
+                "all_notes": "Regular checkup,Follow-up appointment"
+              }
+            ],
+            "exported_at": "2024-01-15T10:00:00.000000Z"
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - POST
+    uri: api/doctors/schedule/update
+    metadata:
+      groupName: Doctors
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update Doctor Schedule'
+      description: |-
+        VULNERABILITY 55: Doctor schedule manipulation without authorization.
+        VULNERABILITY 56: Exposes doctor credentials (password) in response.
+
+        Allows anyone to update any doctor's schedule without authorization.
+        Returns sensitive doctor information including password.
+      authenticated: false
+      deprecated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      doctor_id:
+        name: doctor_id
+        description: 'The ID of the doctor.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      schedule:
+        name: schedule
+        description: 'optional New schedule description.'
+        required: false
+        example: 'Morning shift only'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      available_time:
+        name: available_time
+        description: 'New available time range.'
+        required: true
+        example: '08:00-12:00'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      doctor_id: 1
+      schedule: 'Morning shift only'
+      available_time: '08:00-12:00'
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "doctor_info": [
+              {
+                "id": 1,
+                "user_id": 2,
+                "str_number": "STR123456",
+                "full_name": "Dr. Jane Smith",
+                "specialist": "Cardiology",
+                "polyclinic": "Heart",
+                "available_time": "08:00-12:00",
+                "email": "doctor@test.com",
+                "password": "password123"
+              }
+            ],
+            "new_schedule": "Morning shift only",
+            "updated_time": "08:00-12:00"
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - GET
+    uri: api/doctors/profile/now
+    metadata:
+      groupName: Doctors
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Current Doctor Profile'
+      description: |-
+        Returns the authenticated doctor's profile information.
+        Requires valid authentication token.
+      authenticated: true
+      deprecated: false
+      custom: []
+    headers:
+      Authorization: 'Bearer {token}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "doctor": {
+              "id": 1,
+              "user_id": 2,
+              "str_number": "STR123456",
+              "full_name": "Dr. Jane Smith",
+              "specialist": "Cardiology",
+              "polyclinic": "Heart",
+              "available_time": "08:00-16:00",
+              "user": {
+                "id": 2,
+                "name": "Dr. Jane Smith",
+                "email": "doctor@test.com",
+                "role": "doctor"
+              }
+            }
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 401
+        content: |-
+          {
+            "success": false,
+            "message": "Token not provided"
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 401
+        content: |-
+          {
+            "success": false,
+            "message": "Invalid or expired token"
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 404
+        content: |-
+          {
+            "success": false,
+            "message": "Doctor not found"
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
