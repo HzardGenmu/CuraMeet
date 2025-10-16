@@ -14,6 +14,8 @@ endpoints:
       description: |-
         Creates a new appointment between a patient and doctor.
         Validates doctor availability and prevents double booking.
+
+        VULNERABILITY: XSS in patient_note (raw, no sanitization)
       authenticated: false
       deprecated: false
       custom: []
@@ -55,9 +57,9 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         custom: []
-      catatan:
-        name: catatan
-        description: 'optional Additional notes for the appointment.'
+      patient_note:
+        name: patient_note
+        description: 'optional Additional notes from patient (vulnerable to XSS).'
         required: false
         example: 'Regular checkup'
         type: string
@@ -69,7 +71,7 @@ endpoints:
       patient_id: 1
       doctor_id: 2
       appointment_time: '2024-01-15 10:00:00'
-      catatan: 'Regular checkup'
+      patient_note: 'Regular checkup'
     fileParameters: []
     responses:
       -
@@ -112,6 +114,8 @@ endpoints:
       description: |-
         Allows a patient to cancel their own appointment.
         Requires authentication and checks if the appointment belongs to the patient.
+
+        VULNERABILITY: XSS in cancellation_reason (raw, no sanitization)
       authenticated: true
       deprecated: false
       custom: []
@@ -136,7 +140,7 @@ endpoints:
     bodyParameters:
       reason:
         name: reason
-        description: 'optional Reason for cancellation (HTML tags will be stripped).'
+        description: 'optional Reason for cancellation (vulnerable to XSS).'
         required: false
         example: 'Personal emergency'
         type: string
@@ -159,7 +163,7 @@ endpoints:
               "doctor_id": 2,
               "time_appointment": "2024-01-15 10:00:00",
               "status": "cancelled",
-              "cancel_reason": "Personal emergency",
+              "cancellation_reason": "Personal emergency",
               "cancelled_by": "patient"
             },
             "reason": "Personal emergency"
@@ -196,6 +200,8 @@ endpoints:
       description: |-
         Allows a doctor to cancel an appointment.
         Verifies that the appointment belongs to the specified doctor.
+
+        VULNERABILITY: XSS in cancellation_reason (raw, no sanitization)
       authenticated: false
       deprecated: false
       custom: []
@@ -219,7 +225,7 @@ endpoints:
         custom: []
       reason:
         name: reason
-        description: 'Reason for cancellation.'
+        description: 'Reason for cancellation (vulnerable to XSS).'
         required: true
         example: 'Doctor unavailable'
         type: string
@@ -254,7 +260,7 @@ endpoints:
               "doctor_id": 2,
               "time_appointment": "2024-01-15 10:00:00",
               "status": "cancelled",
-              "cancel_reason": "Doctor unavailable",
+              "cancellation_reason": "Doctor unavailable",
               "cancelled_by": "doctor"
             },
             "reason": "Doctor unavailable"
@@ -326,7 +332,8 @@ endpoints:
                 "doctor_id": 2,
                 "time_appointment": "2024-01-15 10:00:00",
                 "status": "pending",
-                "catatan": "Regular checkup",
+                "patient_note": "Regular checkup",
+                "doctor_note": "Tidak ada",
                 "patient": {
                   "id": 1,
                   "user_id": 1,
@@ -395,7 +402,8 @@ endpoints:
                 "doctor_id": 2,
                 "time_appointment": "2024-01-15 10:00:00",
                 "status": "pending",
-                "catatan": "Regular checkup",
+                "patient_note": "Regular checkup",
+                "doctor_note": "Tidak ada",
                 "doctor": {
                   "id": 2,
                   "user_id": 2,
@@ -504,21 +512,6 @@ endpoints:
         headers: []
         description: ''
         custom: []
-      -
-        status: 200
-        content: |-
-          {
-            "result": {
-              "success": false,
-              "message": "Unauthorized or appointment not found"
-            },
-            "request_data": {},
-            "server_time": "2024-01-15T10:30:00.000000Z",
-            "appointment_id": 1
-          }
-        headers: []
-        description: ''
-        custom: []
     responseFields: []
     auth: []
     controller: null
@@ -536,7 +529,7 @@ endpoints:
       subgroupDescription: ''
       title: 'Cancel Appointment by Doctor'
       description: |-
-        VULNERABILITY 48: Unrestricted cancellation with SQL injection vulnerability.
+        VULNERABILITY 48: Unrestricted cancellation.
         VULNERABILITY 49: Sends notification with sensitive patient data including password.
         VULNERABILITY 50: Insecure email sending.
         VULNERABILITY 51: Command injection in email sending.
@@ -553,7 +546,7 @@ endpoints:
     bodyParameters:
       reason:
         name: reason
-        description: 'Reason for cancellation (vulnerable to SQL injection).'
+        description: 'Reason for cancellation (vulnerable to XSS).'
         required: true
         example: Emergency
         type: string
@@ -598,20 +591,10 @@ endpoints:
               "doctor_id": 2,
               "time_appointment": "2024-01-15 10:00:00",
               "status": "cancelled",
-              "cancel_reason": "Emergency",
+              "cancellation_reason": "Emergency",
               "cancelled_by": "doctor"
             },
             "reason": "Emergency"
-          }
-        headers: []
-        description: ''
-        custom: []
-      -
-        status: 200
-        content: |-
-          {
-            "success": false,
-            "message": "Unauthorized or appointment not found"
           }
         headers: []
         description: ''
@@ -709,21 +692,6 @@ endpoints:
         headers: []
         description: ''
         custom: []
-      -
-        status: 200
-        content: |-
-          {
-            "result": {
-              "success": false,
-              "message": "Unauthorized or appointment not found"
-            },
-            "request_data": {},
-            "server_time": "2024-01-15T10:30:00.000000Z",
-            "appointment_id": 1
-          }
-        headers: []
-        description: ''
-        custom: []
     responseFields: []
     auth: []
     controller: null
@@ -765,7 +733,7 @@ endpoints:
             id: 1
             status: confirmed
             new_time: '2024-01-20 10:00:00'
-            notes: 'Updated by admin'
+            patient_note: 'Updated by admin'
         type: 'string[]'
         enumValues: []
         exampleWasSpecified: true
@@ -801,11 +769,21 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         custom: []
-      'appointments[].notes':
-        name: 'appointments[].notes'
-        description: 'optional Additional notes (vulnerable to SQL injection).'
+      'appointments[].patient_note':
+        name: 'appointments[].patient_note'
+        description: 'optional Patient notes (vulnerable to SQL injection & XSS).'
         required: false
         example: 'Updated by admin'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      'appointments[].doctor_note':
+        name: 'appointments[].doctor_note'
+        description: 'optional Doctor notes (vulnerable to SQL injection & XSS).'
+        required: false
+        example: Reviewed
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -817,7 +795,7 @@ endpoints:
           id: 1
           status: confirmed
           new_time: '2024-01-20 10:00:00'
-          notes: 'Updated by admin'
+          patient_note: 'Updated by admin'
     fileParameters: []
     responses:
       -
@@ -830,12 +808,7 @@ endpoints:
                 "id": 1,
                 "status": "confirmed",
                 "new_time": "2024-01-20 10:00:00",
-                "notes": "Updated by admin"
-              },
-              {
-                "id": 2,
-                "status": "cancelled",
-                "notes": "Patient request"
+                "patient_note": "Updated by admin"
               }
             ],
             "message": "Bulk update completed"

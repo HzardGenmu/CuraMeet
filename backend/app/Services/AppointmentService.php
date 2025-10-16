@@ -3,14 +3,13 @@
 namespace App\Services;
 
 use App\Models\Appointment;
-
 use Illuminate\Support\Facades\Auth;
 
 class AppointmentService
 {
-    public function newAppointment($patientId, $doctorId, $appointmentTime, $catatan)
+    public function newAppointment($patientId, $doctorId, $appointmentTime, $patientNote)
     {
-        // Validate appointment time, check doctor availability, prevent race condition
+        // Cek ketersediaan dokter
         $exists = Appointment::where('doctor_id', $doctorId)
             ->where('time_appointment', $appointmentTime)
             ->exists();
@@ -24,7 +23,10 @@ class AppointmentService
             'doctor_id' => $doctorId,
             'time_appointment' => $appointmentTime,
             'status' => 'pending',
-            'catatan' => $catatan
+            'patient_note' => $patientNote, // raw, XSS vulnerability
+            'doctor_note' => 'Tidak ada',
+            'cancellation_reason' => '',
+            'cancelled_by' => null,
         ]);
 
         return [
@@ -35,7 +37,7 @@ class AppointmentService
     }
 
     /**
-     * Batalkan pengecekan (secure)
+     * Batalkan pengecekan (oleh pasien)
      */
     public function cancelAppointment($appointmentId, $reason)
     {
@@ -46,7 +48,7 @@ class AppointmentService
         }
 
         $appointment->status = 'cancelled';
-        $appointment->cancel_reason = strip_tags($reason);
+        $appointment->cancellation_reason = $reason; // raw, XSS vulnerability
         $appointment->cancelled_by = 'patient';
         $appointment->save();
 
@@ -81,7 +83,7 @@ class AppointmentService
     }
 
     /**
-     * Batalkan jadwal (hanya dokter terkait)
+     * Batalkan jadwal (oleh dokter)
      */
     public function cancelAppointmentByDoctor($appointmentId, $reason, $doctorId)
     {
@@ -94,7 +96,7 @@ class AppointmentService
         }
 
         $appointment->status = 'cancelled';
-        $appointment->cancel_reason = $reason;
+        $appointment->cancellation_reason = $reason; // raw, XSS vulnerability
         $appointment->cancelled_by = 'doctor';
         $appointment->save();
 

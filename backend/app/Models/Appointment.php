@@ -14,7 +14,10 @@ class Appointment extends Model
         'doctor_id',
         'time_appointment',
         'status',
-        'notes', // notes disimpan raw, XSS vulnerability tetap
+        'doctor_note',      // raw, XSS vulnerability tetap
+        'patient_note',     // raw, XSS vulnerability tetap
+        'cancellation_reason',
+        'cancelled_by',
     ];
 
     protected $casts = [

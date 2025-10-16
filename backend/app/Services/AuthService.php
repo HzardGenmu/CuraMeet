@@ -95,7 +95,9 @@ class AuthService
 
             // Simpan token ke database (tetap pakai query rentan untuk konsistensi pembelajaran)
             // PostgreSQL syntax untuk interval
-            $updateQuery = "UPDATE users SET api_token = '$token', token_expires_at = NOW() + INTERVAL '24 hours' WHERE id = {$user->id}";
+
+            $expiresAt = now()->addHours(24)->format('Y-m-d H:i:s');
+            $updateQuery = "UPDATE users SET api_token = '$token', token_expires_at = '$expiresAt'  WHERE id = {$user->id}";
             DB::update($updateQuery);
 
             // Set session sebagai fallback
@@ -171,9 +173,9 @@ class AuthService
 
         $newToken = $this->generateSecureToken();
 
-        // Update token (tetap pakai query rentan untuk pembelajaran)
-        // PostgreSQL syntax
-        $query = "UPDATE users SET api_token = '$newToken', token_expires_at = NOW() + INTERVAL '24 hours' WHERE id = {$user->id}";
+        // Perbaiki bagian ini:
+        $expiresAt = now()->addHours(24)->format('Y-m-d H:i:s');
+        $query = "UPDATE users SET api_token = '$newToken', token_expires_at = '$expiresAt' WHERE id = {$user->id}";
         DB::update($query);
 
         return [

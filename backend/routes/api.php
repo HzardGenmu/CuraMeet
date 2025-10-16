@@ -70,7 +70,7 @@ Route::prefix('doctors')->group(function () {
     Route::post('/schedule/update', [DoctorController::class, 'updateDoctorSchedule']);
 
     // Route that should require doctor authentication
-    Route::middleware('auth')->get('/profile/now', [DoctorController::class, 'getDoctorNow']);
+    Route::get('/profile/now', [DoctorController::class, 'getDoctorNow']);
 });
 
 //--- Patient Routes ---//
