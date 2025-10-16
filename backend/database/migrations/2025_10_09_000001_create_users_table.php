@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->enum('role', ['patient', 'doctor', 'admin'])->default('patient');
             $table->rememberToken();
             $table->timestamps();
+            $table->string('api_token', 80)->unique()->nullable();
+            $table->timestamp('token_expires_at')->nullable();
 
             $table->unique(['email', 'role']);
         });

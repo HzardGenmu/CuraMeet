@@ -20,4 +20,17 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
+
+    /**
+     * The application's middleware aliases.
+     *
+     * @var array
+     */
+    protected $middlewareAliases = [
+        'auth' => \App\Http\Middleware\Authenticate::class,
+        // ... alias bawaan Laravel lainnya
+
+        // PINDAHKAN is.admin DARI $middlewareGroups KE SINI
+        'is.admin' => \App\Http\Middleware\IsAdminMiddleware::class,
+    ];
 }

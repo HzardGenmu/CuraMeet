@@ -40,6 +40,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        // Tambahkan atau pastikan baris ini ada dan benar
+        'api' => [
+            'driver' => 'sanctum', // Pastikan driver-nya adalah sanctum
+            'provider' => 'users',
+        ],
     ],
 
     /*
