@@ -45,7 +45,7 @@ class AuthController extends Controller
     public function currentUser(Request $request)
     {
         // Ambil token dari header Authorization
-        $token = $this->extractToken($request);
+        $token = $this->authService->extractToken($request);
 
         $user = $this->authService->getCurrentUser($token);
 
@@ -240,7 +240,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $token = $this->extractToken($request);
+        $token = $this->authService->extractToken($request);
 
         $result = $this->authService->logout($token);
 
@@ -275,7 +275,7 @@ class AuthController extends Controller
      */
     public function refreshToken(Request $request)
     {
-        $token = $this->extractToken($request);
+        $token = $this->authService->extractToken($request);
 
         if (!$token) {
             return response()->json([
@@ -325,7 +325,7 @@ class AuthController extends Controller
      */
     public function verifyToken(Request $request)
     {
-        $token = $this->extractToken($request);
+        $token = $this->authService->extractToken($request);
 
         if (!$token) {
             return response()->json([
@@ -354,31 +354,6 @@ class AuthController extends Controller
             'valid' => false,
             'message' => 'Invalid or expired token'
         ], 401);
-    }
-
-    /**
-     * Helper method untuk extract token dari request
-     * Mendukung format: Bearer token, atau query parameter
-     */
-    private function extractToken(Request $request)
-    {
-        // 1. Cek Authorization header (Bearer token)
-        $authHeader = $request->header('Authorization');
-        if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-            return $matches[1];
-        }
-
-        // 2. Cek query parameter ?token=xxx
-        if ($request->has('token')) {
-            return $request->query('token');
-        }
-
-        // // 3. Fallback ke session token (jika ada)
-        // if ($request->session()->has('api_token')) {
-        //     return $request->session()->get('api_token');
-        // }
-
-        return null;
     }
 
     /**
@@ -440,7 +415,7 @@ class AuthController extends Controller
      */
     public function changePassword(Request $request)
     {
-        $token = $this->extractToken($request);
+        $token = $this->authService->extractToken($request);
         $user = $this->authService->verifyToken($token);
 
         if (!$user) {
@@ -485,7 +460,7 @@ class AuthController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $token = $this->extractToken($request);
+        $token = $this->authService->extractToken($request);
         $user = $this->authService->verifyToken($token);
 
         if (!$user) {
