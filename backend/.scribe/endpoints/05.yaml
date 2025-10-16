@@ -101,14 +101,14 @@ endpoints:
         name: id
         description: 'The ID of the medical record.'
         required: true
-        example: architecto
+        example: consequatur
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
     cleanUrlParameters:
-      id: architecto
+      id: consequatur
     queryParameters:
       id:
         name: id
@@ -315,14 +315,14 @@ endpoints:
         name: id
         description: 'The ID of the medical record.'
         required: true
-        example: architecto
+        example: consequatur
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
     cleanUrlParameters:
-      id: architecto
+      id: consequatur
     queryParameters:
       id:
         name: id

@@ -25,14 +25,14 @@ endpoints:
         name: any
         description: ''
         required: true
-        example: '|{+-0p'
+        example: 2UZ5i
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
     cleanUrlParameters:
-      any: '|{+-0p'
+      any: 2UZ5i
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []

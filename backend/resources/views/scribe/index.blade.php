@@ -26,7 +26,7 @@
             </style>
 
     <script>
-        var tryItOutBaseUrl = "http://localhost";
+        var tryItOutBaseUrl = "https://api.curameet.duckdns.org";
         var useCsrf = Boolean();
         var csrfUrl = "/sanctum/csrf-cookie";
     </script>
@@ -283,7 +283,7 @@
     <div class="content">
         <h1 id="introduction">Introduction</h1>
 <aside>
-    <strong>Base URL</strong>: <code>http://localhost</code>
+    <strong>Base URL</strong>: <code>https://api.curameet.duckdns.org</code>
 </aside>
 <pre><code>This documentation aims to provide all the information you need to work with our API.
 
@@ -315,7 +315,7 @@ No authorization check or audit trail.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/admin/roles/manage" \
+    "https://api.curameet.duckdns.org/api/admin/roles/manage" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -327,7 +327,7 @@ No authorization check or audit trail.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/roles/manage"
+    "https://api.curameet.duckdns.org/api/admin/roles/manage"
 );
 
 const headers = {
@@ -479,14 +479,14 @@ Exposes complete system environment and server details.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/admin/logs/activity?user_id=1&amp;action=login&amp;date_from=2024-01-01" \
+    --get "https://api.curameet.duckdns.org/api/admin/logs/activity?user_id=1&amp;action=login&amp;date_from=2024-01-01" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/logs/activity"
+    "https://api.curameet.duckdns.org/api/admin/logs/activity"
 );
 
 const params = {
@@ -665,7 +665,7 @@ Can delete admin users and modify any number of users at once.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/admin/users/bulk-manage" \
+    "https://api.curameet.duckdns.org/api/admin/users/bulk-manage" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -686,7 +686,7 @@ Can delete admin users and modify any number of users at once.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/users/bulk-manage"
+    "https://api.curameet.duckdns.org/api/admin/users/bulk-manage"
 );
 
 const headers = {
@@ -878,14 +878,14 @@ Exposes database credentials and admin privileges.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/admin/logs/audit?table=users&amp;action=update" \
+    --get "https://api.curameet.duckdns.org/api/admin/logs/audit?table=users&amp;action=update" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/logs/audit"
+    "https://api.curameet.duckdns.org/api/admin/logs/audit"
 );
 
 const params = {
@@ -1053,14 +1053,14 @@ Logs current request with headers, cookies, and session data.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/admin/logs/api-requests?endpoint=%2Fapi%2Fauth%2Flogin&amp;method=POST" \
+    --get "https://api.curameet.duckdns.org/api/admin/logs/api-requests?endpoint=%2Fapi%2Fauth%2Flogin&amp;method=POST" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/logs/api-requests"
+    "https://api.curameet.duckdns.org/api/admin/logs/api-requests"
 );
 
 const params = {
@@ -1222,14 +1222,14 @@ Executes system commands without sanitization.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/admin/monitoring/backend" \
+    --get "https://api.curameet.duckdns.org/api/admin/monitoring/backend" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/monitoring/backend"
+    "https://api.curameet.duckdns.org/api/admin/monitoring/backend"
 );
 
 const headers = {
@@ -1363,14 +1363,14 @@ Returns all recent traffic including request details.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/admin/monitoring/traffic-anomaly?threshold=100" \
+    --get "https://api.curameet.duckdns.org/api/admin/monitoring/traffic-anomaly?threshold=100" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/monitoring/traffic-anomaly"
+    "https://api.curameet.duckdns.org/api/admin/monitoring/traffic-anomaly"
 );
 
 const params = {
@@ -1518,7 +1518,7 @@ Supports direct SQL execution, system commands, and file operations.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/admin/system/maintenance" \
+    "https://api.curameet.duckdns.org/api/admin/system/maintenance" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1535,7 +1535,7 @@ Supports direct SQL execution, system commands, and file operations.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/system/maintenance"
+    "https://api.curameet.duckdns.org/api/admin/system/maintenance"
 );
 
 const headers = {
@@ -1733,7 +1733,7 @@ No authorization, audit trail, or time limits.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/admin/users/impersonate" \
+    "https://api.curameet.duckdns.org/api/admin/users/impersonate" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1744,7 +1744,7 @@ No authorization, audit trail, or time limits.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/users/impersonate"
+    "https://api.curameet.duckdns.org/api/admin/users/impersonate"
 );
 
 const headers = {
@@ -1886,7 +1886,7 @@ Exposes database credentials in response.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/admin/database/backup" \
+    "https://api.curameet.duckdns.org/api/admin/database/backup" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1900,7 +1900,7 @@ Exposes database credentials in response.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/database/backup"
+    "https://api.curameet.duckdns.org/api/admin/database/backup"
 );
 
 const headers = {
@@ -2044,7 +2044,7 @@ Exposes all environment configuration including secrets.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/admin/config/manage" \
+    "https://api.curameet.duckdns.org/api/admin/config/manage" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -2057,7 +2057,7 @@ Exposes all environment configuration including secrets.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/config/manage"
+    "https://api.curameet.duckdns.org/api/admin/config/manage"
 );
 
 const headers = {
@@ -2232,7 +2232,7 @@ Exposes full command output and error traces.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/admin/artisan/execute" \
+    "https://api.curameet.duckdns.org/api/admin/artisan/execute" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -2247,7 +2247,7 @@ Exposes full command output and error traces.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/admin/artisan/execute"
+    "https://api.curameet.duckdns.org/api/admin/artisan/execute"
 );
 
 const headers = {
@@ -2413,7 +2413,7 @@ Validates doctor availability and prevents double booking.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/appointments/new" \
+    "https://api.curameet.duckdns.org/api/appointments/new" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -2427,7 +2427,7 @@ Validates doctor availability and prevents double booking.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/appointments/new"
+    "https://api.curameet.duckdns.org/api/appointments/new"
 );
 
 const headers = {
@@ -2605,7 +2605,7 @@ Requires authentication and checks if the appointment belongs to the patient.</p
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/appointments/1/cancel" \
+    "https://api.curameet.duckdns.org/api/appointments/1/cancel" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -2616,7 +2616,7 @@ Requires authentication and checks if the appointment belongs to the patient.</p
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/appointments/1/cancel"
+    "https://api.curameet.duckdns.org/api/appointments/1/cancel"
 );
 
 const headers = {
@@ -2777,7 +2777,7 @@ Verifies that the appointment belongs to the specified doctor.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/appointments/cancel-by-doctor" \
+    "https://api.curameet.duckdns.org/api/appointments/cancel-by-doctor" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -2790,7 +2790,7 @@ Verifies that the appointment belongs to the specified doctor.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/appointments/cancel-by-doctor"
+    "https://api.curameet.duckdns.org/api/appointments/cancel-by-doctor"
 );
 
 const headers = {
@@ -2961,14 +2961,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/appointments/doctor?doctor_id=2" \
+    --get "https://api.curameet.duckdns.org/api/appointments/doctor?doctor_id=2" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/appointments/doctor"
+    "https://api.curameet.duckdns.org/api/appointments/doctor"
 );
 
 const params = {
@@ -3115,14 +3115,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/appointments/patient?patient_id=1" \
+    --get "https://api.curameet.duckdns.org/api/appointments/patient?patient_id=1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/appointments/patient"
+    "https://api.curameet.duckdns.org/api/appointments/patient"
 );
 
 const params = {
@@ -3272,7 +3272,7 @@ Allows a doctor to change appointment schedule.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/appointments/change-schedule/doctor" \
+    "https://api.curameet.duckdns.org/api/appointments/change-schedule/doctor" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -3285,7 +3285,7 @@ Allows a doctor to change appointment schedule.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/appointments/change-schedule/doctor"
+    "https://api.curameet.duckdns.org/api/appointments/change-schedule/doctor"
 );
 
 const headers = {
@@ -3456,7 +3456,7 @@ VULNERABILITY 51: Command injection in email sending.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/appointments/cancel/doctor" \
+    "https://api.curameet.duckdns.org/api/appointments/cancel/doctor" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -3469,7 +3469,7 @@ VULNERABILITY 51: Command injection in email sending.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/appointments/cancel/doctor"
+    "https://api.curameet.duckdns.org/api/appointments/cancel/doctor"
 );
 
 const headers = {
@@ -3632,7 +3632,7 @@ Exposes sensitive request data and server information.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/appointments/change-schedule/patient" \
+    "https://api.curameet.duckdns.org/api/appointments/change-schedule/patient" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -3645,7 +3645,7 @@ Exposes sensitive request data and server information.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/appointments/change-schedule/patient"
+    "https://api.curameet.duckdns.org/api/appointments/change-schedule/patient"
 );
 
 const headers = {
@@ -3816,7 +3816,7 @@ No limit on number of appointments that can be updated.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/appointments/bulk-update" \
+    "https://api.curameet.duckdns.org/api/appointments/bulk-update" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -3834,7 +3834,7 @@ No limit on number of appointments that can be updated.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/appointments/bulk-update"
+    "https://api.curameet.duckdns.org/api/appointments/bulk-update"
 );
 
 const headers = {
@@ -4041,7 +4041,7 @@ Returns user information and Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/auth/login" \
+    "https://api.curameet.duckdns.org/api/auth/login" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -4055,7 +4055,7 @@ Returns user information and Bearer token.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/login"
+    "https://api.curameet.duckdns.org/api/auth/login"
 );
 
 const headers = {
@@ -4249,7 +4249,7 @@ Creates associated patient or doctor record based on role.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/auth/register" \
+    "https://api.curameet.duckdns.org/api/auth/register" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -4273,7 +4273,7 @@ Creates associated patient or doctor record based on role.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/register"
+    "https://api.curameet.duckdns.org/api/auth/register"
 );
 
 const headers = {
@@ -4594,7 +4594,7 @@ VULNERABILITY 9: Plain text password in email/logs.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/auth/password/reset" \
+    "https://api.curameet.duckdns.org/api/auth/password/reset" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -4606,7 +4606,7 @@ VULNERABILITY 9: Plain text password in email/logs.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/password/reset"
+    "https://api.curameet.duckdns.org/api/auth/password/reset"
 );
 
 const headers = {
@@ -4748,7 +4748,7 @@ Allows attackers to determine which emails are registered.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/auth/email/check" \
+    "https://api.curameet.duckdns.org/api/auth/email/check" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -4759,7 +4759,7 @@ Allows attackers to determine which emails are registered.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/email/check"
+    "https://api.curameet.duckdns.org/api/auth/email/check"
 );
 
 const headers = {
@@ -4898,7 +4898,7 @@ Returns user information if token is valid.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/auth/token/verify" \
+    --get "https://api.curameet.duckdns.org/api/auth/token/verify" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -4906,7 +4906,7 @@ Returns user information if token is valid.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/token/verify"
+    "https://api.curameet.duckdns.org/api/auth/token/verify"
 );
 
 const headers = {
@@ -5058,7 +5058,7 @@ Supports authentication via Bearer token or session.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/auth/user" \
+    --get "https://api.curameet.duckdns.org/api/auth/user" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -5066,7 +5066,7 @@ Supports authentication via Bearer token or session.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/user"
+    "https://api.curameet.duckdns.org/api/auth/user"
 );
 
 const headers = {
@@ -5207,7 +5207,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/auth/logout" \
+    "https://api.curameet.duckdns.org/api/auth/logout" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -5215,7 +5215,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/logout"
+    "https://api.curameet.duckdns.org/api/auth/logout"
 );
 
 const headers = {
@@ -5340,7 +5340,7 @@ Returns a new token with extended expiration (24 hours).</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/auth/token/refresh" \
+    "https://api.curameet.duckdns.org/api/auth/token/refresh" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -5348,7 +5348,7 @@ Returns a new token with extended expiration (24 hours).</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/token/refresh"
+    "https://api.curameet.duckdns.org/api/auth/token/refresh"
 );
 
 const headers = {
@@ -5496,7 +5496,7 @@ Requires authentication but doesn't verify old password properly.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/auth/password/change" \
+    "https://api.curameet.duckdns.org/api/auth/password/change" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -5509,7 +5509,7 @@ Requires authentication but doesn't verify old password properly.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/password/change"
+    "https://api.curameet.duckdns.org/api/auth/password/change"
 );
 
 const headers = {
@@ -5674,7 +5674,7 @@ Vulnerable to privilege escalation through role manipulation.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/auth/profile/update" \
+    "https://api.curameet.duckdns.org/api/auth/profile/update" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -5688,7 +5688,7 @@ Vulnerable to privilege escalation through role manipulation.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/auth/profile/update"
+    "https://api.curameet.duckdns.org/api/auth/profile/update"
 );
 
 const headers = {
@@ -5865,14 +5865,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/doctors" \
+    --get "https://api.curameet.duckdns.org/api/doctors" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/doctors"
+    "https://api.curameet.duckdns.org/api/doctors"
 );
 
 const headers = {
@@ -6001,14 +6001,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/doctors/search?name=Jane" \
+    --get "https://api.curameet.duckdns.org/api/doctors/search?name=Jane" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/doctors/search"
+    "https://api.curameet.duckdns.org/api/doctors/search"
 );
 
 const params = {
@@ -6148,14 +6148,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/doctors/1" \
+    --get "https://api.curameet.duckdns.org/api/doctors/1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/doctors/1"
+    "https://api.curameet.duckdns.org/api/doctors/1"
 );
 
 const headers = {
@@ -6302,14 +6302,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/doctors/user/2" \
+    --get "https://api.curameet.duckdns.org/api/doctors/user/2" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/doctors/user/2"
+    "https://api.curameet.duckdns.org/api/doctors/user/2"
 );
 
 const headers = {
@@ -6459,14 +6459,14 @@ Exposes sensitive patient information including passwords.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/doctors/medical-records/view?doctor_id=1&amp;patient_id=1" \
+    "https://api.curameet.duckdns.org/api/doctors/medical-records/view?doctor_id=1&amp;patient_id=1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/doctors/medical-records/view"
+    "https://api.curameet.duckdns.org/api/doctors/medical-records/view"
 );
 
 const params = {
@@ -6626,14 +6626,14 @@ No authorization or data minimization.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/doctors/patients/1/export" \
+    "https://api.curameet.duckdns.org/api/doctors/patients/1/export" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/doctors/patients/1/export"
+    "https://api.curameet.duckdns.org/api/doctors/patients/1/export"
 );
 
 const headers = {
@@ -6776,7 +6776,7 @@ Returns sensitive doctor information including password.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/doctors/schedule/update" \
+    "https://api.curameet.duckdns.org/api/doctors/schedule/update" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -6789,7 +6789,7 @@ Returns sensitive doctor information including password.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/doctors/schedule/update"
+    "https://api.curameet.duckdns.org/api/doctors/schedule/update"
 );
 
 const headers = {
@@ -6957,7 +6957,7 @@ Requires valid authentication token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/doctors/profile/now" \
+    --get "https://api.curameet.duckdns.org/api/doctors/profile/now" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -6965,7 +6965,7 @@ Requires valid authentication token.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/doctors/profile/now"
+    "https://api.curameet.duckdns.org/api/doctors/profile/now"
 );
 
 const headers = {
@@ -7136,14 +7136,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request OPTIONS \
-    "http://localhost/api/|{+-0p" \
+    "https://api.curameet.duckdns.org/api/2UZ5i" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/|{+-0p"
+    "https://api.curameet.duckdns.org/api/2UZ5i"
 );
 
 const headers = {
@@ -7236,10 +7236,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="any"                data-endpoint="OPTIONSapi--any-"
-               value="|{+-0p"
+               value="2UZ5i"
                data-component="url">
     <br>
-<p>Example: <code>|{+-0p</code></p>
+<p>Example: <code>2UZ5i</code></p>
             </div>
                     </form>
 
@@ -7264,14 +7264,14 @@ Returns sensitive information including patient password, NIK, allergies, and em
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/medical-records/patient?patient_id=1" \
+    --get "https://api.curameet.duckdns.org/api/medical-records/patient?patient_id=1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/medical-records/patient"
+    "https://api.curameet.duckdns.org/api/medical-records/patient"
 );
 
 const params = {
@@ -7419,7 +7419,7 @@ Requires authentication.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/medical-records/architecto?id=1" \
+    --get "https://api.curameet.duckdns.org/api/medical-records/consequatur?id=1" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -7427,7 +7427,7 @@ Requires authentication.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/medical-records/architecto"
+    "https://api.curameet.duckdns.org/api/medical-records/consequatur"
 );
 
 const params = {
@@ -7577,10 +7577,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="id"                data-endpoint="GETapi-medical-records--id-"
-               value="architecto"
+               value="consequatur"
                data-component="url">
     <br>
-<p>The ID of the medical record. Example: <code>architecto</code></p>
+<p>The ID of the medical record. Example: <code>consequatur</code></p>
             </div>
                         <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
                                     <div style="padding-left: 28px; clear: unset;">
@@ -7611,7 +7611,7 @@ Requires authentication and validates the medical record exists.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/medical-records/update" \
+    "https://api.curameet.duckdns.org/api/medical-records/update" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -7625,7 +7625,7 @@ Requires authentication and validates the medical record exists.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/medical-records/update"
+    "https://api.curameet.duckdns.org/api/medical-records/update"
 );
 
 const headers = {
@@ -7834,14 +7834,14 @@ No authorization or ownership verification.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost/api/medical-records/architecto/delete?id=1" \
+    "https://api.curameet.duckdns.org/api/medical-records/consequatur/delete?id=1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/medical-records/architecto/delete"
+    "https://api.curameet.duckdns.org/api/medical-records/consequatur/delete"
 );
 
 const params = {
@@ -7960,10 +7960,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="id"                data-endpoint="DELETEapi-medical-records--id--delete"
-               value="architecto"
+               value="consequatur"
                data-component="url">
     <br>
-<p>The ID of the medical record. Example: <code>architecto</code></p>
+<p>The ID of the medical record. Example: <code>consequatur</code></p>
             </div>
                         <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
                                     <div style="padding-left: 28px; clear: unset;">
@@ -7996,14 +7996,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/patients/search?name=John" \
+    --get "https://api.curameet.duckdns.org/api/patients/search?name=John" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/patients/search"
+    "https://api.curameet.duckdns.org/api/patients/search"
 );
 
 const params = {
@@ -8146,14 +8146,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/patients/1" \
+    --get "https://api.curameet.duckdns.org/api/patients/1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/patients/1"
+    "https://api.curameet.duckdns.org/api/patients/1"
 );
 
 const headers = {
@@ -8303,14 +8303,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/patients/user/1" \
+    --get "https://api.curameet.duckdns.org/api/patients/user/1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/patients/user/1"
+    "https://api.curameet.duckdns.org/api/patients/user/1"
 );
 
 const headers = {
@@ -8464,7 +8464,7 @@ Authorization is checked in service layer using Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/patients/1/profile/fill" \
+    "https://api.curameet.duckdns.org/api/patients/1/profile/fill" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -8480,7 +8480,7 @@ Authorization is checked in service layer using Bearer token.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/patients/1/profile/fill"
+    "https://api.curameet.duckdns.org/api/patients/1/profile/fill"
 );
 
 const headers = {
@@ -8703,14 +8703,14 @@ Allows filtering by date range.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/patients/1/statistics?date_from=2024-01-01&amp;date_to=2024-12-31" \
+    --get "https://api.curameet.duckdns.org/api/patients/1/statistics?date_from=2024-01-01&amp;date_to=2024-12-31" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/patients/1/statistics"
+    "https://api.curameet.duckdns.org/api/patients/1/statistics"
 );
 
 const params = {
@@ -8874,7 +8874,7 @@ Requires valid authentication token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/patients/profile/now" \
+    --get "https://api.curameet.duckdns.org/api/patients/profile/now" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -8882,7 +8882,7 @@ Requires valid authentication token.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/patients/profile/now"
+    "https://api.curameet.duckdns.org/api/patients/profile/now"
 );
 
 const headers = {
