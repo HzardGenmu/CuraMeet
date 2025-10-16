@@ -31,6 +31,17 @@ Route::get('/', function () {
     // Kode ini baru akan dieksekusi saat user mengunjungi '/'
     return response()->json(['message' => 'Welcome']);
 });
+
+Route::options('{any}', function (Request $request) {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', $request->header('Origin') ?: 'http://localhost:3000')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept')
+        ->header('Access-Control-Allow-Credentials', 'true')
+        ->header('Access-Control-Max-Age', '86400');
+})->where('any', '.*');
+
+
 //--- Authentication Routes ---//
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
