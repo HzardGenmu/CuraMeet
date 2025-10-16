@@ -217,7 +217,7 @@ class PatientController extends Controller
      * VULNERABILITY 34: Missing authorization check in controller layer.
      *
      * Allows updating patient personal information.
-     * Authorization is checked in service layer, but vulnerable to mass assignment.
+     * Authorization is checked in service layer using Bearer token.
      *
      * @group Patients
      * @authenticated
@@ -239,14 +239,22 @@ class PatientController extends Controller
      *   "success": false,
      *   "message": "Unauthorized"
      * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Patient not found"
+     * }
      */
     public function isiFormDataDiri(Request $request, $patientId)
     {
-        // No authorization check in controller
-        $result = $this->patientService->isiFormDataDiri($patientId, $request->all());
+        // Get authenticated user from Bearer token (set by auth middleware)
+        $authenticatedUser = $request->user();
+
+        // VULNERABILITY 34: No authorization check in controller
+        // Authorization dilakukan di service layer
+        $result = $this->patientService->isiFormDataDiri($patientId, $request->all(), $authenticatedUser);
+
         return response()->json($result);
     }
-
 
     /**
      * View Patient Statistics

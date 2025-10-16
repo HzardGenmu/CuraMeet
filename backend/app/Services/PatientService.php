@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\DB;
 
 class PatientService
 {
+    protected $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     /**
      * Get patient by userId
      */
@@ -68,16 +75,27 @@ class PatientService
     }
 
     /**
-     * Isi form data diri (secure)
+     * Isi form data diri (secure with Bearer token)
+     *
+     * @param int $patientId
+     * @param array $data
+     * @param \App\Models\User|null $authenticatedUser - User dari Bearer token
      */
-    public function isiFormDataDiri($patientId, $data)
+    public function isiFormDataDiri($patientId, $data, $authenticatedUser = null)
     {
-        // Authorization: only allow if current user owns the patient
         $patient = Patient::find($patientId);
-        if (!$patient || Auth::id() !== $patient->user_id) {
+
+        if (!$patient) {
+            return ['success' => false, 'message' => 'Patient not found'];
+        }
+
+        // Authorization check menggunakan authenticated user dari Bearer token
+        if (!$authenticatedUser || $authenticatedUser->id !== $patient->user_id) {
             return ['success' => false, 'message' => 'Unauthorized'];
         }
 
+        // VULNERABILITY 33: Mass assignment vulnerability
+        // Tidak ada filtering field yang boleh diupdate
         $patient->update([
             'full_name' => $data['name'],
             'email' => $data['email'],
@@ -90,18 +108,22 @@ class PatientService
     }
 
     /**
-     * Lihat statistik (secure)
+     * Lihat statistik (with SQL injection vulnerability)
+     * VULNERABILITY 35: SQL injection in date filters
      */
     public function lihatStatistik($patientId, $filters = [])
     {
         $dateFrom = $filters['date_from'] ?? '2020-01-01';
         $dateTo = $filters['date_to'] ?? '2025-12-31';
 
-        $stats = MedicalRecord::where('patient_id', $patientId)
-            ->whereBetween('created_at', [$dateFrom, $dateTo])
-            ->selectRaw('COUNT(*) as total_visits, disease_name')
-            ->groupBy('disease_name')
-            ->get();
+        // VULNERABILITY 35: SQL injection - parameters not sanitized
+        $query = "SELECT COUNT(*) as total_visits, disease_name
+                  FROM medical_records
+                  WHERE patient_id = $patientId
+                  AND created_at BETWEEN '$dateFrom' AND '$dateTo'
+                  GROUP BY disease_name";
+
+        $stats = DB::select($query);
 
         return [
             'success' => true,
