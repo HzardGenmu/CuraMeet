@@ -56,7 +56,8 @@ class DoctorFactory extends Factory
         ];
 
         return [
-            'user_id' => User::factory()->doctor(),
+            // Perbaikan di sini:
+            'user_id' => User::factory(),
             'str_number' => 'STR-' . fake()->unique()->numerify('########'),
             'full_name' => fake()->name(),
             'specialist' => fake()->randomElement($specialists),
@@ -70,7 +71,7 @@ class DoctorFactory extends Factory
      */
     public function specialist(string $specialist): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'specialist' => $specialist,
         ]);
     }
@@ -80,7 +81,7 @@ class DoctorFactory extends Factory
      */
     public function generalPractitioner(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'specialist' => 'General Practitioner',
             'polyclinic' => 'Internal Medicine',
         ]);
@@ -91,7 +92,7 @@ class DoctorFactory extends Factory
      */
     public function emergency(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'specialist' => 'Emergency Medicine',
             'polyclinic' => 'Emergency Medicine',
             'available_time' => 'Daily: 24/7 Emergency',

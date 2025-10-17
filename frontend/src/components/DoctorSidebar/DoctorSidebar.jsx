@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { NavLink ,useNavigate} from 'react-router-dom';
-import { IoPersonCircleOutline, IoLogOutOutline } from 'react-icons/io5';
-import ConfirmationModal from '../ConfirmationModal/ConfirmationModal'; // Import modal
+import React, { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { IoPersonCircleOutline, IoLogOutOutline } from "react-icons/io5";
+import ConfirmationModal from "../ConfirmationModal/ConfirmationModal"; // Import modal
+import { authService } from "../../services/authService";
 
 const DoctorSidebar = () => {
   // Logic untuk Logout Dokter
@@ -13,8 +14,8 @@ const DoctorSidebar = () => {
   };
 
   const confirmLogout = () => {
-    localStorage.removeItem('doctorAuthToken'); // Gunakan token berbeda untuk dokter
-    navigate('/login'); // Kembali ke halaman login
+    authService.logout();
+    navigate("/login");
     setShowLogoutModal(false);
   };
 
@@ -41,7 +42,7 @@ const DoctorSidebar = () => {
                 to="/dokter/janji-temu"
                 className={({ isActive }) =>
                   `flex items-center p-3 rounded-lg text-lg hover:bg-emerald-600 transition-colors duration-200
-                  ${isActive ? 'bg-emerald-600 font-bold' : ''}`
+                  ${isActive ? "bg-emerald-600 font-bold" : ""}`
                 }
               >
                 Janji Temu
@@ -52,7 +53,7 @@ const DoctorSidebar = () => {
                 to="/dokter/pasien"
                 className={({ isActive }) =>
                   `flex items-center p-3 rounded-lg text-lg hover:bg-emerald-600 transition-colors duration-200
-                  ${isActive ? 'bg-emerald-600 font-bold' : ''}`
+                  ${isActive ? "bg-emerald-600 font-bold" : ""}`
                 }
               >
                 Daftar Pasien
