@@ -1,113 +1,121 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-import TextDetailModal from '../../components/TextDetailModal/TextDetailModal';
+import TextDetailModal from "../../components/TextDetailModal/TextDetailModal";
 
-import { patientService } from '../../services/patientService';
-import { authService } from '../../services/authService';
+import { authService } from "../../services/authService";
+import { patientService } from "../../services/patientService";
+import { medicalRecordService } from "../../services/medicalRecordService"; // ✅ 1. Import service yang benar
 
 const CatatanMedis = () => {
   const [catatanMedis, setCatatanMedis] = useState([]);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalContent, setModalContent] = useState('');
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalContent, setModalContent] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCatatan = async () => {
       setLoading(true);
-      setError('');
+      setError("");
       try {
-        const user = authService.getCurrentUser();
-        if (!user || !user.id) {
-          setError('User belum login.');
-          setLoading(false);
+        if (!authService.isAuthenticated()) {
+          navigate("/login");
           return;
         }
-        const res = await patientService.getMedicalRecords(user.id);
-        if (res.success && Array.isArray(res.records)) {
-          setCatatanMedis(res.records);
+
+        // ✅ 2. Alur pengambilan data yang benar
+        // Langkah A: Ambil profil pasien terlebih dahulu untuk mendapatkan patient.id
+        const profileRes = await patientService.getProfile();
+        if (profileRes.success && profileRes.patient) {
+          const patientId = profileRes.patient.id;
+
+          // Langkah B: Gunakan patient.id untuk mengambil catatan medis dari service yang benar
+          const recordsRes = await medicalRecordService.getForPatient(patientId);
+          if (recordsRes.success && Array.isArray(recordsRes.records)) {
+            setCatatanMedis(recordsRes.records);
+          } else {
+            setCatatanMedis([]); // Tetapkan array kosong jika tidak ada catatan
+          }
         } else {
-          setCatatanMedis([]);
+          setError(profileRes.message || "Gagal memuat profil pasien.");
         }
       } catch (err) {
-        setError('Gagal memuat catatan medis.');
+        console.error("Failed to load medical records:", err);
+        setError(err.response?.data?.message || "Gagal memuat catatan medis.");
       } finally {
         setLoading(false);
       }
     };
     fetchCatatan();
-  }, []);
+  }, [navigate]);
 
   const handleCardClick = (catatan) => {
-    const fullContent = `Diagnosa:\n${catatan.diagnosis || catatan.disease_name || '-'}\n\nResep Obat:\n${catatan.resepObat || catatan.resep_obat || '-'}`;
-    setModalTitle(`Detail Catatan Medis - ${catatan.tanggal || catatan.created_at || '-'}`);
+    // Logika ini sudah baik, menyesuaikan dengan key dari backend
+    const fullContent = `Diagnosa:\n${
+      catatan.disease_name || "-"
+    }\n\nCatatan Dokter:\n${catatan.catatan_dokter || "-"}`;
+    const formattedDate = new Date(catatan.created_at).toLocaleDateString(
+      "id-ID",
+      { day: "numeric", month: "long", year: "numeric" }
+    );
+    setModalTitle(`Detail Catatan Medis - ${formattedDate}`);
     setModalContent(fullContent);
     setIsDetailModalOpen(true);
   };
 
   const handleCloseDetailModal = () => {
     setIsDetailModalOpen(false);
-    setModalTitle('');
-    setModalContent('');
   };
 
   return (
     <>
-      {/* .catatan-medis-container */}
-      <div className="p-8">
-        {/* .page-header */}
+      <div className="p-8 min-h-screen bg-gray-50">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold m-0 text-gray-800">Catatan Medis</h1>
+          <h1 className="text-3xl font-semibold m-0 text-gray-800">
+            Catatan Medis
+          </h1>
           {loading ? (
             <p className="mt-2 text-gray-600">Memuat data catatan medis...</p>
           ) : error ? (
             <p className="mt-2 text-red-600">{error}</p>
           ) : (
-            <p className="text-lg text-gray-600 mt-2">Anda memiliki {catatanMedis.length} catatan medis</p>
+            <p className="text-lg text-gray-600 mt-2">
+              Anda memiliki {catatanMedis.length} catatan medis
+            </p>
           )}
         </div>
-        {/* .catatan-medis-grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"> {/* Grid responsif */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {catatanMedis.map((catatan) => (
             <div
               key={catatan.id}
-              className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-200 ease-in-out cursor-pointer h-64
-                         hover:translate-y-[-5px] hover:shadow-lg" // h-64 = 256px
+              className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-200 ease-in-out cursor-pointer h-64 hover:translate-y-[-5px] hover:shadow-lg"
               onClick={() => handleCardClick(catatan)}
             >
-              {/* .catatan-card-header */}
               <div className="bg-gray-50 px-5 py-3 border-b border-gray-200">
                 <p className="m-0 font-semibold text-gray-800 text-base">
-                  {new Date(catatan.tanggal || catatan.created_at).toLocaleDateString('id-ID', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  }) || '-'}
+                  {new Date(catatan.created_at).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
                 </p>
               </div>
-              {/* .catatan-card-body */}
-              <div className="p-5 flex flex-col justify-between h-[calc(100%-48px)]"> {/* Sesuaikan tinggi body */}
-                <div className="space-y-2"> {/* Memberi jarak antar paragraf */}
+              <div className="p-5 flex flex-col justify-between h-[calc(100%-57px)]">
+                <div className="space-y-2">
                   <p className="m-0 text-gray-700 text-sm">
-                    <strong className="font-semibold">Dokter:</strong> {catatan.dokter || catatan.doctor_name || '-'}
+                    <strong className="font-semibold">Dokter:</strong>{" "}
+                    {catatan.doctor_name || "-"}
                   </p>
                   <p className="m-0 text-gray-700 text-sm">
                     <strong className="font-semibold">Diagnosa:</strong>
                   </p>
-                  <p className="mt-1 text-gray-800 text-sm line-clamp-2"> {/* line-clamp-2 untuk 2 baris */}
-                    {catatan.diagnosis || catatan.disease_name || '-'}
+                  <p className="mt-1 text-gray-800 text-sm line-clamp-3">
+                    {catatan.disease_name || "-"}
                   </p>
-                  {(catatan.resepObat || catatan.resep_obat) && (
-                    <>
-                      <p className="mt-3 text-gray-700 text-sm">
-                        <strong className="font-semibold">Resep Obat:</strong>
-                      </p>
-                      <p className="mt-1 text-gray-800 text-sm line-clamp-2"> {/* line-clamp-2 */}
-                        {catatan.resepObat || catatan.resep_obat}
-                      </p>
-                    </>
-                  )}
                 </div>
               </div>
             </div>

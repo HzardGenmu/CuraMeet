@@ -1,189 +1,152 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { IoClose, IoCalendar, IoTime, IoPerson, IoDocumentText } from 'react-icons/io5';
 
-import { IoClose } from 'react-icons/io5';
+const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
+  // State untuk mengelola input form
+  const [doctorId, setDoctorId] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [notes, setNotes] = useState('');
+  const [error, setError] = useState('');
 
-// Tambahkan isDoctorView ke props
-const AppointmentFormModal = ({ show, onClose, title, appointmentData, doctors, rooms, onSave, isDoctorView = false }) => {
-  const [formData, setFormData] = useState({
-    id: appointmentData?.id || null, // Tambahkan ID
-    tanggal: appointmentData?.tanggal || '',
-    jam: appointmentData?.jam || '',
-    dokter: appointmentData?.dokterId || '', // Gunakan dokterId
-    ruang: appointmentData?.ruang || '',
-    pasien: appointmentData?.pasien || '', // Tambahkan pasien juga
-  });
-
-  // useEffect untuk mengisi formData saat appointmentData berubah (saat modal dibuka dengan data baru)
-  useEffect(() => {
-    if (appointmentData) {
-      setFormData({
-        id: appointmentData.id,
-        tanggal: appointmentData.tanggal,
-        jam: appointmentData.jam,
-        dokter: appointmentData.dokterId, // Pastikan ini dokterId
-        ruang: appointmentData.ruang,
-        pasien: appointmentData.pasien,
-      });
-    } else {
-      // Reset form jika tidak ada data awal (misal untuk "tambah baru")
-      setFormData({ id: null, tanggal: '', jam: '', dokter: '', ruang: '', pasien: '' });
-    }
-  }, [appointmentData, show]); // Tambahkan `show` agar form direset saat modal ditutup/dibuka ulang
-
-  if (!show) {
+  if (!isOpen) {
     return null;
   }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    setError('');
+
+    // Validasi sederhana, sekarang termasuk 'notes'
+    if (!doctorId || !date || !time || !notes) {
+      setError('Harap lengkapi semua field yang wajib diisi.');
+      return;
+    }
+
+    // Mengirim data kembali ke komponen induk (JanjiTemu.jsx)
+    onSubmit({
+      doctorId,
+      date,
+      time,
+      notes,
+    });
   };
 
   return (
-    // .modal-overlay
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[1050]" onClick={onClose}>
-      {/* .modal-content (form-modal) */}
+    // Latar belakang modal
+    <div
+      className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50"
+      onClick={onClose}
+    >
+      {/* Konten Modal */}
       <div
-        className="bg-white p-6 sm:p-8 rounded-xl w-11/12 max-w-xl shadow-2xl animate-scale-up" // max-w-xl = 36rem = 576px
+        className="bg-white p-6 sm:p-8 rounded-xl w-11/12 max-w-lg shadow-2xl transform transition-all"
         onClick={e => e.stopPropagation()}
       >
-        {/* .modal-header */}
-        <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-6"> {/* mb-6 = 1.5rem */}
-          <h2 className="text-2xl font-semibold text-gray-800">{title || "Form Janji Temu"}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition duration-200 p-1">
+        {/* Header Modal */}
+        <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">Buat Janji Temu Baru</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition p-1 rounded-full">
             <IoClose size={28} />
           </button>
         </div>
-        {/* .modal-body */}
-        <div>
-          <form onSubmit={handleSubmit}>
-            {/* .form-group-modal */}
-            <div className="mb-6">
-              <label htmlFor="tanggal" className="block mb-2 font-medium text-gray-700 text-base">
-                Tanggal<span className="text-red-500 ml-1">*</span>
-              </label>
-              <input
-                type="date"
-                id="tanggal"
-                name="tanggal"
-                value={formData.tanggal}
-                onChange={handleChange}
-                required
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg text-lg
-                           focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                           transition duration-200 ease-in-out
-                           ${isDoctorView ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                disabled={isDoctorView} // Dokter tidak bisa mengubah tanggal (opsional, bisa diubah)
-              />
-            </div>
-            {/* .form-group-modal */}
-            <div className="mb-6">
-              <label htmlFor="jam" className="block mb-2 font-medium text-gray-700 text-base">
-                Jam<span className="text-red-500 ml-1">*</span>
-              </label>
-              <input
-                type="time"
-                id="jam"
-                name="jam"
-                value={formData.jam}
-                onChange={handleChange}
-                required
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg text-lg
-                           focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                           transition duration-200 ease-in-out
-                           ${isDoctorView ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                disabled={isDoctorView} // Dokter tidak bisa mengubah jam (opsional, bisa diubah)
-              />
-            </div>
-            {/* .form-group-modal */}
-            <div className="mb-6">
-              <label htmlFor="dokter" className="block mb-2 font-medium text-gray-700 text-base">
-                Dokter<span className="text-red-500 ml-1">*</span>
-              </label>
-              <select
-                id="dokter"
-                name="dokter"
-                value={formData.dokter}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg appearance-none
-                           focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                           transition duration-200 ease-in-out bg-gray-100 cursor-not-allowed" // Selalu disabled di tampilan dokter
-                disabled={true} // DOKTER TIDAK DAPAT MENGUBAH FIELD INI
-              >
-                <option value="" disabled>Pilih Dokter</option>
-                {doctors.map(doctor => (
-                  <option key={doctor.id} value={doctor.id}>
-                    {doctor.nama}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* .form-group-modal */}
-            <div className="mb-6">
-              <label htmlFor="ruang" className="block mb-2 font-medium text-gray-700 text-base">
-                Ruang<span className="text-red-500 ml-1">*</span>
-              </label>
-              <select
-                id="ruang"
-                name="ruang"
-                value={formData.ruang}
-                onChange={handleChange}
-                required
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg text-lg appearance-none
-                           focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                           transition duration-200 ease-in-out
-                           ${isDoctorView ? '' : 'bg-gray-100 cursor-not-allowed'}`} // Ruang bisa diubah oleh dokter, tapi tidak oleh pasien
-                disabled={!isDoctorView} // Hanya dokter yang bisa mengubah ruang
-              >
-                <option value="" disabled>Pilih Ruang</option>
-                {rooms.map(room => (
-                  <option key={room.id} value={room.nama}>
-                    {room.nama}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* Tambahkan field Pasien jika diperlukan untuk ditampilkan/diedit */}
-            <div className="mb-8"> {/* mb-8 = 2rem */}
-              <label htmlFor="pasien" className="block mb-2 font-medium text-gray-700 text-base">
-                Pasien
-              </label>
-              <input
-                type="text"
-                id="pasien"
-                name="pasien"
-                value={formData.pasien}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg
-                           focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                           transition duration-200 ease-in-out
-                           bg-gray-100 cursor-not-allowed"
-                disabled={true} // Dokter tidak bisa mengubah pasien
-              />
-            </div>
 
-            {/* .form-submit-btn */}
+        {/* Body Modal berisi Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg text-center text-sm">⚠️ {error}</div>}
+
+          {/* Input Dokter */}
+          <div>
+            <label htmlFor="doctor" className="block text-sm font-medium mb-2 text-gray-700">Pilih Dokter <span className="text-red-500">*</span></label>
+            <div className="relative">
+              <IoPerson className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <select
+                id="doctor"
+                value={doctorId}
+                onChange={(e) => setDoctorId(e.target.value)}
+                required
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="" disabled>-- Pilih seorang dokter --</option>
+                {doctors.map((doctor) => (
+                  <option key={doctor.id} value={doctor.id}>
+                    {doctor.full_name} - {doctor.specialist}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Input Tanggal & Waktu */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="date" className="block text-sm font-medium mb-2 text-gray-700">Tanggal <span className="text-red-500">*</span></label>
+              <div className="relative">
+                 <IoCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="date"
+                  id="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="time" className="block text-sm font-medium mb-2 text-gray-700">Waktu <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <IoTime className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="time"
+                  id="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  required
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Input Catatan */}
+          <div>
+            <label htmlFor="notes" className="block text-sm font-medium mb-2 text-gray-700">Catatan <span className="text-red-500">*</span></label>
+            <div className="relative">
+              <IoDocumentText className="absolute left-3 top-4 text-gray-400" />
+              <textarea
+                id="notes"
+                rows="3"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Contoh: Saya mengalami demam selama 3 hari."
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                required
+              ></textarea>
+            </div>
+          </div>
+
+          {/* Tombol Aksi */}
+          <div className="flex justify-end gap-4 pt-4">
+            <button
+              type="button"
+              className="px-6 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition"
+              onClick={onClose}
+            >
+              Batal
+            </button>
             <button
               type="submit"
-              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium
-                         hover:bg-blue-700 transition duration-300 ease-in-out"
+              className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
             >
-              Simpan Perubahan
+              Jadwalkan
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
 export default AppointmentFormModal;
+

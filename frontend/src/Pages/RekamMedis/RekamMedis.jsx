@@ -22,6 +22,8 @@ const RekamMedis = () => {
   // State untuk form upload
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [diseaseName, setDiseaseName] = useState("");
+  const [doctorNote, setDoctorNote] = useState("");
 
   // State yang dibutuhkan untuk logika yang benar
   const [patientId, setPatientId] = useState(null);
@@ -36,32 +38,21 @@ const RekamMedis = () => {
         navigate("/login");
         return;
       }
-
       try {
         setLoading(true);
-        
         const profileRes = await patientService.getProfile();
-        
         if (profileRes.success && profileRes.patient) {
           const currentPatientId = profileRes.patient.id;
           setPatientId(currentPatientId);
-
-          
-          const recordsRes = await medicalRecordService.getForPatient(
-            currentPatientId
-          );
+          const recordsRes = await medicalRecordService.getForPatient(currentPatientId);
           if (recordsRes.success) {
             setRecords(recordsRes.records || []);
           }
-
-         
           const doctorsRes = await doctorService.getAll();
-
-          
+          // Axios membungkus respons dalam properti 'data'
           if (doctorsRes.data && doctorsRes.data.success) {
             setDoctors(doctorsRes.data.doctors || []);
           }
-
         } else {
           setError(profileRes.message || "Gagal memuat data profil Anda.");
         }
@@ -72,7 +63,6 @@ const RekamMedis = () => {
         setLoading(false);
       }
     };
-
     fetchInitialData();
   }, [navigate]);
 
@@ -83,14 +73,16 @@ const RekamMedis = () => {
 
     if (!selectedFile) return setError("Pilih file terlebih dahulu.");
     if (!selectedDoctorId) return setError("Pilih dokter terlebih dahulu.");
-    if (!patientId)
-      return setError("ID Pasien tidak ditemukan. Harap muat ulang halaman.");
+    if (!patientId) return setError("ID Pasien tidak ditemukan. Harap muat ulang halaman.");
+    if (!diseaseName) return setError("Nama penyakit wajib diisi.");
 
+    // Validasi tipe file
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
     if (!allowedTypes.includes(selectedFile.type)) {
       return setError("Hanya file PDF, JPG, dan PNG yang diizinkan");
     }
 
+    // Validasi ukuran file (misal, 2MB)
     if (selectedFile.size > 2 * 1024 * 1024) {
       return setError("Ukuran file maksimal 2MB");
     }
@@ -102,17 +94,23 @@ const RekamMedis = () => {
       formData.append("patient_id", patientId);
       formData.append("doctor_id", selectedDoctorId);
       formData.append("file", selectedFile);
+      formData.append("disease_name", diseaseName);
+      formData.append("doctor_note", doctorNote);
 
       const response = await medicalRecordService.upload(formData);
 
       if (response.success) {
         setSuccess("File rekam medis berhasil diunggah!");
+        // Reset semua state form
         setSelectedFile(null);
         setSelectedDoctorId("");
-        if(document.getElementById("fileInput")) {
+        setDiseaseName("");
+        setDoctorNote("");
+        if (document.getElementById("fileInput")) {
           document.getElementById("fileInput").value = "";
         }
         
+        // Muat ulang daftar rekam medis
         const newRecords = await medicalRecordService.getForPatient(patientId);
         if (newRecords.success) setRecords(newRecords.records || []);
       } else {
@@ -120,9 +118,7 @@ const RekamMedis = () => {
       }
     } catch (error) {
       console.error("Error uploading file:", error);
-      setError(
-        error.response?.data?.message || "Terjadi kesalahan saat mengunggah file"
-      );
+      setError(error.response?.data?.message || "Terjadi kesalahan saat mengunggah file");
     } finally {
       setUploadLoading(false);
     }
@@ -153,7 +149,7 @@ const RekamMedis = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 sm:p-8 flex flex-col items-center">
-      <div className="w-full max-w-6xl mb-8">
+       <div className="w-full max-w-6xl mb-8">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-800 text-center mb-6">
           <span className="inline-block align-middle mr-2">📋</span> Rekam Medis Saya
         </h1>
@@ -184,6 +180,25 @@ const RekamMedis = () => {
               ))}
             </select>
 
+            <input
+              type="text"
+              value={diseaseName}
+              onChange={(e) => setDiseaseName(e.target.value)}
+              placeholder="Nama Penyakit / Diagnosa *"
+              required
+              disabled={uploadLoading}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+            />
+            
+            <textarea
+              rows="3"
+              value={doctorNote}
+              onChange={(e) => setDoctorNote(e.target.value)}
+              placeholder="Catatan Dokter (opsional)..."
+              disabled={uploadLoading}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base resize-y"
+            />
+
             <div className="relative border border-gray-300 rounded-lg overflow-hidden cursor-pointer">
               <input
                 id="fileInput"
@@ -194,14 +209,14 @@ const RekamMedis = () => {
                 disabled={uploadLoading}
               />
               <label htmlFor="fileInput" className="block w-full py-3 px-4 text-gray-700 bg-gray-50 text-center cursor-pointer hover:bg-gray-100 transition duration-200 ease-in-out text-base font-medium">
-                {selectedFile ? selectedFile.name : "Pilih file (PDF, JPG, PNG)"}
+                {selectedFile ? selectedFile.name : "Pilih file (PDF, JPG, PNG) *"}
               </label>
             </div>
 
             <button
               type="submit"
               className="w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg"
-              disabled={!selectedFile || !selectedDoctorId || uploadLoading}
+              disabled={!selectedFile || !selectedDoctorId || !diseaseName || uploadLoading}
             >
               {uploadLoading ? (
                 <>
@@ -244,7 +259,7 @@ const RekamMedis = () => {
                   {record.path_file &&
                   record.path_file.match(/\.(jpeg|jpg|png)$/i) ? (
                     <img
-                      src={`http://localhost:8000/storage/${record.path_file}`} 
+                      src={`http://localhost:8000/storage/${record.path_file}`}
                       alt="Rekam Medis"
                       className="object-cover w-full h-full"
                     />
@@ -281,7 +296,7 @@ const RekamMedis = () => {
                 <div className="p-4 border-t border-gray-200 mt-auto">
                   {record.path_file && (
                     <a
-                      href={`http://localhost:8000/storage/${record.path_file}`} // URL Lengkap ke Backend
+                      href={`http://localhost:8000/storage/${record.path_file}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full inline-flex items-center justify-center py-2 px-4 border border-blue-500 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition duration-200 ease-in-out text-base"
