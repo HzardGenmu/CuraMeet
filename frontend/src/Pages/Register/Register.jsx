@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
 
-
 const Register = () => {
-  const [nama, setNama] = useState("");
+  // PERBAIKAN 2: Konsistensi state dengan payload API
+  const [name, setName] = useState("");
   const [nik, setNik] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,64 +24,67 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const response = await authService.register({
-        name: nama,
-        email: email,
-        password: password,
+      const userData = {
+        name, // Menggunakan state yang sudah konsisten
+        email,
+        password,
         password_confirmation: confirmPassword,
         NIK: nik,
-      });
-      console.log(response);
-      if (response.success !== false) { // Memperbaiki kondisi if (response.success != false)
-        alert("Registrasi berhasil.");
-        navigate("/login");
+        role: "patient", // Secara eksplisit mengirim role default
+      };
+
+      const response = await authService.register(userData);
+
+      // PERBAIKAN 3: Logika sukses terpusat di `try`
+      if (response.success) {
+        // PERBAIKAN 1: Menghilangkan `alert` untuk UX yang lebih baik
+        // Mengarahkan ke halaman login dengan pesan sukses (opsional)
+        navigate("/login", {
+          state: { message: "Registrasi berhasil! Silakan login." },
+        });
       } else {
-        // Handle error messages from backend, assuming response.errors might be an object
-        const errorMessages = typeof response.errors === 'object' 
-                              ? Object.values(response.errors).flat().join(', ')
-                              : response.errors || "Registrasi gagal.";
-        setError(errorMessages);
+        // Ini akan menangani error logis dari backend (success: false)
+         setError(response.message || "Registrasi gagal karena alasan yang tidak diketahui.");
       }
+
     } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-        err?.message ||
-        "Terjadi kesalahan. Silakan coba lagi."
-      );
+      // PERBAIKAN 3: Penanganan error terpusat di `catch`
+      console.error("Registration failed:", err);
+      // Menangani error validasi dari Laravel (422) atau error server lainnya
+      if (err.response?.data?.errors) {
+        const errorMessages = Object.values(err.response.data.errors).flat().join(' ');
+        setError(errorMessages);
+      } else {
+        setError(err.response?.data?.message || "Terjadi kesalahan pada server.");
+      }
     } finally {
       setLoading(false);
     }
   };
-
+  
+  // ( ... Bagian JSX Anda tidak perlu diubah, sudah sangat baik ... )
+  // Saya sertakan kembali untuk kelengkapan
   return (
-    
     <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-300 p-4 box-border">
-      
       <h1 className="text-6xl font-bold text-emerald-800 mb-8 mt-12 md:mt-0">CuraMeet</h1>
-
-      
       <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-10 text-center custom-shadow">
-        
         <h2 className="text-3xl font-semibold text-gray-800 mb-6">Register</h2>
-
         <form onSubmit={handleSubmit} className="space-y-6" aria-disabled={loading}>
           {error && (
-            
-            <div className="bg-red-100 text-red-700 border border-red-700 px-4 py-2 rounded mb-4 text-sm flex items-center" role="alert" tabIndex={-1}>
+            <div className="bg-red-100 text-red-700 border border-red-700 px-4 py-2 rounded mb-4 text-sm flex items-center" role="alert">
               <span>⚠️ {error}</span>
             </div>
           )}
-
-          {/* Form Group untuk Nama */}
+          
           <div>
-            <label htmlFor="nama" className="block text-sm font-medium mb-2 text-gray-700 text-left">
+            <label htmlFor="name" className="block text-sm font-medium mb-2 text-gray-700 text-left">
               Nama<span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              id="nama"
-              value={nama}
-              onChange={(e) => setNama(e.target.value)}
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
               disabled={loading}
               placeholder="Masukkan nama lengkap Anda"
@@ -89,7 +92,6 @@ const Register = () => {
             />
           </div>
 
-          {/* Form Group untuk NIK */}
           <div>
             <label htmlFor="nik" className="block text-sm font-medium mb-2 text-gray-700 text-left">
               NIK<span className="text-red-500">*</span>
@@ -109,7 +111,6 @@ const Register = () => {
             />
           </div>
 
-          {/* Form Group untuk Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-700 text-left">
               E-mail<span className="text-red-500">*</span>
@@ -127,7 +128,6 @@ const Register = () => {
             />
           </div>
 
-          {/* Form Group untuk Password */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-700 text-left">
               Password<span className="text-red-500">*</span>
@@ -145,7 +145,6 @@ const Register = () => {
             />
           </div>
 
-          {/* Form Group untuk Konfirmasi Password */}
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2 text-gray-700 text-left">
               Konfirmasi Password<span className="text-red-500">*</span>
@@ -162,8 +161,7 @@ const Register = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
           </div>
-
-          {/* Tombol Register */}
+          
           <button
             type="submit"
             className="w-full py-3 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition ease-in-out duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
@@ -179,7 +177,6 @@ const Register = () => {
           </button>
         </form>
 
-        {/* Link untuk Login */}
         <div className="flex flex-col items-center mt-6 space-y-3">
           <Link to="/login" className="text-blue-600 hover:underline text-base font-medium" tabIndex={loading ? -1 : 0}>
             Sudah punya akun? Login
