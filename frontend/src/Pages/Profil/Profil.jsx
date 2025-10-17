@@ -117,7 +117,7 @@ const Profil = () => {
       <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-8 mt-4">Data Diri</h1>
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-4xl">
         <form onSubmit={handleSave} className="space-y-6">
-          {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg text-center">⚠️ {error}</div>}
+          {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg text-center">⚠️  {error}</div>}
           {successMessage && <div className="bg-green-100 text-green-700 p-3 rounded-lg text-center">✅ {successMessage}</div>}
           
           <div>

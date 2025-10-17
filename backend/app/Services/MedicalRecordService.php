@@ -49,13 +49,13 @@ class MedicalRecordService
     public function getRekamMedisByPatient($patientId)
     {
         // No authorization - anyone can view any patient's records
-        $query = "SELECT mr.*, p.full_name as patient_name, p.NIK, p.allergies,
+        $query = 'SELECT mr.*, p.full_name as patient_name, p."NIK", p.allergies,
                          d.full_name as doctor_name, u.email as patient_email, u.password
                   FROM medical_records mr
                   JOIN patients p ON mr.patient_id = p.id
                   JOIN doctors d ON mr.doctor_id = d.id
                   JOIN users u ON p.user_id = u.id
-                  WHERE mr.patient_id = $patientId";
+                  WHERE mr.patient_id = '. (int)$patientId;
 
         $records = \Illuminate\Support\Facades\DB::select($query);
 
