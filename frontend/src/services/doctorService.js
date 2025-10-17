@@ -1,74 +1,55 @@
+// src/services/doctorService.js
 import apiClient from "./apiService";
 
 export const doctorService = {
-  // Add medical record
-  addMedicalRecord: async (recordData) => {
-    const response = await apiClient.post("/doctor/tambah-rekaman", recordData);
-    return response.data;
-  },
-
-  // Add prescription
-  addPrescription: async (prescriptionData) => {
-    const response = await apiClient.post(
-      "/doctor/tambah-resep",
-      prescriptionData
-    );
-    return response.data;
-  },
-
-  // Get medical records
-  getMedicalRecords: async (doctorId, patientId) => {
-    const response = await apiClient.get("/doctor/rekaman-medis", {
-      params: { doctor_id: doctorId, patient_id: patientId },
-    });
-    return response.data;
-  },
-
-  // Update appointment schedule
-  updateAppointmentSchedule: async (appointmentId, newTime, doctorId) => {
-    const response = await apiClient.put(
-      `/doctor/ubah-jadwal/${appointmentId}`,
-      {
-        new_time: newTime,
-        doctor_id: doctorId,
-      }
-    );
-    return response.data;
-  },
-
-  // Cancel schedule
-  cancelSchedule: async (appointmentId, reason, doctorId) => {
-    const response = await apiClient.put(
-      `/doctor/batalkan-jadwal/${appointmentId}`,
-      {
-        reason,
-        doctor_id: doctorId,
-      }
-    );
-    return response.data;
-  },
-
-  // Export patient data
-  exportPatientData: async (patientId) => {
-    const response = await apiClient.get(`/doctor/export-patient/${patientId}`);
-    return response.data;
-  },
-
-  // Bulk update appointments
-  bulkUpdateAppointments: async (appointments) => {
-    const response = await apiClient.put("/doctor/bulk-appointments", {
-      appointments,
-    });
-    return response.data;
-  },
-
-  // Update doctor schedule
-  updateDoctorSchedule: async (doctorId, schedule, availableTime) => {
-    const response = await apiClient.put("/doctor/update-schedule", {
+  /**
+   * FIX: Endpoint disesuaikan dengan DoctorController.
+   * Dokter melihat rekam medis pasien.
+   */
+  viewPatientMedicalRecords: async (doctorId, patientId) => {
+    const response = await apiClient.post("/doctors/medical-records/view", {
       doctor_id: doctorId,
-      schedule,
+      patient_id: patientId,
+    });
+    return response.data;
+  },
+
+  /**
+   * FIX: Method & Endpoint disesuaikan.
+   * Mengekspor data pasien.
+   */
+  exportPatientData: async (patientId) => {
+    const response = await apiClient.post(
+      `/doctors/patients/${patientId}/export`
+    );
+    return response.data;
+  },
+
+  /**
+   * FIX: Method & Endpoint disesuaikan.
+   * Memperbarui jadwal praktek dokter (bukan jadwal janji temu).
+   */
+  updatePracticeSchedule: async (doctorId, availableTime) => {
+    const response = await apiClient.post("/doctors/schedule/update", {
+      doctor_id: doctorId,
       available_time: availableTime,
     });
     return response.data;
+  },
+  
+  // --- Fungsi Tambahan untuk Melengkapi (opsional) ---
+  
+  /**
+   * Mengambil profil dokter yang sedang login.
+   */
+  getProfile: async () => {
+    return await apiClient.get('/doctors/profile/now');
+  },
+
+  /**
+   * Mengambil semua data dokter.
+   */
+  getAll: async () => {
+    return await apiClient.get('/doctors');
   },
 };
