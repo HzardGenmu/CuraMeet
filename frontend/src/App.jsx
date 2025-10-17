@@ -24,6 +24,7 @@ import ManageRoles from "./Pages/Admin/ManageRoles/ManageRoles";
 import LogViewer from "./Pages/Admin/LogViewer/LogViewer";
 import SystemMonitoring from "./Pages/Admin/SystemMonitoring/SystemMonitoring";
 import DataManagement from "./Pages/Admin/DataManagement/DataManagement";
+import ForbiddenPage from "./Pages/Forbidden/ForbiddenPage";
 
 function App() {
   return (
@@ -65,6 +66,7 @@ function App() {
 
         {/* Rute Default saat membuka root */}
         <Route path="/" element={<Navigate to="/register" />} />
+        <Route path="/forbidden" element={<ForbiddenPage />} />
       </Routes>
     </div>
   );

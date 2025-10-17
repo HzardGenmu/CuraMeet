@@ -36,20 +36,20 @@ export const doctorService = {
     });
     return response.data;
   },
-  
+
   // --- Fungsi Tambahan untuk Melengkapi (opsional) ---
-  
+
   /**
    * Mengambil profil dokter yang sedang login.
    */
   getProfile: async () => {
-    return await apiClient.get('/doctors/profile/now');
+    return await apiClient.get("/doctors/profile/now");
   },
 
   /**
    * Mengambil semua data dokter.
    */
   getAll: async () => {
-    return await apiClient.get('/doctors');
+    return await apiClient.get("/doctors");
   },
 };
