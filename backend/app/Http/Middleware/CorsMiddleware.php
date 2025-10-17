@@ -4,40 +4,29 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class CorsMiddleware
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        $allowedOrigins = [
-            'http://localhost:3000',
-            'https://curameet.duckdns.org',
-            'https://api.curameet.duckdns.org',
-        ];
-
-        $origin = $request->headers->get('Origin');
-
-        $headers = [
-            'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'Origin, Content-Type, Accept, Authorization, X-Requested-With',
-            'Access-Control-Allow-Credentials' => 'true',
-        ];
-
-        if (in_array($origin, $allowedOrigins)) {
-            $headers['Access-Control-Allow-Origin'] = $origin;
+        // Handle preflight OPTIONS request
+        if ($request->isMethod('OPTIONS')) {
+            return response('', 200)
+                ->header('Access-Control-Allow-Origin', $request->header('Origin') ?: 'http://localhost:3000')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept')
+                ->header('Access-Control-Allow-Credentials', 'true')
+                ->header('Access-Control-Max-Age', '86400');
         }
 
-        if ($request->getMethod() === 'OPTIONS') {
-            return response('OK', 200)->withHeaders($headers);
-        }
-
+        // Handle actual request
         $response = $next($request);
-
-        foreach ($headers as $key => $value) {
-            $response->headers->set($key, $value);
-        }
-
-        return $response;
+        
+        return $response
+            ->header('Access-Control-Allow-Origin', $request->header('Origin') ?: 'http://localhost:3000')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept')
+            ->header('Access-Control-Allow-Credentials', 'true');
     }
 }
-

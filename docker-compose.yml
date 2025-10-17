@@ -23,7 +23,7 @@ services:
   # OJS Application
   # ----------------
   ojs:
-    image: pkpofficial/ojs:latest
+    image: pkpofficial/ojs:3_3_0-14
     container_name: ojs_app
     restart: unless-stopped
     environment:
@@ -32,8 +32,9 @@ services:
       - DB_PASSWORD=ojs_pass
       - DB_NAME=ojs_db
     volumes:
-      - ./ojs_files:/var/www/html/public
-      - ./ojs_config/config.inc.php:/var/www/html/config/config.inc.php # <--- note the config/ path
+      - ./ojs_files/files:/var/www/files
+      #- ./ojs_config/config.inc.php:/var/www/html/config.inc.php
+      - ./ojs_files/public:/var/www/html/public
     depends_on:
       - ojs_db
     networks:
@@ -83,7 +84,7 @@ services:
     volumes:
       - ./backend:/var/www/html
       - ./backend/nginx.conf:/etc/nginx/conf.d/default.conf # ← TAMBAHKAN INI
-      - ./ojs_config/config.inc.php:/var/www/html/config.inc.php
+      #- ./ojs_config/config.inc.php:/var/www/html/config.inc.php
     networks:
       - app-network
 

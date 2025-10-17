@@ -5,6 +5,7 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
 {
+<<<<<<< HEAD
     /**
      * The application's global HTTP middleware stack.
      */
@@ -27,6 +28,13 @@ class Kernel extends HttpKernel
             // 'throttle:api', // DISABLED - No rate limiting (allows brute force)
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+=======
+    protected $middleware = [];
+    
+    protected $middlewareGroups = [
+        'web' => [],
+        'api' => [],
+>>>>>>> 37c39b2c (Save local changes before pull)
     ];
 
     /**
