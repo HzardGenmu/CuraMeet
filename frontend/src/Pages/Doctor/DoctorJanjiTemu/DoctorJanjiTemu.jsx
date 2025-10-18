@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { doctorService } from "../../../services/doctorService";
 import { appointmentService } from "../../../services/appointmentService";
-import { IoTrash, IoCheckmarkCircle, IoCloseCircle } from "react-icons/io5";
+import {
+  IoTrash,
+  IoCheckmarkCircle,
+  IoCloseCircle,
+  IoCreate,
+} from "react-icons/io5";
 import Modal from "../../../components/Modal/Modal";
 import AppointmentFormModal from "../../../components/AppointmentFormModal/AppointmentFormModal";
 import ConfirmationModal from "../../../components/ConfirmationModal/ConfirmationModal";
@@ -11,10 +16,12 @@ const DoctorJanjiTemu = () => {
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const [isListModalOpen, setIsListModalOpen] = useState(false);
-  const [isEditFormModalOpen, setIsEditFormModalOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [currentAppointment, setCurrentAppointment] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
   const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] =
     useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
@@ -22,13 +29,17 @@ const DoctorJanjiTemu = () => {
     useState(false);
   const [appointmentToUpdateStatus, setAppointmentToUpdateStatus] =
     useState(null);
-  const [newStatus, setNewStatus] = useState("");
+  const [actionType, setActionType] = useState(""); // 'confirm', 'complete', 'cancel'
+  const [newScheduleTime, setNewScheduleTime] = useState("");
 
-  // --- Ambil profil dokter sekarang ---
+  // Constants
+  const STATUS_ORDER = ["pending", "confirmed", "completed", "cancelled"];
+
+  // --- Fetch doctor profile ---
   useEffect(() => {
     const fetchDoctorProfile = async () => {
       try {
-        const res = await doctorService.getProfile(); // Sesuai service baru
+        const res = await doctorService.getProfile();
         setDoctorNowData(res.data.doctor);
       } catch (err) {
         console.error("Failed to fetch doctor profile:", err);
@@ -38,15 +49,15 @@ const DoctorJanjiTemu = () => {
     fetchDoctorProfile();
   }, []);
 
-  // --- Ambil daftar janji temu dokter ---
+  // --- Fetch appointments ---
   const fetchAppointments = useCallback(async () => {
     if (!doctorNowData) return;
 
     setIsLoading(true);
     setError(null);
     try {
-      const res = await appointmentService.getByDoctor(doctorNowData.id);
-      setAppointments(res.data.appointments || []);
+      const res = await appointmentService.getForDoctor(doctorNowData.id);
+      setAppointments(res.appointments || []);
     } catch (err) {
       console.error("Error fetching appointments:", err);
       setError("Gagal memuat data janji temu.");
@@ -61,143 +72,267 @@ const DoctorJanjiTemu = () => {
     }
   }, [fetchAppointments, doctorNowData]);
 
-  // --- Handler Modal ---
+  // --- Modal Handlers ---
   const handleOpenListModal = () => setIsListModalOpen(true);
   const handleCloseListModal = () => setIsListModalOpen(false);
-  const handleOpenEditForm = (appointment) => {
+
+  const handleOpenScheduleModal = (appointment) => {
     setCurrentAppointment(appointment);
-    setIsEditFormModalOpen(true);
-  };
-  const handleCloseEditFormModal = () => {
-    setIsEditFormModalOpen(false);
-    setCurrentAppointment(null);
+    setNewScheduleTime(appointment.time_appointment || "");
+    setIsScheduleModalOpen(true);
   };
 
-  // --- Update Appointment ---
-  const handleSaveChanges = async (formData) => {
+  const handleCloseScheduleModal = () => {
+    setIsScheduleModalOpen(false);
+    setCurrentAppointment(null);
+    setNewScheduleTime("");
+  };
+
+  const handleCloseCancelModal = () => {
+    setIsDeleteConfirmModalOpen(false);
+    setAppointmentToDelete(null);
+    setCancelReason("");
+  };
+
+  // --- Change Schedule ---
+  const handleSaveSchedule = async () => {
+    if (!currentAppointment || !newScheduleTime) {
+      alert("Mohon pilih waktu janji temu yang baru.");
+      return;
+    }
+
     try {
-      await appointmentService.update(formData.id, {
-        appointment_date: formData.tanggal,
-        appointment_time: formData.jam,
-        room: formData.ruang,
-        notes: formData.catatan,
-      });
-      alert("Perubahan berhasil disimpan!");
+      await appointmentService.changeScheduleByDoctor(
+        currentAppointment.id,
+        doctorNowData.id,
+        newScheduleTime
+      );
+      alert("Jadwal janji temu berhasil diubah!");
       fetchAppointments();
-      handleCloseEditFormModal();
+      handleCloseScheduleModal();
     } catch (err) {
-      alert("Terjadi kesalahan saat menyimpan perubahan.");
+      alert("Terjadi kesalahan saat mengubah jadwal.");
       console.error(err);
     }
   };
 
-  // --- Delete Appointment ---
-  const handleDeleteClick = (appointmentId, e) => {
+  // --- Delete/Cancel Appointment ---
+  const handleDeleteClick = (appointment, e) => {
     e.stopPropagation();
-    setAppointmentToDelete(appointmentId);
+    setAppointmentToDelete(appointment);
     setIsDeleteConfirmModalOpen(true);
   };
 
   const confirmDelete = async () => {
     if (!appointmentToDelete) return;
+
+    if (!cancelReason.trim()) {
+      alert("Mohon isi alasan pembatalan.");
+      return;
+    }
+
     try {
-      await appointmentService.delete(appointmentToDelete);
+      await appointmentService.cancelByDoctor(
+        appointmentToDelete.id,
+        doctorNowData.id,
+        cancelReason
+      );
       alert("Janji temu berhasil dibatalkan!");
       fetchAppointments();
     } catch (err) {
       alert("Terjadi kesalahan saat membatalkan janji temu.");
       console.error(err);
     } finally {
-      setIsDeleteConfirmModalOpen(false);
-      setAppointmentToDelete(null);
+      handleCloseCancelModal();
     }
   };
 
   const cancelDelete = () => {
-    setIsDeleteConfirmModalOpen(false);
-    setAppointmentToDelete(null);
+    handleCloseCancelModal();
   };
 
-  // --- Ubah Status Appointment ---
-  const handleStatusChangeClick = (appointment, status) => {
+  // --- Change Appointment Status ---
+  const handleStatusActionClick = (appointment, action) => {
     setAppointmentToUpdateStatus(appointment);
-    setNewStatus(status);
+    setActionType(action);
     setIsStatusConfirmModalOpen(true);
   };
 
-  const confirmStatusChange = async () => {
-    if (!appointmentToUpdateStatus || !newStatus) return;
+  const confirmStatusAction = async () => {
+    if (!appointmentToUpdateStatus || !actionType) return;
 
     try {
-      await appointmentService.updateStatus(appointmentToUpdateStatus.id, {
-        status: newStatus,
-      });
-
-      alert(`Status janji temu diubah menjadi ${newStatus}!`);
+      switch (actionType) {
+        case "confirm":
+          await appointmentService.confirmByDoctor(
+            appointmentToUpdateStatus.id,
+            doctorNowData.id
+          );
+          alert("Janji temu berhasil dikonfirmasi!");
+          break;
+        case "complete":
+          await appointmentService.completeByDoctor(
+            appointmentToUpdateStatus.id,
+            doctorNowData.id
+          );
+          alert("Janji temu berhasil diselesaikan!");
+          break;
+        case "cancel":
+          await appointmentService.cancelByDoctor(
+            appointmentToUpdateStatus.id,
+            doctorNowData.id,
+            "Ditolak oleh dokter"
+          );
+          alert("Janji temu berhasil ditolak!");
+          break;
+        default:
+          break;
+      }
       fetchAppointments();
     } catch (err) {
-      alert(`Gagal mengubah status menjadi ${newStatus}.`);
+      alert(`Gagal melakukan aksi: ${actionType}`);
       console.error(err);
     } finally {
       setIsStatusConfirmModalOpen(false);
       setAppointmentToUpdateStatus(null);
-      setNewStatus("");
+      setActionType("");
     }
   };
 
-  const cancelStatusChange = () => {
+  const cancelStatusAction = () => {
     setIsStatusConfirmModalOpen(false);
     setAppointmentToUpdateStatus(null);
-    setNewStatus("");
+    setActionType("");
   };
 
-  // --- Loading / Error State ---
+  // --- Utility Functions ---
+  const getStatusBadgeClass = (status) => {
+    const statusLower = status?.toLowerCase();
+    switch (statusLower) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "confirmed":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "completed":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getActionLabel = (action) => {
+    switch (action) {
+      case "confirm":
+        return "Konfirmasi";
+      case "complete":
+        return "Selesaikan";
+      case "cancel":
+        return "Tolak";
+      default:
+        return "";
+    }
+  };
+
+  const sortByStatus = (a, b) => {
+    const aIdx = STATUS_ORDER.indexOf(a.status?.toLowerCase());
+    const bIdx = STATUS_ORDER.indexOf(b.status?.toLowerCase());
+    return aIdx - bIdx;
+  };
+
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return "-";
+    const date = new Date(dateTime);
+    const dateStr = date.toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const timeStr = date.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return `${dateStr} - ${timeStr}`;
+  };
+
+  // --- Loading / Error States ---
   if (isLoading) {
-    return <p className="p-8 text-gray-700 text-lg">Loading...</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-700 text-lg">Memuat data...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <p className="p-8 text-red-600 text-lg">{error}</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+          <p className="text-red-600 text-lg font-semibold mb-2">
+            Terjadi Kesalahan
+          </p>
+          <p className="text-red-700">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   if (!doctorNowData) {
     return <p className="p-8 text-gray-700 text-lg">Memuat data dokter...</p>;
   }
 
+  // --- Data Processing ---
   const CURRENT_DOCTOR_NAME = doctorNowData.full_name || "Tanpa Nama";
 
-  const relevantAppointments = appointments.filter(
-    (app) => app.status === "Pending" || app.status === "Approved"
-  );
+  const relevantAppointments = appointments
+    .slice()
+    .sort(sortByStatus)
+    .filter((app) => {
+      const status = app.status?.toLowerCase();
+      if (statusFilter === "all") {
+        return status === "pending" || status === "confirmed";
+      }
+      return status === statusFilter;
+    });
 
-  const upcomingAppointmentsDisplay = relevantAppointments.slice(0, 2);
+  const upcomingAppointmentsDisplay = relevantAppointments;
 
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "Approved":
-        return "bg-green-100 text-green-800";
-      case "Rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
+  // --- Render ---
   return (
     <>
-      <div className="p-8">
-        <h1 className="text-3xl font-semibold mb-8 text-gray-800">
+      <div className="p-8 bg-gray-50 min-h-screen">
+        <h1 className="text-3xl font-bold mb-8 text-gray-800">
           Janji Temu Dokter {CURRENT_DOCTOR_NAME}
         </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Kartu sambutan */}
-          <div className="bg-white p-8 rounded-xl shadow-md">
-            <h2 className="text-2xl font-bold mb-2 text-gray-800">
-              Hello, Dokter {CURRENT_DOCTOR_NAME}!
+
+        <div className="mb-6">
+          <label className="mr-2 font-medium text-gray-700">
+            Filter Status:
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border rounded-lg focus:ring focus:ring-blue-200"
+          >
+            <option value="all">Semua (Pending & Confirmed)</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Welcome Card */}
+          <div className="lg:col-span-2 bg-gradient-to-br from-blue-500 to-blue-700 p-8 rounded-xl shadow-lg text-white">
+            <h2 className="text-2xl font-bold mb-2">
+              Selamat Datang, Dr. {CURRENT_DOCTOR_NAME}!
             </h2>
-            <p className="text-gray-600 mb-2">
+            <p className="text-blue-100 mb-2">
               {new Date().toLocaleDateString("id-ID", {
                 weekday: "long",
                 year: "numeric",
@@ -205,21 +340,63 @@ const DoctorJanjiTemu = () => {
                 day: "numeric",
               })}
             </p>
-            <p className="text-gray-700 mb-4">
-              Anda memiliki {relevantAppointments.length} janji temu mendatang
-              (Pending/Approved).
+            <p className="text-white mb-6 text-lg">
+              Anda memiliki{" "}
+              <span className="font-bold text-2xl">
+                {relevantAppointments.length}
+              </span>{" "}
+              janji temu mendatang.
             </p>
             <button
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition duration-300 ease-in-out"
+              className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition duration-300 ease-in-out shadow-md"
               onClick={handleOpenListModal}
             >
-              Lihat & Kelola Janji Temu
+              Kelola Semua Janji Temu
             </button>
           </div>
 
-          {/* Daftar Janji Temu Mendatang */}
-          <div className="bg-white p-8 rounded-xl shadow-md">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">
+          {/* Statistics Card */}
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Statistik Hari Ini
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
+                <span className="text-gray-700">Pending</span>
+                <span className="text-xl font-bold text-yellow-700">
+                  {
+                    appointments.filter(
+                      (a) => a.status?.toLowerCase() === "pending"
+                    ).length
+                  }
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                <span className="text-gray-700">Confirmed</span>
+                <span className="text-xl font-bold text-green-700">
+                  {
+                    appointments.filter(
+                      (a) => a.status?.toLowerCase() === "confirmed"
+                    ).length
+                  }
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <span className="text-gray-700">Completed</span>
+                <span className="text-xl font-bold text-blue-700">
+                  {
+                    appointments.filter(
+                      (a) => a.status?.toLowerCase() === "completed"
+                    ).length
+                  }
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming Appointments */}
+          <div className="lg:col-span-3 bg-white p-8 rounded-xl shadow-md">
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">
               Janji Temu Mendatang
             </h2>
             <div className="space-y-4">
@@ -227,179 +404,326 @@ const DoctorJanjiTemu = () => {
                 upcomingAppointmentsDisplay.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 border-b border-gray-200 last:border-b-0"
+                    className="flex flex-col lg:flex-row justify-between items-start lg:items-center p-6 border border-gray-200 rounded-lg hover:shadow-md transition duration-200"
                   >
-                    <div className="flex-grow mb-2 sm:mb-0">
-                      <p className="text-gray-800 font-semibold text-lg">
-                        {item.appointment_date} - {item.appointment_time}
-                      </p>
-                      <p className="text-gray-700 text-base">
-                        Pasien: {item.patient_name}
+                    <div className="flex-grow mb-4 lg:mb-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        <p className="text-gray-800 font-bold text-xl">
+                          {item.patient?.full_name || "-"}
+                        </p>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(
+                            item.status
+                          )}`}
+                        >
+                          {item.status}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-base mb-1">
+                        📅 {formatDateTime(item.time_appointment)}
                       </p>
                       <p className="text-gray-600 text-sm">
-                        Ruang: {item.room}
+                        🏥 Ruang: {doctorNowData.polyclinic || "-"}
                       </p>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(
-                          item.status
-                        )}`}
-                      >
-                        {item.status}
-                      </span>
+                      {item.notes && (
+                        <p className="text-gray-500 text-sm mt-2 italic">
+                          📝 {item.notes}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex space-x-2">
-                      {item.status === "Pending" && (
+                    <div className="flex gap-2 flex-wrap">
+                      {item.status?.toLowerCase() === "pending" && (
                         <>
                           <button
-                            className="text-green-600 hover:text-green-800 transition duration-200 p-2 rounded-full hover:bg-green-50"
+                            className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition duration-200"
                             onClick={() =>
-                              handleStatusChangeClick(item, "Approved")
+                              handleStatusActionClick(item, "confirm")
                             }
-                            title="Setujui Janji Temu"
+                            title="Konfirmasi Janji Temu"
                           >
-                            <IoCheckmarkCircle size={24} />
+                            <IoCheckmarkCircle size={20} />
+                            Konfirmasi
                           </button>
                           <button
-                            className="text-red-600 hover:text-red-800 transition duration-200 p-2 rounded-full hover:bg-red-50"
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition duration-200"
                             onClick={() =>
-                              handleStatusChangeClick(item, "Rejected")
+                              handleStatusActionClick(item, "cancel")
                             }
                             title="Tolak Janji Temu"
                           >
-                            <IoCloseCircle size={24} />
+                            <IoCloseCircle size={20} />
+                            Tolak
                           </button>
                         </>
                       )}
-                      {item.status !== "Rejected" && (
-                        <button
-                          className="text-gray-500 hover:text-gray-700 transition duration-200 p-2 rounded-full hover:bg-gray-50"
-                          onClick={(e) => handleDeleteClick(item.id, e)}
-                          title="Batalkan Janji Temu"
-                        >
-                          <IoTrash size={20} />
-                        </button>
+                      {item.status?.toLowerCase() === "confirmed" && (
+                        <>
+                          <button
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition duration-200"
+                            onClick={() =>
+                              handleStatusActionClick(item, "complete")
+                            }
+                            title="Tandai Selesai"
+                          >
+                            <IoCheckmarkCircle size={20} />
+                            Selesai
+                          </button>
+                          <button
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition duration-200"
+                            onClick={() => handleOpenScheduleModal(item)}
+                            title="Ubah Jadwal"
+                          >
+                            <IoCreate size={20} />
+                            Ubah Jadwal
+                          </button>
+                        </>
                       )}
+                      {item.status?.toLowerCase() !== "cancelled" &&
+                        item.status?.toLowerCase() !== "completed" && (
+                          <button
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition duration-200"
+                            onClick={(e) => handleDeleteClick(item, e)}
+                            title="Batalkan Janji Temu"
+                          >
+                            <IoTrash size={18} />
+                            Batalkan
+                          </button>
+                        )}
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 italic text-center">
-                  Tidak ada janji temu mendatang.
-                </p>
+                <div className="text-center py-12">
+                  <p className="text-gray-400 text-lg italic">
+                    Tidak ada janji temu mendatang.
+                  </p>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal daftar janji temu */}
+      {/* Appointments List Modal */}
       <Modal
         show={isListModalOpen}
         onClose={handleCloseListModal}
-        title="Kelola Janji Temu Anda"
+        title="Kelola Semua Janji Temu"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+        <div className="grid grid-cols-1 gap-4 max-h-[70vh] overflow-y-auto pr-2">
           {appointments.length > 0 ? (
-            appointments.map((app) => (
-              <div
-                key={app.id}
-                className={`bg-white border rounded-lg p-4 flex justify-between items-center transition duration-200 ease-in-out ${
-                  app.status === "Pending"
-                    ? "border-yellow-300 hover:bg-yellow-50"
-                    : app.status === "Approved"
-                    ? "border-green-300 hover:bg-green-50"
-                    : "border-gray-200 hover:bg-gray-50"
-                }`}
-              >
-                <div
-                  className="flex-grow cursor-pointer"
-                  onClick={() => handleOpenEditForm(app)}
-                >
-                  <p className="m-0 text-gray-800 text-lg font-semibold">
-                    <strong className="text-emerald-600">
-                      Pasien: {app.patient_name}
-                    </strong>
-                  </p>
-                  <p className="m-0 text-gray-700 text-base">
-                    {app.appointment_date} {app.appointment_time}
-                  </p>
-                  <p className="m-0 text-gray-600 text-sm">Ruang: {app.room}</p>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(
-                      app.status
-                    )}`}
+            appointments
+              .slice()
+              .sort(sortByStatus)
+              .map((app) => {
+                const statusLower = app.status?.toLowerCase();
+                return (
+                  <div
+                    key={app.id}
+                    className={`border rounded-lg p-5 transition duration-200 ease-in-out ${
+                      statusLower === "pending"
+                        ? "border-yellow-300 bg-yellow-50"
+                        : statusLower === "confirmed"
+                        ? "border-green-300 bg-green-50"
+                        : statusLower === "completed"
+                        ? "border-blue-300 bg-blue-50"
+                        : "border-gray-200 bg-gray-50"
+                    }`}
                   >
-                    {app.status}
-                  </span>
-                </div>
-                <div className="flex flex-col space-y-2 ml-4">
-                  {app.status === "Pending" && (
-                    <>
-                      <button
-                        className="text-green-600 hover:text-green-800 transition duration-200 p-2 rounded-full hover:bg-green-50"
-                        onClick={() => handleStatusChangeClick(app, "Approved")}
-                        title="Setujui Janji Temu"
-                      >
-                        <IoCheckmarkCircle size={24} />
-                      </button>
-                      <button
-                        className="text-red-600 hover:text-red-800 transition duration-200 p-2 rounded-full hover:bg-red-50"
-                        onClick={() => handleStatusChangeClick(app, "Rejected")}
-                        title="Tolak Janji Temu"
-                      >
-                        <IoCloseCircle size={24} />
-                      </button>
-                    </>
-                  )}
-                  {app.status !== "Rejected" && (
-                    <button
-                      className="text-gray-500 hover:text-gray-700 transition duration-200 p-2 rounded-full hover:bg-gray-50"
-                      onClick={(e) => handleDeleteClick(app.id, e)}
-                      title="Batalkan Janji Temu"
-                    >
-                      <IoTrash size={20} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))
+                    <div className="flex justify-between items-start">
+                      <div className="flex-grow">
+                        <div className="flex items-center gap-3 mb-2">
+                          <p className="text-gray-800 text-lg font-bold">
+                            {app.patient?.full_name || "-"}
+                          </p>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(
+                              app.status
+                            )}`}
+                          >
+                            {app.status}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 text-base mb-1">
+                          📅 {app.appointment_date} {app.appointment_time}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                          🏥 Ruang: {app.room || "-"}
+                        </p>
+                        {app.notes && (
+                          <p className="text-gray-500 text-sm mt-2 italic">
+                            📝 {app.notes}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2 ml-4">
+                        {statusLower === "pending" && (
+                          <>
+                            <button
+                              className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 transition"
+                              onClick={() =>
+                                handleStatusActionClick(app, "confirm")
+                              }
+                              title="Konfirmasi"
+                            >
+                              <IoCheckmarkCircle size={24} />
+                            </button>
+                            <button
+                              className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-100 transition"
+                              onClick={() =>
+                                handleStatusActionClick(app, "cancel")
+                              }
+                              title="Tolak"
+                            >
+                              <IoCloseCircle size={24} />
+                            </button>
+                          </>
+                        )}
+                        {statusLower === "confirmed" && (
+                          <>
+                            <button
+                              className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 transition"
+                              onClick={() =>
+                                handleStatusActionClick(app, "complete")
+                              }
+                              title="Selesaikan"
+                            >
+                              <IoCheckmarkCircle size={24} />
+                            </button>
+                            <button
+                              className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition"
+                              onClick={() => handleOpenScheduleModal(app)}
+                              title="Ubah Jadwal"
+                            >
+                              <IoCreate size={24} />
+                            </button>
+                          </>
+                        )}
+                        {(statusLower === "cancelled" ||
+                          statusLower === "completed") && (
+                          <button
+                            className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition"
+                            onClick={(e) => handleDeleteClick(app, e)}
+                            title="Hapus"
+                          >
+                            <IoTrash size={20} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
           ) : (
-            <p className="col-span-full text-center text-gray-500 italic text-lg p-5">
-              Anda tidak memiliki janji temu saat ini.
-            </p>
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-lg italic">
+                Tidak ada janji temu saat ini.
+              </p>
+            </div>
           )}
         </div>
       </Modal>
 
-      {currentAppointment && (
-        <AppointmentFormModal
-          show={isEditFormModalOpen}
-          onClose={handleCloseEditFormModal}
-          title="Edit Janji Temu"
-          appointmentData={currentAppointment}
-          onSave={handleSaveChanges}
-          isDoctorView={true}
-          disablePatientEdit={true}
-          showStatusField={true}
-        />
-      )}
+      {/* Schedule Change Modal */}
+      <Modal
+        show={isScheduleModalOpen}
+        onClose={handleCloseScheduleModal}
+        title="Ubah Jadwal Janji Temu"
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-gray-700 mb-2">
+              <strong>Pasien:</strong> {currentAppointment?.patient?.full_name}
+            </p>
+            <p className="text-gray-600 mb-4">
+              <strong>Jadwal Saat Ini:</strong>{" "}
+              {formatDateTime(currentAppointment?.time_appointment)}
+            </p>
+          </div>
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">
+              Pilih Waktu Baru
+            </label>
+            <input
+              type="datetime-local"
+              value={newScheduleTime}
+              onChange={(e) => setNewScheduleTime(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={handleSaveSchedule}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+            >
+              Simpan Perubahan
+            </button>
+            <button
+              onClick={handleCloseScheduleModal}
+              className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      </Modal>
 
-      <ConfirmationModal
+      {/* Delete Confirmation Modal */}
+      <Modal
         show={isDeleteConfirmModalOpen}
+        onClose={handleCloseCancelModal}
         title="Batalkan Janji Temu"
-        message="Apakah Anda yakin ingin membatalkan janji temu ini? Tindakan ini tidak dapat diurungkan."
-        onConfirm={confirmDelete}
-        onCancel={cancelDelete}
-      />
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-gray-700 mb-2">
+              <strong>Pasien:</strong> {appointmentToDelete?.patient?.full_name}
+            </p>
+            <p className="text-gray-600 mb-4">
+              <strong>Jadwal:</strong>{" "}
+              {formatDateTime(appointmentToDelete?.time_appointment)}
+            </p>
+          </div>
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">
+              Alasan Pembatalan <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Masukkan alasan pembatalan janji temu..."
+              rows={4}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={confirmDelete}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
+            >
+              Ya, Batalkan
+            </button>
+            <button
+              onClick={handleCloseCancelModal}
+              className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      </Modal>
 
+      {/* Status Action Confirmation Modal */}
       <ConfirmationModal
         show={isStatusConfirmModalOpen}
-        title={`Konfirmasi ${
-          newStatus === "Approved" ? "Persetujuan" : "Penolakan"
-        }`}
-        message={`Apakah Anda yakin ingin mengubah status janji temu pasien ${appointmentToUpdateStatus?.patient_name} menjadi ${newStatus}?`}
-        onConfirm={confirmStatusChange}
-        onCancel={cancelStatusChange}
+        title={`Konfirmasi ${getActionLabel(actionType)}`}
+        message={`Apakah Anda yakin ingin ${getActionLabel(
+          actionType
+        ).toLowerCase()} janji temu dengan ${
+          appointmentToUpdateStatus?.patient?.full_name || "-"
+        }?`}
+        onConfirm={confirmStatusAction}
+        onCancel={cancelStatusAction}
       />
     </>
   );

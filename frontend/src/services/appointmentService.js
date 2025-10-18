@@ -4,13 +4,33 @@ import apiClient from "./apiService"; // ✅ BARIS YANG HILANG TELAH DITAMBAHKAN
  * Service untuk mengelola semua interaksi API yang berhubungan dengan Janji Temu (Appointments).
  */
 export const appointmentService = {
-  
+  /**
+   * Konfirmasi janji temu oleh dokter
+   */
+  confirmByDoctor: async (appointmentId, doctorId) => {
+    const response = await apiClient.post("/appointments/confirm/doctor", {
+      appointment_id: appointmentId,
+      doctor_id: doctorId,
+    });
+    return response.data;
+  },
+
+  /**
+   * Tandai janji temu selesai oleh dokter
+   */
+  completeByDoctor: async (appointmentId, doctorId) => {
+    const response = await apiClient.post("/appointments/complete/doctor", {
+      appointment_id: appointmentId,
+      doctor_id: doctorId,
+    });
+    return response.data;
+  },
+
   create: async (appointmentData) => {
     const response = await apiClient.post("/appointments/new", appointmentData);
     return response.data;
   },
 
-  
   getForPatient: async (patientId) => {
     const response = await apiClient.get("/appointments/patient", {
       params: { patient_id: patientId },
@@ -18,7 +38,6 @@ export const appointmentService = {
     return response.data;
   },
 
-  
   getForDoctor: async (doctorId) => {
     const response = await apiClient.get("/appointments/doctor", {
       params: { doctor_id: doctorId },
@@ -26,7 +45,6 @@ export const appointmentService = {
     return response.data;
   },
 
-  
   cancelByPatient: async (appointmentId, reason = "") => {
     const response = await apiClient.post(
       `/appointments/${appointmentId}/cancel`,
@@ -35,7 +53,6 @@ export const appointmentService = {
     return response.data;
   },
 
-  
   cancelByDoctor: async (appointmentId, doctorId, reason) => {
     const response = await apiClient.post("/appointments/cancel/doctor", {
       appointment_id: appointmentId,
@@ -85,4 +102,3 @@ export const appointmentService = {
     return response.data;
   },
 };
-

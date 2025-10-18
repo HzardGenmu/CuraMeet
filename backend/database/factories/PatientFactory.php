@@ -17,11 +17,16 @@ class PatientFactory extends Factory
      */
     public function definition(): array
     {
+        $pictureUrl = fake()->optional()->imageUrl(200, 200, 'people');
+        $filename = $pictureUrl ? basename($pictureUrl) : null;
+        $picturePath = $filename ? 'storage/patients/' . $filename : null;
+        $user = User::factory()->create();
+
         return [
-            'user_id' => User::factory()->patient(),
-            'full_name' => fake()->name(),
+            'user_id' => $user->id,
+            'full_name' => $user->name,
             'NIK' => fake()->unique()->numerify('################'), // 16 digit NIK
-            'picture' => fake()->optional()->imageUrl(200, 200, 'people'),
+            'picture' => $picturePath,
             'allergies' => fake()->optional()->randomElement([
                 'Peanuts, Shellfish',
                 'Penicillin',
@@ -48,7 +53,7 @@ class PatientFactory extends Factory
      */
     public function withAllergies(string $allergies): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'allergies' => $allergies,
         ]);
     }
@@ -58,7 +63,7 @@ class PatientFactory extends Factory
      */
     public function withoutPicture(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'picture' => null,
         ]);
     }
