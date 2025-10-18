@@ -20,11 +20,11 @@ class PatientFactory extends Factory
         $pictureUrl = fake()->optional()->imageUrl(200, 200, 'people');
         $filename = $pictureUrl ? basename($pictureUrl) : null;
         $picturePath = $filename ? 'storage/patients/' . $filename : null;
-        $user = User::factory()->create();
 
         return [
-            'user_id' => $user->id,
-            'full_name' => $user->name,
+            'full_name' => function (array $attributes) {
+                return User::find($attributes['user_id'])->name;
+            },
             'NIK' => fake()->unique()->numerify('################'), // 16 digit NIK
             'picture' => $picturePath,
             'allergies' => fake()->optional()->randomElement([

@@ -16,45 +16,53 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create admin user
+        // 1️⃣ Admin
         User::factory()->admin()->create([
             'name' => 'Admin User',
             'email' => 'admin@hospital.com',
         ]);
 
-        // Create patients with their user accounts
-        $patients = Patient::factory(50)->create();
-
-        // Create doctors with their user accounts
-        $doctors = Doctor::factory(15)->create();
-
-        // Create appointments
-        Appointment::factory(100)
-            ->recycle($patients)
-            ->recycle($doctors)
+        // 2️⃣ Users role patient + Patient model
+        $patients = User::factory()
+            ->count(50)
+            ->patient()
+            ->has(Patient::factory()) // otomatis isi user_id
             ->create();
 
-        // Create some specific appointment states
+        // 3️⃣ Users role doctor + Doctor model
+        $doctors = User::factory()
+            ->count(15)
+            ->doctor()
+            ->has(Doctor::factory()) // otomatis isi user_id
+            ->create();
+
+        // 4️⃣ Appointments
+        Appointment::factory(100)
+            ->recycle($patients->pluck('patient'))
+            ->recycle($doctors->pluck('doctor'))
+            ->create();
+
         Appointment::factory(20)->pending()
-            ->recycle($patients)
-            ->recycle($doctors)
+            ->recycle($patients->pluck('patient'))
+            ->recycle($doctors->pluck('doctor'))
             ->create();
 
         Appointment::factory(15)->today()
-            ->recycle($patients)
-            ->recycle($doctors)
+            ->recycle($patients->pluck('patient'))
+            ->recycle($doctors->pluck('doctor'))
             ->create();
 
-        // Create medical records
+        // 5️⃣ Medical Records
         MedicalRecord::factory(200)
-            ->recycle($patients)
-            ->recycle($doctors)
+            ->recycle($patients->pluck('patient'))
+            ->recycle($doctors->pluck('doctor'))
             ->create();
 
-        // Create some specific medical records
         MedicalRecord::factory(30)->chronicDisease()
-            ->recycle($patients)
-            ->recycle($doctors)
+            ->recycle($patients->pluck('patient'))
+            ->recycle($doctors->pluck('doctor'))
             ->create();
     }
+
+
 }
