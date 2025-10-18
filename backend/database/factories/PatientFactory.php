@@ -1,5 +1,4 @@
 <?php
-
 namespace Database\Factories;
 
 use App\Models\User;
@@ -17,19 +16,21 @@ class PatientFactory extends Factory
      */
     public function definition(): array
     {
+        $user = User::factory()->patient()->create();
         $pictureUrl = fake()->optional()->imageUrl(200, 200, 'people');
         $filename = $pictureUrl ? basename($pictureUrl) : null;
         $picturePath = $filename ? 'storage/patients/' . $filename : null;
 
         return [
+            'user_id' => $user->id,
             'full_name' => function (array $attributes) {
                 return User::find($attributes['user_id'])->name;
             },
-            'NIK' => fake()->unique()->numerify('################'), // 16 digit NIK
+            'NIK' => fake()->unique()->numerify('################'),
             'picture' => $picturePath,
             'allergies' => fake()->optional()->randomElement([
                 'Peanuts, Shellfish',
-                'Penicillin',
+                'Penicilliclsn',
                 'Dust mites, Pollen',
                 'Latex',
                 'None known',
@@ -49,22 +50,12 @@ class PatientFactory extends Factory
     }
 
     /**
-     * Create a patient with specific allergies.
+     * State for patient with specific allergies
      */
     public function withAllergies(string $allergies): static
     {
         return $this->state(fn(array $attributes) => [
             'allergies' => $allergies,
-        ]);
-    }
-
-    /**
-     * Create a patient without picture.
-     */
-    public function withoutPicture(): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'picture' => null,
         ]);
     }
 }
