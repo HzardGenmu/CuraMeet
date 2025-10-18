@@ -328,7 +328,7 @@ const DoctorJanjiTemu = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Welcome Card */}
-          <div className="lg:col-span-2 flex flex-col justify-center items-center bg-gradient-to-br from-blue-500 to-blue-700 p-8 rounded-xl shadow-lg text-white text-center">
+          <div className="lg:col-span-2 bg-gradient-to-br from-blue-500 to-blue-700 p-8 rounded-xl shadow-lg text-white">
             <h2 className="text-2xl font-bold mb-2">
               Selamat Datang, Dr. {CURRENT_DOCTOR_NAME}!
             </h2>
@@ -347,6 +347,12 @@ const DoctorJanjiTemu = () => {
               </span>{" "}
               janji temu mendatang.
             </p>
+            <button
+              className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition duration-300 ease-in-out shadow-md"
+              onClick={handleOpenListModal}
+            >
+              Kelola Semua Janji Temu
+            </button>
           </div>
 
           {/* Statistics Card */}
@@ -438,7 +444,7 @@ const DoctorJanjiTemu = () => {
                             <IoCheckmarkCircle size={20} />
                             Konfirmasi
                           </button>
-                          {/* <button
+                          <button
                             className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition duration-200"
                             onClick={() =>
                               handleStatusActionClick(item, "cancel")
@@ -447,7 +453,7 @@ const DoctorJanjiTemu = () => {
                           >
                             <IoCloseCircle size={20} />
                             Tolak
-                          </button> */}
+                          </button>
                         </>
                       )}
                       {item.status?.toLowerCase() === "confirmed" && (
