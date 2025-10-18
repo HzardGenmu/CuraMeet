@@ -37,7 +37,7 @@ function App() {
         {/* Rute Pasien (menggunakan DashboardLayout) */}
         <Route element={<DashboardLayout />}>
           <Route path="/janji-temu" element={<JanjiTemu />} />
-          <Route path="/profil" element={<Profil />} />
+          <Route path="/profil/:profilId" element={<Profil />} />
           <Route path="/rekam-medis" element={<RekamMedis />} />
           <Route path="/catatan-medis" element={<CatatanMedis />} />
           <Route path="/dashboard" element={<Navigate to="/janji-temu" />} />

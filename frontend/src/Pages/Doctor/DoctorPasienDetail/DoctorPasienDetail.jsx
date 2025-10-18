@@ -122,44 +122,38 @@ const DoctorPasienDetail = () => {
     setIsAddNoteModalOpen(false);
   };
 
-  const handleSaveNewNote = async ({ diagnosa, resepObat, catatan }) => {
-    if (!patient) return;
-
+  const handleSaveNewNote = async (data) => {
     try {
-      // Upload as a medical record with doctor note
+      const { diagnosa, resepObat, file } = data;
+
+      // Buat FormData untuk upload
       const formData = new FormData();
-
-      // Create a text file for the diagnosis note
-      const noteContent = `Diagnosis: ${diagnosa}\nResep Obat: ${
-        resepObat || "-"
-      }\nCatatan: ${catatan || "-"}`;
-      const blob = new Blob([noteContent], { type: "text/plain" });
-      const file = new File([blob], `diagnosis_${Date.now()}.txt`, {
-        type: "text/plain",
-      });
-
       formData.append("file", file);
       formData.append("patient_id", patient.id);
       formData.append("doctor_id", CURRENT_DOCTOR_ID);
-      formData.append("doctor_note", `${diagnosa} | ${resepObat}`);
+      formData.append(
+        "doctor_note",
+        `Diagnosa: ${diagnosa}${resepObat ? ` | Resep: ${resepObat}` : ""}`
+      );
 
-      const response = await medicalRecordService.upload(formData);
+      // Upload menggunakan medicalRecordService
+      const result = await medicalRecordService.upload(formData);
 
-      if (response.success) {
-        // Refresh data after adding note
-        await fetchPatientData();
+      if (result.success) {
         alert("Catatan medis berhasil ditambahkan!");
+        // Refresh data
+        fetchPatientData();
       } else {
-        throw new Error(response.message || "Gagal menambah catatan");
+        alert(
+          "Gagal menambahkan catatan medis: " +
+            (result.message || "Unknown error")
+        );
       }
-    } catch (err) {
-      console.error("Error saving note:", err);
-      alert(err.message || "Gagal menambah catatan medis");
-    } finally {
-      setIsAddNoteModalOpen(false);
+    } catch (error) {
+      console.error("Error saving medical record:", error);
+      alert("Terjadi kesalahan saat menyimpan catatan medis.");
     }
   };
-
   const handleBack = () => {
     navigate("/dokter/pasien");
   };
@@ -392,11 +386,11 @@ const DoctorPasienDetail = () => {
       </div>
 
       {/* Add Medical Record Modal */}
-      {/* <AddMedicalRecordModal
+      <AddMedicalRecordModal
         show={isAddNoteModalOpen}
         onClose={handleCloseAddNoteModal}
         onSave={handleSaveNewNote}
-      /> */}
+      />
     </>
   );
 };
