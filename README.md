@@ -1,9 +1,10 @@
-# CuraMeet – Web Platform Deployment Guide
+# CuraMeet
 
-CuraMeet adalah platform terintegrasi yang menggabungkan:
-- **OJS (Open Journal System)** untuk pengelolaan publikasi ilmiah.
-- **Laravel Backend API** untuk sistem manajemen dan logika bisnis.
-- **React Frontend** untuk antarmuka pengguna modern.
+Pada Project ini, kami dari kelompok 2 menerapkan prinsip DevSecOps pada 2 macam app yaitu Open Journal System(OJS) dan CuraMeet yaitu platform yang berlandasan kesehatan untuk pengecekan dan mencatat rekaman medis.
+Didalam project ini terdapat struktur artsitektur sebagai berikut:
+- **OJS (Open Journal System)** untuk pengelolaan publikasi jurnal.
+- **Laravel Backend API** untuk sistem manajemen dan logika.
+- **React Frontend** untuk antarmuka pengguna.
 - **Nginx Proxy Manager (NPM)** sebagai reverse proxy dengan SSL (Let's Encrypt).
 
 ---
