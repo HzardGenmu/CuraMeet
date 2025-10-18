@@ -1,10 +1,21 @@
-// src/services/adminService.js
 import apiClient from "./apiService";
 
+/**
+ * Service untuk mengelola semua interaksi API yang berhubungan dengan fungsi Admin.
+ */
 export const adminService = {
+  
+  getAllUsers: async () => {
+    const response = await apiClient.get("/admin/users"); // Memanggil endpoint baru
+    return response.data;
+  },
+  
+  
   /**
-   * FIX: Method diubah ke POST, URL disesuaikan.
    * Mengelola peran pengguna.
+   * @param {number} userId - ID pengguna yang akan diubah.
+   * @param {string} newRole - Role baru ('patient', 'doctor', 'admin').
+   * @returns {Promise<any>}
    */
   manageUserRole: async (userId, newRole) => {
     const response = await apiClient.post("/admin/roles/manage", {
@@ -14,9 +25,12 @@ export const adminService = {
     return response.data;
   },
 
+  
+
   /**
-   * FIX: URL disesuaikan.
    * Memantau log aktivitas.
+   * @param {object} filters - Filter opsional seperti { user_id, action }.
+   * @returns {Promise<any>}
    */
   getActivityLogs: async (filters = {}) => {
     const response = await apiClient.get("/admin/logs/activity", {
@@ -26,8 +40,9 @@ export const adminService = {
   },
 
   /**
-   * FIX: URL disesuaikan.
    * Melakukan manajemen pengguna secara massal.
+   * @param {Array<object>} operations - Array berisi operasi yang akan dilakukan.
+   * @returns {Promise<any>}
    */
   bulkUserManagement: async (operations) => {
     const response = await apiClient.post("/admin/users/bulk-manage", {
@@ -37,11 +52,11 @@ export const adminService = {
   },
 
   /**
-   * FIX: URL disesuaikan.
    * Mendapatkan log audit.
+   * @param {object} filters - Filter opsional seperti { table, action }.
+   * @returns {Promise<any>}
    */
   getAuditLogs: async (filters = {}) => {
-    // filters can contain { table, action }
     const response = await apiClient.get("/admin/logs/audit", {
       params: filters,
     });
@@ -49,11 +64,11 @@ export const adminService = {
   },
 
   /**
-   * FIX: URL disesuaikan.
    * Mendapatkan log permintaan API.
+   * @param {object} filters - Filter opsional seperti { endpoint, method }.
+   * @returns {Promise<any>}
    */
   getApiLogs: async (filters = {}) => {
-    // filters can contain { endpoint, method }
     const response = await apiClient.get("/admin/logs/api-requests", {
       params: filters,
     });
@@ -61,8 +76,8 @@ export const adminService = {
   },
 
   /**
-   * FIX: URL disesuaikan.
    * Mendapatkan data pemantauan backend.
+   * @returns {Promise<any>}
    */
   getBackendMonitoring: async () => {
     const response = await apiClient.get("/admin/monitoring/backend");
@@ -70,8 +85,9 @@ export const adminService = {
   },
 
   /**
-   * FIX: URL disesuaikan.
    * Mendeteksi anomali lalu lintas.
+   * @param {number} threshold - Ambang batas untuk deteksi.
+   * @returns {Promise<any>}
    */
   getTrafficAnomalies: async (threshold) => {
     const response = await apiClient.get("/admin/monitoring/traffic-anomaly", {
@@ -80,11 +96,11 @@ export const adminService = {
     return response.data;
   },
 
-  // --- Functions below were added for completeness ---
-
   /**
-   * NEW: Ditambahkan sesuai AdminController.
    * Menjalankan tugas pemeliharaan sistem.
+   * @param {string} operation - Operasi yang akan dijalankan.
+   * @param {object} parameters - Parameter untuk operasi.
+   * @returns {Promise<any>}
    */
   systemMaintenance: async (operation, parameters = {}) => {
     const response = await apiClient.post("/admin/system/maintenance", {
@@ -95,8 +111,9 @@ export const adminService = {
   },
 
   /**
-   * NEW: Ditambahkan sesuai AdminController.
    * Meniru (impersonate) pengguna lain.
+   * @param {number} targetUserId - ID pengguna yang akan ditiru.
+   * @returns {Promise<any>}
    */
   impersonateUser: async (targetUserId) => {
     const response = await apiClient.post("/admin/users/impersonate", {
@@ -106,8 +123,9 @@ export const adminService = {
   },
 
   /**
-   * NEW: Ditambahkan sesuai AdminController.
    * Mencadangkan database.
+   * @param {Array<string>} tables - Array nama tabel yang akan dicadangkan.
+   * @returns {Promise<any>}
    */
   backupDatabase: async (tables = []) => {
     const payload = tables.length > 0 ? { tables } : {};
@@ -116,8 +134,11 @@ export const adminService = {
   },
 
   /**
-   * NEW: Ditambahkan sesuai AdminController.
    * Mengelola konfigurasi sistem (.env).
+   * @param {string} action - Aksi yang akan dilakukan ('get', 'set', 'delete').
+   * @param {string} key - Kunci konfigurasi.
+   * @param {string|null} value - Nilai baru untuk aksi 'set'.
+   * @returns {Promise<any>}
    */
   manageConfig: async (action, key, value = null) => {
     const response = await apiClient.post("/admin/config/manage", {
@@ -129,8 +150,10 @@ export const adminService = {
   },
 
   /**
-   * NEW: Ditambahkan sesuai AdminController.
    * Menjalankan perintah Artisan.
+   * @param {string} command - Nama perintah Artisan.
+   * @param {object} parameters - Parameter untuk perintah.
+   * @returns {Promise<any>}
    */
   executeArtisan: async (command, parameters = {}) => {
     const response = await apiClient.post("/admin/artisan/execute", {
