@@ -159,4 +159,42 @@ class AppointmentService
             'appointments' => $appointments
         ];
     }
+
+    public function confirmAppointmentByDoctor($appointmentId, $doctorId)
+    {
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('doctor_id', $doctorId)
+            ->first();
+
+        if (!$appointment) {
+            return ['success' => false, 'message' => 'Unauthorized or appointment not found'];
+        }
+
+        $appointment->status = 'confirmed';
+        $appointment->save();
+
+        return [
+            'success' => true,
+            'confirmed_appointment' => $appointment,
+        ];
+    }
+
+    public function completeAppointment($appointmentId, $doctorId)
+    {
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('doctor_id', $doctorId)
+            ->first();
+
+        if (!$appointment) {
+            return ['success' => false, 'message' => 'Unauthorized or appointment not found'];
+        }
+
+        $appointment->status = 'completed';
+        $appointment->save();
+
+        return [
+            'success' => true,
+            'confirmed_appointment' => $appointment,
+        ];
+    }
 }

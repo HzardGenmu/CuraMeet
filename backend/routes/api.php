@@ -92,8 +92,9 @@ Route::prefix('appointments')->group(function () {
     Route::post('/cancel-by-doctor', [AppointmentController::class, 'cancelAppointmentByDoctorId']); // Original method
     Route::get('/doctor', [AppointmentController::class, 'getAppointmentsByDoctor']);
     Route::get('/patient', [AppointmentController::class, 'getAppointmentByPatient']);
+    Route::post('/confirm/doctor', [AppointmentController::class, 'confirmAppointmentByDoctor']);
+    Route::post('/complete/doctor', [AppointmentController::class, 'completeAppointment']);
 
-    // Vulnerable endpoints
     Route::post('/change-schedule/doctor', [AppointmentController::class, 'changeScheduleByDoctor']);
     Route::post('/cancel/doctor', [AppointmentController::class, 'cancelAppointmentByDoctor']); // Vulnerable method
     Route::post('/change-schedule/patient', [AppointmentController::class, 'changeAppointmentByPatient']);

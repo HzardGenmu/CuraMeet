@@ -30,6 +30,7 @@ class DoctorFactory extends Factory
             'Oncologist',
             'Endocrinologist',
             'Ophthalmologist',
+            'Emergency Medicine',
         ];
 
         $polyclinics = [
@@ -54,12 +55,12 @@ class DoctorFactory extends Factory
             'Monday-Friday: 13:00-21:00',
             'Daily: 24/7 Emergency',
         ];
+        $user = User::factory()->create();
 
         return [
-            // Perbaikan di sini:
-            'user_id' => User::factory(),
+            'user_id' => $user->id,
+            'full_name' => $user->name,
             'str_number' => 'STR-' . fake()->unique()->numerify('########'),
-            'full_name' => fake()->name(),
             'specialist' => fake()->randomElement($specialists),
             'polyclinic' => fake()->randomElement($polyclinics),
             'available_time' => fake()->randomElement($availableTimes),

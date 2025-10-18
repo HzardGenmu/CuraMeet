@@ -46,6 +46,7 @@ class MedicalRecordFactory extends Factory
             'doctor_id' => Doctor::factory(),
             'disease_name' => fake()->randomElement($diseases),
             'path_file' => $hasFile ? 'medical_records/' . fake()->uuid() . '.' . fake()->randomElement($fileTypes) : null,
+            'catatan_dokter' => fake()->sentence(),
         ];
     }
 
@@ -54,7 +55,7 @@ class MedicalRecordFactory extends Factory
      */
     public function withDisease(string $disease): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'disease_name' => $disease,
         ]);
     }
@@ -64,7 +65,7 @@ class MedicalRecordFactory extends Factory
      */
     public function withFile(string $extension = 'pdf'): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'path_file' => 'medical_records/' . fake()->uuid() . '.' . $extension,
         ]);
     }
@@ -74,7 +75,7 @@ class MedicalRecordFactory extends Factory
      */
     public function withoutFile(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'path_file' => null,
         ]);
     }
@@ -93,7 +94,7 @@ class MedicalRecordFactory extends Factory
             'Chronic Kidney Disease',
         ];
 
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'disease_name' => fake()->randomElement($chronicDiseases),
         ]);
     }
@@ -112,7 +113,7 @@ class MedicalRecordFactory extends Factory
             'Food Poisoning',
         ];
 
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'disease_name' => fake()->randomElement($acuteConditions),
         ]);
     }

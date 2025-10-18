@@ -373,6 +373,44 @@ class AppointmentController extends Controller
     }
 
     /**
+     * Confirm Appointment by Doctor
+     *
+     * @group Appointments
+     * @bodyParam appointment_id integer required The ID of the appointment. Example: 1
+     * @bodyParam doctor_id integer required The ID of the doctor. Example: 2
+     * @response 200 {
+     *   "success": true,
+     *   "confirmed_appointment": { ... }
+     * }
+     */
+    public function confirmAppointmentByDoctor(Request $request)
+    {
+        $appointmentId = $request->input('appointment_id');
+        $doctorId = $request->input('doctor_id');
+        $result = $this->appointmentService->confirmAppointmentByDoctor($appointmentId, $doctorId);
+        return response()->json($result);
+    }
+
+    /**
+     * Complete Appointment by Doctor
+     *
+     * @group Appointments
+     * @bodyParam appointment_id integer required The ID of the appointment. Example: 1
+     * @bodyParam doctor_id integer required The ID of the doctor. Example: 2
+     * @response 200 {
+     *   "success": true,
+     *   "confirmed_appointment": { ... }
+     * }
+     */
+    public function completeAppointment(Request $request)
+    {
+        $appointmentId = $request->input('appointment_id');
+        $doctorId = $request->input('doctor_id');
+        $result = $this->appointmentService->completeAppointment($appointmentId, $doctorId);
+        return response()->json($result);
+    }
+
+    /**
      * VULNERABILITY 50: Insecure email sending
      * VULNERABILITY 51: Command injection in email sending
      */
