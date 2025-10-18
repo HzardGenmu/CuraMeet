@@ -1,11 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { doctorService } from '../../../services/doctorService';
-import { authService } from '../../../services/authService';
-
-// Ambil ID dokter dari auth (atau context)
-const CURRENT_DOCTOR_ID = authService.getCurrentUser()?.id || 'DR001';
+import { doctorService } from "../../../services/doctorService";
 
 const DoctorDaftarPasien = () => {
   const navigate = useNavigate();
@@ -19,23 +15,26 @@ const DoctorDaftarPasien = () => {
       setLoading(true);
       setError(null);
       try {
-        // Ambil janji temu dokter dari backend
-        const response = await doctorService.getAppointments(CURRENT_DOCTOR_ID);
+        // Ambil semua janji temu dokter (otomatis ambil doctorId dari profile)
+        const response =
+          await doctorService.viewPatientAppointmentsByDoctorNow();
+
         if (response.success && Array.isArray(response.appointments)) {
           // Map janji temu ke data pasien unik
           const patientsMap = {};
-          response.appointments.forEach(app => {
-            if (app.pasien_id && !patientsMap[app.pasien_id]) {
-              patientsMap[app.pasien_id] = {
-                id: app.pasien_id,
-                nama: app.pasien,
-                foto: '', // Tambahkan jika backend support foto
-                deskripsiSingkat: app.catatan || '',
-                alamat: app.alamat || '',
-                tanggalLahir: app.tanggal_lahir || '',
-                jenisKelamin: app.jenis_kelamin || '',
-                telepon: app.telepon || '',
-                email: app.email || '',
+          response.appointments.forEach((app) => {
+            const patient = app.patient;
+            if (patient && !patientsMap[patient.id]) {
+              patientsMap[patient.id] = {
+                id: patient.id,
+                nama: patient.full_name,
+                foto: patient.picture || "", // jika ada foto di backend
+                deskripsiSingkat: app.patient_note || "",
+                alamat: patient.address || "",
+                tanggalLahir: patient.birth_date || "",
+                jenisKelamin: patient.gender || "",
+                telepon: patient.phone || "",
+                email: patient.email || "",
               };
             }
           });
@@ -44,7 +43,8 @@ const DoctorDaftarPasien = () => {
           setMyPatients([]);
         }
       } catch (err) {
-        setError('Gagal memuat data pasien.');
+        console.error("Error fetch patients:", err, err?.response);
+        setError("Gagal memuat data pasien.");
       } finally {
         setLoading(false);
       }
@@ -56,17 +56,25 @@ const DoctorDaftarPasien = () => {
     navigate(`/dokter/pasien/${patientId}`);
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-600 text-lg">Loading...</div>;
-  if (error) return <div className="p-8 text-center text-red-600 text-lg">{error}</div>;
+  if (loading)
+    return (
+      <div className="p-8 text-center text-gray-600 text-lg">Loading...</div>
+    );
+  if (error)
+    return <div className="p-8 text-center text-red-600 text-lg">{error}</div>;
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-semibold mb-2 text-gray-800">Daftar Pasien Anda</h1>
-      <p className="text-lg text-gray-600 mb-8">Anda memiliki {myPatients.length} pasien yang pernah berjanji temu.</p>
+      <h1 className="text-3xl font-semibold mb-2 text-gray-800">
+        Daftar Pasien Anda
+      </h1>
+      <p className="text-lg text-gray-600 mb-8">
+        Anda memiliki {myPatients.length} pasien yang pernah berjanji temu.
+      </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {myPatients.length > 0 ? (
-          myPatients.map(patient => (
+          myPatients.map((patient) => (
             <div
               key={patient.id}
               className="bg-white rounded-xl shadow-md p-5 flex items-center cursor-pointer
@@ -74,13 +82,20 @@ const DoctorDaftarPasien = () => {
               onClick={() => handlePatientCardClick(patient.id)}
             >
               <img
-                src={patient.foto || 'https://via.placeholder.com/150/007bff/ffffff?text=PS'}
+                src={
+                  patient.foto ||
+                  "https://via.placeholder.com/150/007bff/ffffff?text=PS"
+                }
                 alt={patient.nama}
                 className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-emerald-600 flex-shrink-0"
               />
               <div className="flex-grow">
-                <h3 className="text-xl font-semibold text-gray-800 mb-1">{patient.nama}</h3>
-                <p className="text-gray-600 text-sm italic line-clamp-2">{patient.deskripsiSingkat || 'Tidak ada deskripsi singkat.'}</p>
+                <h3 className="text-xl font-semibold text-gray-800 mb-1">
+                  {patient.nama}
+                </h3>
+                <p className="text-gray-600 text-sm italic line-clamp-2">
+                  {patient.deskripsiSingkat || "Tidak ada deskripsi singkat."}
+                </p>
               </div>
             </div>
           ))
