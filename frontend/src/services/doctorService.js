@@ -4,7 +4,8 @@ import { appointmentService } from "./appointmentService";
 export const doctorService = {
   viewPatientAppointmentsByDoctorNow: async () => {
     const profileRes = await doctorService.getProfile();
-    const doctorId = profileRes.data?.resul?.id;
+    // console.log("Profile response:", profileRes);
+    const doctorId = profileRes.data?.doctor.id;
     if (!doctorId) throw new Error("Doctor ID not found in profile response");
     const response = await appointmentService.getForDoctor(doctorId);
     return response;
