@@ -34,11 +34,11 @@ const ManageRoles = () => {
       let combinedUsers = [];
       if (patientResponse.success && Array.isArray(patientResponse.patients)) {
         const mappedPatients = patientResponse.patients.map((p) => ({
-          id: p.id,
+          id: p.user?.id,
           userId: p.user_id,
           name: p.full_name,
-          email: p.email || "N/A",
-          role: p.role,
+          email: p.user?.email || "N/A",
+          role: p.user?.role,
         }));
         combinedUsers.push(...mappedPatients);
       }
