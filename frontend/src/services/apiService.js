@@ -19,26 +19,26 @@ apiClient.interceptors.request.use(
 );
 
 // Response interceptor to handle errors globally
-// apiClient.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     console.error("API Error:", error);
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("API Error:", error);
 
-//     if (error.response?.status === 401) {
-//       // Handle unauthorized access
-//       console.log("Unauthorized access, clearing auth data");
-//       localStorage.removeItem("authToken");
-//       localStorage.removeItem("userInfo");
-//       localStorage.removeItem("isAuthenticated");
+    if (error.response?.status === 401) {
+      // Handle unauthorized access
+      console.log("Unauthorized access, clearing auth data");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("isAuthenticated");
 
-//       // Redirect to login if not already there
-//       if (window.location.pathname !== "/login") {
-//         window.location.href = "/login";
-//       }
-//     }
+      // Redirect to login if not already there
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    }
 
-//     return Promise.reject(error);
-//   }
-// );
+    return Promise.reject(error);
+  }
+);
 
 export default apiClient;
