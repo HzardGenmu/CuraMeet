@@ -21,7 +21,7 @@ const Login = () => {
         navigate("/dokter/");
         break;
       default:
-        navigate("/profil");
+        navigate("/janji-temu");
     }
   };
 
@@ -40,16 +40,24 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await authService.login(email, password, role, rememberMe);
+      const response = await authService.login(
+        email,
+        password,
+        role,
+        rememberMe
+      );
 
       if (response.success === true && response.user) {
         redirectBasedOnRole(response.user.role);
       } else {
-        setError(response.message || "Login gagal. Periksa kembali kredensial Anda.");
+        setError(
+          response.message || "Login gagal. Periksa kembali kredensial Anda."
+        );
       }
     } catch (err) {
       console.error("Login error:", err);
-      const errorMessage = err.response?.data?.message || "Terjadi kesalahan pada server.";
+      const errorMessage =
+        err.response?.data?.message || "Terjadi kesalahan pada server.";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -58,7 +66,9 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-300 p-4 box-border">
-      <h1 className="text-6xl font-bold text-emerald-800 mb-8 mt-12 md:mt-0">CuraMeet</h1>
+      <h1 className="text-6xl font-bold text-emerald-800 mb-8 mt-12 md:mt-0">
+        CuraMeet
+      </h1>
       <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-10 text-center">
         <h2 className="text-3xl font-semibold text-gray-800 mb-6">Login</h2>
         <form
@@ -68,13 +78,19 @@ const Login = () => {
           noValidate // Opsional: Menonaktifkan semua validasi HTML5 pada form
         >
           {error && (
-            <div className="bg-red-100 text-red-700 border border-red-700 px-4 py-2 rounded mb-4 text-sm" role="alert">
+            <div
+              className="bg-red-100 text-red-700 border border-red-700 px-4 py-2 rounded mb-4 text-sm"
+              role="alert"
+            >
               <span>⚠️ {error}</span>
             </div>
           )}
-          
+
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-700 text-left">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium mb-2 text-gray-700 text-left"
+            >
               Email<span className="text-red-500">*</span>
             </label>
             <input
@@ -87,13 +103,16 @@ const Login = () => {
               required
               disabled={loading}
               autoComplete="username"
-              placeholder="Enter your email or SQLi payload"
+              placeholder="Enter your email"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-700 text-left">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium mb-2 text-gray-700 text-left"
+            >
               Password<span className="text-red-500">*</span>
             </label>
             <input
@@ -110,7 +129,10 @@ const Login = () => {
           </div>
 
           <div>
-            <label htmlFor="role" className="block text-sm font-medium mb-2 text-gray-700 text-left">
+            <label
+              htmlFor="role"
+              className="block text-sm font-medium mb-2 text-gray-700 text-left"
+            >
               Role<span className="text-red-500">*</span>
             </label>
             <select
@@ -136,9 +158,11 @@ const Login = () => {
               disabled={loading}
               className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="rememberMe" className="text-sm text-gray-700">Remember me</label>
+            <label htmlFor="rememberMe" className="text-sm text-gray-700">
+              Remember me
+            </label>
           </div>
-          
+
           <button
             type="submit"
             className="w-full py-3 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition ease-in-out duration-300 disabled:opacity-50"
@@ -149,10 +173,16 @@ const Login = () => {
         </form>
 
         <div className="flex flex-col items-center mt-6 space-y-3">
-          <Link to="/register" className="text-blue-600 hover:underline text-base font-medium">
+          <Link
+            to="/register"
+            className="text-blue-600 hover:underline text-base font-medium"
+          >
             Don't have an account? Register
           </Link>
-          <Link to="/reset-password" className="text-blue-600 hover:underline text-base font-medium">
+          <Link
+            to="/reset-password"
+            className="text-blue-600 hover:underline text-base font-medium"
+          >
             Forgot password?
           </Link>
         </div>
