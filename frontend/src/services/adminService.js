@@ -4,13 +4,11 @@ import apiClient from "./apiService";
  * Service untuk mengelola semua interaksi API yang berhubungan dengan fungsi Admin.
  */
 export const adminService = {
-  
   getAllUsers: async () => {
     const response = await apiClient.get("/admin/users"); // Memanggil endpoint baru
     return response.data;
   },
-  
-  
+
   /**
    * Mengelola peran pengguna.
    * @param {number} userId - ID pengguna yang akan diubah.
@@ -24,8 +22,6 @@ export const adminService = {
     });
     return response.data;
   },
-
-  
 
   /**
    * Memantau log aktivitas.
