@@ -61,11 +61,20 @@ class PatientService
      */
     public function getPatientsByName($name)
     {
-        $patients = Patient::where('full_name', 'like', '%' . $name . '%')->get();
+        $patients = User::where('name', 'like', '%' . $name . '%')->get();
+
+        $output = $patients->map(function ($patient) {
+            return [
+                'id' => $patient->id,
+                'full_name' => $patient->name,
+                'email' => $patient->email ?? null,
+                'role' => $patient->role
+            ];
+        });
 
         return [
             'success' => true,
-            'patients' => $patients,
+            'patients' => $output,
             'count' => $patients->count()
         ];
     }

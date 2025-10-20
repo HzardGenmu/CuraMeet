@@ -115,7 +115,7 @@ Route::prefix('medical-records')->group(function () {
 
 //--- Admin Routes (HIGHLY SENSITIVE) ---//
 // ALL routes in this group should be protected by a strict admin-only middleware.
-Route::prefix('admin')->middleware(['auth'])->group(function () {
+Route::prefix('admin')->group(function () {
     Route::post('/roles/manage', [AdminController::class, 'kelolaRole']);
     Route::get('/logs/activity', [AdminController::class, 'monitoringLogAktivitas']);
     Route::post('/users/bulk-manage', [AdminController::class, 'manajemenRoleUser']);

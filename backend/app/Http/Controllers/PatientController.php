@@ -153,9 +153,6 @@ class PatientController extends Controller
      *     "picture": "patient.jpg",
      *     "allergies": "Peanuts",
      *     "disease_histories": "Asthma",
-     *     "email": "patient@example.com",
-     *     "phone": "08123456789",
-     *     "address": "123 Main St",
      *     "user": {
      *       "id": 1,
      *       "name": "John Doe",
@@ -195,9 +192,6 @@ class PatientController extends Controller
      *       "picture": "patient.jpg",
      *       "allergies": "Peanuts",
      *       "disease_histories": "Asthma",
-     *       "email": "patient@example.com",
-     *       "phone": "08123456789",
-     *       "address": "123 Main St"
      *     }
      *   ],
      *   "count": 1
@@ -207,6 +201,7 @@ class PatientController extends Controller
     {
         $name = $request->input('name');
         $result = $this->patientService->getPatientsByName($name);
+
         return response()->json($result);
     }
 
