@@ -425,10 +425,14 @@ const DoctorJanjiTemu = () => {
                       <p className="text-gray-600 text-sm">
                         🏥 Ruang: {doctorNowData.polyclinic || "-"}
                       </p>
-                      {item.notes && (
-                        <p className="text-gray-500 text-sm mt-2 italic">
-                          📝 {item.notes}
-                        </p>
+                      {console.log(item)}
+                      {item.patient_note && (
+                        <p
+                          className="text-gray-500 text-sm mt-2 italic"
+                          dangerouslySetInnerHTML={{
+                            __html: "📝 " + item.patient_note,
+                          }}
+                        />
                       )}
                     </div>
                     <div className="flex gap-2 flex-wrap">
@@ -550,10 +554,13 @@ const DoctorJanjiTemu = () => {
                         <p className="text-gray-600 text-sm">
                           🏥 Ruang: {app.room || "-"}
                         </p>
-                        {app.notes && (
-                          <p className="text-gray-500 text-sm mt-2 italic">
-                            📝 {app.notes}
-                          </p>
+                        {app.patient_note && (
+                          <p
+                            className="text-gray-500 text-sm mt-2 italic"
+                            dangerouslySetInnerHTML={{
+                              __html: "📝 " + app.patient_note,
+                            }}
+                          />
                         )}
                       </div>
                       <div className="flex flex-col gap-2 ml-4">
