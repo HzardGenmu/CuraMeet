@@ -22,6 +22,7 @@ export const patientService = {
     const response = await apiClient.get("/patients/search", {
       params: { name },
     });
+    console.log(response);
     return response.data;
   },
 
@@ -71,7 +72,7 @@ export const patientService = {
     });
     return response.data;
   },
-  
+
   deleteById: async (patientId) => {
     const response = await apiClient.delete(`/patients/${patientId}`); // Endpoint yang diasumsikan
     return response.data;

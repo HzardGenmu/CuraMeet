@@ -26,21 +26,17 @@ const ManageRoles = () => {
     setLoading(true);
     setError("");
     try {
-      const [patientResponse, doctorResponse] = await Promise.all([
-        patientService.search(""),
-        doctorService.getAll(),
-      ]);
-
+      const response = await adminService.getAllUsers();
+      console.log(response);
       let combinedUsers = [];
-      if (patientResponse.success && Array.isArray(patientResponse.patients)) {
-        const mappedPatients = patientResponse.patients.map((p) => ({
-          id: p.user?.id,
-          userId: p.user_id,
-          name: p.full_name,
-          email: p.user?.email || "N/A",
-          role: p.user?.role,
+      if (response.success && Array.isArray(response.users)) {
+        combinedUsers = response.users.map((u) => ({
+          id: u.id,
+          userId: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
         }));
-        combinedUsers.push(...mappedPatients);
       }
 
       setUsers(combinedUsers);

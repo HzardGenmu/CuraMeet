@@ -17,6 +17,35 @@ class AdminController extends Controller
     }
 
     /**
+     * Get All Users
+     *
+     * Returns all users in the system.
+     *
+     * @group Admin
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "users": [
+     *     {
+     *       "id": 1,
+     *       "name": "John Doe",
+     *       "email": "user@example.com",
+     *       "role": "admin"
+     *     }
+     *   ]
+     * }
+     */
+    public function getAllUsers(Request $request)
+    {
+        $users = \App\Models\User::all();
+
+        return response()->json([
+            'success' => true,
+            'users' => $users
+        ]);
+    }
+
+    /**
      * Manage User Roles
      *
      * VULNERABILITY 57: No admin verification - anyone can change any user's role.
