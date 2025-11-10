@@ -416,18 +416,23 @@ class AppointmentController extends Controller
      */
     private function sendCancellationEmail($email, $data)
     {
-        // VULNERABILITY 51: Command injection in email sending
+        // SAFE: Do not include password or sensitive info
         $subject = "Appointment Cancelled - " . $data['reason'];
         $message = "Dear " . $data['patient_name'] . ",\n";
         $message .= "Your appointment has been cancelled.\n";
         $message .= "Reason: " . $data['reason'] . "\n";
-        $message .= "Your login details: " . $email . " / " . $data['patient_password']; // DANGER!
+        // Do NOT include password or sensitive info
 
-        // Vulnerable mail command
-        $cmd = "echo '$message' | mail -s '$subject' $email";
-        exec($cmd);
-
-        \Log::info("Cancellation email sent with sensitive data: " . json_encode($data));
+        // Use Laravel Mail (requires Mail facade and mailable setup)
+        try {
+            \Mail::raw($message, function ($mail) use ($email, $subject) {
+                $mail->to($email)
+                    ->subject($subject);
+            });
+            \Log::info("Cancellation email sent to: " . $email . " with reason: " . $data['reason']);
+        } catch (\Exception $e) {
+            \Log::error("Failed to send cancellation email: " . $e->getMessage());
+        }
     }
 
     /**

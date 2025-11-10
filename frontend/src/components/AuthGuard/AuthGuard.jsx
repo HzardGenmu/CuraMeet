@@ -7,11 +7,11 @@ const AuthGuard = ({ children, requiredRole = null }) => {
   const currentUser = authService.getCurrentUser();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/forbidden" replace />;
   }
 
   if (requiredRole && currentUser?.role !== requiredRole) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/forbidden" replace />;
   }
 
   return children;

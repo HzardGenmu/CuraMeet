@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { IoShieldOutline, IoPeopleOutline, IoLogOutOutline, IoDocumentTextOutline, IoAnalyticsOutline, IoServer } from 'react-icons/io5';
-import ConfirmationModal from '../ConfirmationModal/ConfirmationModal';
+import React, { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import {
+  IoShieldOutline,
+  IoPeopleOutline,
+  IoLogOutOutline,
+  IoDocumentTextOutline,
+  IoAnalyticsOutline,
+  IoServer,
+} from "react-icons/io5";
+import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
+import { authService } from "../../services/authService";
 
 const AdminSidebar = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -12,8 +20,8 @@ const AdminSidebar = () => {
   };
 
   const confirmLogout = () => {
-    localStorage.removeItem('adminAuthToken');
-    navigate('/login');
+    authService.logout();
+    navigate("/login");
     setShowLogoutModal(false);
   };
 
@@ -39,7 +47,11 @@ const AdminSidebar = () => {
                 to="/admin/kelola-role"
                 className={({ isActive }) =>
                   `flex items-center p-3 rounded-lg text-lg hover:bg-slate-700 transition-colors duration-200
-                  ${isActive ? 'bg-slate-700 font-bold text-teal-300' : 'text-slate-100'}`
+                  ${
+                    isActive
+                      ? "bg-slate-700 font-bold text-teal-300"
+                      : "text-slate-100"
+                  }`
                 }
               >
                 <IoPeopleOutline size={22} className="mr-3" /> Kelola Role
@@ -50,10 +62,15 @@ const AdminSidebar = () => {
                 to="/admin/log-viewer"
                 className={({ isActive }) =>
                   `flex items-center p-3 rounded-lg text-lg hover:bg-slate-700 transition-colors duration-200
-                  ${isActive ? 'bg-slate-700 font-bold text-teal-300' : 'text-slate-100'}`
+                  ${
+                    isActive
+                      ? "bg-slate-700 font-bold text-teal-300"
+                      : "text-slate-100"
+                  }`
                 }
               >
-                <IoDocumentTextOutline size={22} className="mr-3" /> Log Aktivitas
+                <IoDocumentTextOutline size={22} className="mr-3" /> Log
+                Aktivitas
               </NavLink>
             </li>
             <li>
@@ -61,10 +78,15 @@ const AdminSidebar = () => {
                 to="/admin/system-monitoring"
                 className={({ isActive }) =>
                   `flex items-center p-3 rounded-lg text-lg hover:bg-slate-700 transition-colors duration-200
-                  ${isActive ? 'bg-slate-700 font-bold text-teal-300' : 'text-slate-100'}`
+                  ${
+                    isActive
+                      ? "bg-slate-700 font-bold text-teal-300"
+                      : "text-slate-100"
+                  }`
                 }
               >
-                <IoAnalyticsOutline size={22} className="mr-3" /> Monitoring Sistem
+                <IoAnalyticsOutline size={22} className="mr-3" /> Monitoring
+                Sistem
               </NavLink>
             </li>
             <li>
@@ -72,7 +94,11 @@ const AdminSidebar = () => {
                 to="/admin/data-management"
                 className={({ isActive }) =>
                   `flex items-center p-3 rounded-lg text-lg hover:bg-slate-700 transition-colors duration-200
-                  ${isActive ? 'bg-slate-700 font-bold text-teal-300' : 'text-slate-100'}`
+                  ${
+                    isActive
+                      ? "bg-slate-700 font-bold text-teal-300"
+                      : "text-slate-100"
+                  }`
                 }
               >
                 <IoServer size={22} className="mr-3" /> Manajemen Data

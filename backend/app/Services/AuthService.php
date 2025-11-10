@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
@@ -77,28 +78,23 @@ class AuthService
         ];
     }
 
-    /**
-     * VULNERABILITY 1: SQL Injection in login (TETAP DIPERTAHANKAN UNTUK PEMBELAJARAN)
-     * No prepared statements, direct string concatenation
-     */
     public function login($email, $password, $role)
     {
-        // Direct SQL injection vulnerability - UNTUK PEMBELAJARAN SQLi
-        $query = "SELECT * FROM users WHERE email = '$email' AND password = '$password' AND role = '$role' ";
-        $user = DB::select($query);
+        // Cari user dengan Eloquent, role dicek juga
+        $user = User::where('email', $email)
+            ->where('role', $role)
+            ->first();
 
-        if (!empty($user)) {
-            $user = $user[0];
 
-            // Generate token yang lebih baik
+        if ($user) {
+            // Generate token yang aman
             $token = $this->generateSecureToken();
+            $expiresAt = now()->addHours(24);
 
-            // Simpan token ke database (tetap pakai query rentan untuk konsistensi pembelajaran)
-            // PostgreSQL syntax untuk interval
-
-            $expiresAt = now()->addHours(24)->format('Y-m-d H:i:s');
-            $updateQuery = "UPDATE users SET api_token = '$token', token_expires_at = '$expiresAt'  WHERE id = {$user->id}";
-            DB::update($updateQuery);
+            // Simpan token ke database dengan Eloquent
+            $user->api_token = $token;
+            $user->token_expires_at = $expiresAt;
+            $user->save();
 
             // Set session sebagai fallback
             Session::put('user_id', $user->id);
@@ -106,9 +102,8 @@ class AuthService
             Session::put('logged_in', true);
             Session::put('api_token', $token);
 
-            // VULNERABILITY 3: Information disclosure in logs
-            \Log::info("User login successful: {$email} with password: {$password}");
-            $this->logAllSessionData();
+            // Log tanpa password
+            \Log::info("User login successful: {$email}");
 
             return [
                 'success' => true,

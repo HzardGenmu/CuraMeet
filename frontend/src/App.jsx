@@ -25,6 +25,7 @@ import LogViewer from "./Pages/Admin/LogViewer/LogViewer";
 import SystemMonitoring from "./Pages/Admin/SystemMonitoring/SystemMonitoring";
 import DataManagement from "./Pages/Admin/DataManagement/DataManagement";
 import ForbiddenPage from "./Pages/Forbidden/ForbiddenPage";
+import AuthGuard from "./components/AuthGuard/AuthGuard";
 
 function App() {
   return (
@@ -34,8 +35,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Rute Pasien (menggunakan DashboardLayout) */}
-        <Route element={<DashboardLayout />}>
+        {/* Rute Pasien */}
+        <Route
+          element={
+            <AuthGuard requiredRole="patient">
+              <DashboardLayout />
+            </AuthGuard>
+          }
+        >
           <Route path="/janji-temu" element={<JanjiTemu />} />
           <Route path="/profil" element={<Profil />} />
           <Route path="/rekam-medis" element={<RekamMedis />} />
@@ -43,28 +50,38 @@ function App() {
           <Route path="/dashboard" element={<Navigate to="/janji-temu" />} />
         </Route>
 
-        {/* Rute Dokter (menggunakan DoctorLayout) */}
-        <Route path="/dokter" element={<DoctorLayout />}>
+        {/* Rute Dokter */}
+        <Route
+          path="/dokter"
+          element={
+            <AuthGuard requiredRole="doctor">
+              <DoctorLayout />
+            </AuthGuard>
+          }
+        >
           <Route path="janji-temu" element={<DoctorJanjiTemu />} />
           <Route path="pasien" element={<DoctorDaftarPasien />} />
           <Route path="pasien/:pasienId" element={<DoctorPasienDetail />} />
-          {/* Tambahkan rute lain untuk dokter di sini */}
-          {/* <Route path="pasien" element={<DoctorDaftarPasien />} /> */}
-          {/* <Route path="profil" element={<DoctorProfil />} /> */}
-          <Route path="" element={<Navigate to="janji-temu" />} />{" "}
-          {/* Default ke janji-temu dokter */}
+          <Route path="" element={<Navigate to="janji-temu" />} />
         </Route>
-        {/* Rute Admin (menggunakan AdminLayout) */}
-        <Route path="/admin" element={<AdminLayout />}>
+
+        {/* Rute Admin */}
+        <Route
+          path="/admin"
+          element={
+            <AuthGuard requiredRole="admin">
+              <AdminLayout />
+            </AuthGuard>
+          }
+        >
           <Route path="kelola-role" element={<ManageRoles />} />
           <Route path="log-viewer" element={<LogViewer />} />
           <Route path="system-monitoring" element={<SystemMonitoring />} />
           <Route path="data-management" element={<DataManagement />} />
-          {/* Tambahkan rute admin lainnya di sini */}
           <Route path="" element={<Navigate to="kelola-role" />} />
         </Route>
 
-        {/* Rute Default saat membuka root */}
+        {/* Rute Default */}
         <Route path="/" element={<Navigate to="/register" />} />
         <Route path="/forbidden" element={<ForbiddenPage />} />
       </Routes>

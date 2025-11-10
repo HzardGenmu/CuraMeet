@@ -19,6 +19,22 @@ import { doctorService } from "../../../services/doctorService";
 import { authService } from "../../../services/authService";
 import AddMedicalRecordModal from "../../../components/AddMedicalRecordModal/AddMedicalRecordModal";
 
+// Tambahkan fungsi sanitasi sederhana
+function sanitize(str) {
+  if (typeof str !== "string") return "";
+  return str.replace(
+    /[<>&"'`]/g,
+    (c) =>
+      ({
+        "<": "&lt;",
+        ">": "&gt;",
+        "&": "&amp;",
+        '"': "&quot;",
+        "'": "&#39;",
+        "`": "&#96;",
+      }[c])
+  );
+}
 const DoctorPasienDetail = () => {
   const { pasienId } = useParams();
   const navigate = useNavigate();
@@ -133,7 +149,9 @@ const DoctorPasienDetail = () => {
       formData.append("doctor_id", CURRENT_DOCTOR_ID);
       formData.append(
         "doctor_note",
-        `Diagnosa: ${diagnosa}${resepObat ? ` | Resep: ${resepObat}` : ""}`
+        sanitize(
+          `Diagnosa: ${diagnosa}${resepObat ? ` | Resep: ${resepObat}` : ""}`
+        )
       );
 
       // Upload menggunakan medicalRecordService
@@ -226,7 +244,7 @@ const DoctorPasienDetail = () => {
               <IoArrowBackOutline size={24} className="text-gray-700" />
             </button>
             <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800">
-              Profil Pasien: {patient.nama}
+              Profil Pasien: {sanitize(patient.nama)}
             </h1>
           </div>
           <button
@@ -241,8 +259,8 @@ const DoctorPasienDetail = () => {
         <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start border-b border-gray-200 pb-6 mb-6">
             <img
-              src={patient.foto}
-              alt={patient.nama}
+              src={sanitize(patient.foto)}
+              alt={sanitize(patient.nama)}
               className="w-24 h-24 rounded-full object-cover mb-4 sm:mb-0 sm:mr-6 border-4 border-emerald-600 shadow-md"
             />
             <div className="text-center sm:text-left">
@@ -264,7 +282,7 @@ const DoctorPasienDetail = () => {
                 className="mr-3 text-emerald-600 flex-shrink-0"
               />
               <span className="text-sm sm:text-base break-all">
-                <strong>Email:</strong> {patient.email}
+                <strong>Email:</strong> {sanitize(patient.email)}
               </span>
             </div>
           </div>
@@ -280,28 +298,27 @@ const DoctorPasienDetail = () => {
         {medicalRecords.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
             {medicalRecords.map((record) => (
-              <div
-                key={record.id}
-                className="bg-white rounded-xl shadow-md p-5 flex flex-col justify-between hover:shadow-lg transition-shadow duration-200"
-              >
-                <div>
-                  <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-800">
-                    {record.judul}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-1">
-                    <strong>Tanggal:</strong> {record.tanggal}
+              <div key={record.id} className="...">
+                <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-800">
+                  {sanitize(record.judul)}
+                </h3>
+                <p className="text-gray-600 text-sm mb-1">
+                  <strong>Tanggal:</strong> {sanitize(record.tanggal)}
+                </p>
+                <p className="text-gray-600 text-sm mb-1">
+                  <strong>Tipe:</strong> {sanitize(record.type)}
+                </p>
+                {record.doctorNote && (
+                  <p className="text-gray-600 text-sm mt-2 pt-2 border-t border-gray-200">
+                    <strong>Catatan:</strong> {sanitize(record.doctorNote)}
                   </p>
-                  <p className="text-gray-600 text-sm mb-1">
-                    <strong>Tipe:</strong> {record.type}
-                  </p>
-                  {record.doctorNote && (
-                    <p className="text-gray-600 text-sm mt-2 pt-2 border-t border-gray-200">
-                      <strong>Catatan:</strong> {record.doctorNote}
-                    </p>
-                  )}
-                </div>
+                )}
                 <a
-                  href={record.fileUrl}
+                  href={
+                    /^https?:\/\/[\w.-]+\//.test(record.fileUrl)
+                      ? record.fileUrl
+                      : "#"
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 block bg-emerald-600 text-white py-2 px-4 rounded-lg text-center text-sm font-medium hover:bg-emerald-700 transition"
@@ -331,32 +348,29 @@ const DoctorPasienDetail = () => {
         {doctorNotes.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
             {doctorNotes.map((note) => (
-              <div
-                key={note.id}
-                className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-xl shadow-sm p-5"
-              >
+              <div key={note.id} className="...">
                 <p className="text-sm text-gray-500 mb-3 pb-2 border-b border-dashed border-emerald-200">
                   <strong className="text-gray-600">Tanggal:</strong>{" "}
-                  {note.tanggal}
+                  {sanitize(note.tanggal)}
                 </p>
                 <p className="text-gray-700 text-base mb-2">
                   <strong className="text-emerald-700">Dokter:</strong>{" "}
-                  {note.dokter}
+                  {sanitize(note.dokter)}
                 </p>
                 <p className="text-gray-700 text-base mb-2">
                   <strong className="text-emerald-700">Diagnosa:</strong>{" "}
-                  {note.diagnosis}
+                  {sanitize(note.diagnosis)}
                 </p>
                 {note.resepObat && (
                   <p className="text-gray-700 text-base mb-2">
                     <strong className="text-emerald-700">Resep Obat:</strong>{" "}
-                    {note.resepObat}
+                    {sanitize(note.resepObat)}
                   </p>
                 )}
                 {note.catatan && (
                   <p className="text-gray-700 text-sm mt-2 pt-2 border-t border-emerald-200">
                     <strong className="text-emerald-700">Catatan:</strong>{" "}
-                    {note.catatan}
+                    {sanitize(note.catatan)}
                   </p>
                 )}
               </div>

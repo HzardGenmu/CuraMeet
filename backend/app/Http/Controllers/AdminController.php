@@ -6,6 +6,10 @@ use App\Services\AdminService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
 
 class AdminController extends Controller
 {
@@ -467,25 +471,30 @@ class AdminController extends Controller
         // No authorization for dangerous operations
         $result = $this->adminService->systemMaintenance($operation, $parameters);
 
-        // VULNERABILITY 72: Additional dangerous operations
         switch ($operation) {
-            case 'execute_sql':
-                $sql = $parameters['sql'] ?? '';
-                $sqlResult = DB::select($sql); // Direct SQL execution!
-                $result['sql_result'] = $sqlResult;
+            case 'clear_cache':
+                \Artisan::call('cache:clear');
+                $result = ['message' => 'Cache cleared successfully'];
                 break;
 
-            case 'system_command':
-                $command = $parameters['command'] ?? '';
-                $output = exec($command); // Command injection!
-                $result['command_output'] = $output;
+            case 'optimize':
+                \Artisan::call('optimize');
+                $result = ['message' => 'Application optimized successfully'];
                 break;
 
-            case 'file_operations':
-                $filepath = $parameters['file'] ?? '';
-                $content = file_get_contents($filepath); // File inclusion!
-                $result['file_content'] = $content;
+            case 'clear_old_logs':
+                // SECURE: Hapus log lama dengan Eloquent (prepared statement)
+                $deleted = DB::table('activity_logs')
+                    ->where('created_at', '<', now()->subMonths(6))
+                    ->delete();
+                $result = ['message' => "Deleted $deleted old log entries"];
                 break;
+
+            default:
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid operation'
+                ], 400);
         }
 
         return response()->json($result);
@@ -538,63 +547,135 @@ class AdminController extends Controller
     }
 
     /**
-     * Backup Database
+     * Backup Database (SECURE)
      *
-     * VULNERABILITY 74: Database backup exposes sensitive data without authorization.
-     * VULNERABILITY 75: Command injection in mysqldump execution.
-     * VULNERABILITY 76: Backup file accessible via public URL.
-     *
-     * Creates database backup and stores in publicly accessible directory.
-     * Exposes database credentials in response.
+     * Creates database backup using Laravel's secure methods.
+     * Stores backup in private storage (not publicly accessible).
+     * Does NOT expose credentials or execute shell commands.
      *
      * @group Admin
      *
-     * @bodyParam tables array optional Specific tables to backup (default: all tables). Example: ["users", "patients"]
-     *
      * @response 200 {
      *   "success": true,
-     *   "backup_file": "backup_2024-01-15_10-00-00.sql",
-     *   "public_url": "http://localhost/backups/backup_2024-01-15_10-00-00.sql",
-     *   "command_executed": "mysqldump -u root -ppassword database",
-     *   "database_credentials": {
-     *     "host": "localhost",
-     *     "database": "curameet",
-     *     "username": "root",
-     *     "password": "password"
-     *   }
+     *   "message": "Database backup scheduled successfully",
+     *   "backup_id": "backup_20241115_100000"
      * }
      */
     public function backupDatabase(Request $request)
     {
-        $tables = $request->input('tables', ['all']);
+        $adminId = $request->user()->id;
 
-        // VULNERABILITY 75: Command injection in backup
-        $backupFile = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
-        $command = "mysqldump -u " . env('DB_USERNAME') . " -p" . env('DB_PASSWORD') . " " . env('DB_DATABASE');
+        // SECURE: Validasi input (hapus opsi custom tables untuk keamanan)
+        $validator = Validator::make($request->all(), [
+            // Tidak ada parameter - backup selalu full database
+        ]);
 
-        if ($tables !== ['all']) {
-            $command .= " " . implode(' ', $tables);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        $command .= " > /tmp/$backupFile";
-        exec($command);
+        try {
+            // SECURE: Gunakan Laravel Backup package atau queue job
+            // Jangan gunakan exec() atau shell commands!
 
-        // VULNERABILITY 76: Backup file accessible via URL
-        $publicBackupPath = "backups/" . $backupFile;
-        copy("/tmp/$backupFile", public_path($publicBackupPath));
+            // Opsi 1: Dispatch job untuk backup (recommended)
+            // dispatch(new DatabaseBackupJob($adminId));
 
-        return response()->json([
-            'success' => true,
-            'backup_file' => $backupFile,
-            'public_url' => url($publicBackupPath),
-            'command_executed' => $command,
-            'database_credentials' => [
-                'host' => env('DB_HOST'),
-                'database' => env('DB_DATABASE'),
-                'username' => env('DB_USERNAME'),
-                'password' => env('DB_PASSWORD')
-            ]
+            // Opsi 2: Gunakan Laravel Backup package
+            // Artisan::call('backup:run', ['--only-db' => true]);
+
+            // Opsi 3: Simpan dump menggunakan mysqldump via Process (lebih aman)
+            $backupId = 'backup_' . date('Y-m-d_H-i-s');
+            $backupPath = storage_path("app/backups/{$backupId}.sql");
+
+            // SECURE: Gunakan Symfony Process (no shell injection)
+            $process = new \Symfony\Component\Process\Process([
+                'mysqldump',
+                '--host=' . config('database.connections.mysql.host'),
+                '--user=' . config('database.connections.mysql.username'),
+                '--password=' . config('database.connections.mysql.password'),
+                config('database.connections.mysql.database'),
+                '--result-file=' . $backupPath
+            ]);
+
+            $process->setTimeout(3600); // 1 hour timeout
+            $process->run();
+
+            if (!$process->isSuccessful()) {
+                throw new \Exception('Backup process failed');
+            }
+
+            // SECURE: Log tanpa expose credentials
+            Log::info("Database backup created", [
+                'admin_id' => $adminId,
+                'backup_id' => $backupId,
+                'ip' => $request->ip(),
+                'timestamp' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Database backup created successfully',
+                'backup_id' => $backupId
+                // TIDAK EXPOSE: URL, credentials, atau path file
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Database backup failed", [
+                'admin_id' => $adminId,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Database backup failed'
+            ], 500);
+        }
+    }
+
+    /**
+     * Download Backup (SECURE - opsional)
+     *
+     * Allows admin to download backup file securely.
+     *
+     * @group Admin
+     */
+    public function downloadBackup(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'backup_id' => 'required|string|regex:/^backup_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{6}$/'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $backupId = $request->input('backup_id');
+        $backupPath = storage_path("app/backups/{$backupId}.sql");
+
+        // SECURE: Cek file exists dan dalam direktori yang benar
+        if (!file_exists($backupPath) || !str_starts_with(realpath($backupPath), storage_path('app/backups'))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Backup not found'
+            ], 404);
+        }
+
+        // SECURE: Log download
+        Log::info("Backup downloaded", [
+            'admin_id' => $request->user()->id,
+            'backup_id' => $backupId,
+            'ip' => $request->ip()
+        ]);
+
+        // SECURE: Return file download (not public URL)
+        return response()->download($backupPath);
     }
 
     /**
