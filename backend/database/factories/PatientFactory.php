@@ -4,33 +4,25 @@ namespace Database\Factories;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Patient>
- */
 class PatientFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        $user = User::factory()->patient()->create();
+        // ✅ JANGAN create User di sini, biarkan null
+        // User akan di-assign dari relasi has() di seeder
+
         $pictureUrl = fake()->optional()->imageUrl(200, 200, 'people');
         $filename = $pictureUrl ? basename($pictureUrl) : null;
         $picturePath = $filename ? 'storage/patients/' . $filename : null;
 
         return [
-            'user_id' => $user->id,
-            'full_name' => function (array $attributes) {
-                return User::find($attributes['user_id'])->name;
-            },
+            // 'user_id' akan otomatis diisi oleh Laravel dari relasi
+            'full_name' => fake()->name(), // ✅ Generate langsung, jangan pakai closure
             'NIK' => fake()->unique()->numerify('################'),
             'picture' => $picturePath,
             'allergies' => fake()->optional()->randomElement([
                 'Peanuts, Shellfish',
-                'Penicilliclsn',
+                'Penicillin',
                 'Dust mites, Pollen',
                 'Latex',
                 'None known',
@@ -49,9 +41,6 @@ class PatientFactory extends Factory
         ];
     }
 
-    /**
-     * State for patient with specific allergies
-     */
     public function withAllergies(string $allergies): static
     {
         return $this->state(fn(array $attributes) => [

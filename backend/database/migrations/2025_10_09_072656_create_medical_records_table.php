@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->foreignId('doctor_id')->constrained('doctors')->onDelete('cascade');
             $table->string('disease_name')->nullable();
             $table->string('path_file')->nullable();
-            $table->string('catatan_dokter')->default('Tidak ada');
+            $table->string('catatan_dokter')->nullable()->default('Tidak ada');
             $table->timestamps();
         });
     }

@@ -17,7 +17,7 @@ class DoctorFactory extends Factory
      */
     public function definition(): array
     {
-        $user = User::factory()->doctor()->create();
+        // $user = User::factory()->doctor()->create();
 
         $specialists = [
             'Cardiologist',
@@ -58,10 +58,7 @@ class DoctorFactory extends Factory
             'Daily: 24/7 Emergency',
         ];
         return [
-            'user_id' => $user->id,
-            'full_name' => function (array $attributes) {
-                return User::find($attributes['user_id'])->name;
-            },
+            'full_name' => fake()->name(), // ✅ Generate langsung, jangan pakai closure
             'str_number' => 'STR-' . fake()->unique()->numerify('########'),
             'specialist' => fake()->randomElement($specialists),
             'polyclinic' => fake()->randomElement($polyclinics),
