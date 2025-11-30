@@ -12,7 +12,7 @@ const AdminSidebar = () => {
   };
 
   const confirmLogout = () => {
-    localStorage.removeItem('adminAuthToken');
+    localStorage.removeItem('authToken');
     navigate('/login');
     setShowLogoutModal(false);
   };
