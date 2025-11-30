@@ -21,48 +21,42 @@ class DoctorController extends Controller
         $this->medicalRecordService = $medicalRecordService;
     }
 
-    /**
-     * Get Current Doctor Profile
-     *
-     * Returns the authenticated doctor's profile information.
-     * Requires valid authentication token.
-     *
-     * @group Doctors
-     * @authenticated
-     *
-     * @header Authorization Bearer {token}
-     *
-     * @response 200 {
-     *   "success": true,
-     *   "doctor": {
-     *     "id": 1,
-     *     "user_id": 2,
-     *     "str_number": "STR123456",
-     *     "full_name": "Dr. Jane Smith",
-     *     "specialist": "Cardiology",
-     *     "polyclinic": "Heart",
-     *     "available_time": "08:00-16:00",
-     *     "user": {
-     *       "id": 2,
-     *       "name": "Dr. Jane Smith",
-     *       "email": "doctor@test.com",
-     *       "role": "doctor"
-     *     }
-     *   }
-     * }
-     * @response 401 {
-     *   "success": false,
-     *   "message": "Token not provided"
-     * }
-     * @response 401 {
-     *   "success": false,
-     *   "message": "Invalid or expired token"
-     * }
-     * @response 404 {
-     *   "success": false,
-     *   "message": "Doctor not found"
-     * }
-     */
+    public function getPatientsWithMedicalRecord(Request $request)
+    {
+        // Ambil token dan verifikasi user
+        $authHeader = $request->header('Authorization');
+        $token = null;
+        if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            $token = $matches[1];
+        } elseif ($request->has('token')) {
+            $token = $request->query('token');
+        }
+        if (!$token) {
+            return response()->json(['success' => false, 'message' => 'Token not provided'], 401);
+        }
+        $user = $this->authService->verifyToken($token);
+        if (!$user || $user->role !== 'doctor') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        // Ambil doctorId dari user yang login
+        $doctor = \App\Models\Doctor::where('user_id', $user->id)->first();
+        if (!$doctor) {
+            return response()->json(['success' => false, 'message' => 'Doctor not found'], 404);
+        }
+        $doctorId = $doctor->id;
+
+        // Ambil semua pasien yang punya medical record dengan dokter ini
+        $patients = \App\Models\Patient::whereHas('medicalRecords', function ($query) use ($doctorId) {
+            $query->where('doctor_id', $doctorId);
+        })->get();
+
+        return response()->json([
+            'success' => true,
+            'patients' => $patients
+        ]);
+    }
+
     public function getDoctorNow(Request $request)
     {
         // Ambil token dari header Authorization
@@ -90,107 +84,18 @@ class DoctorController extends Controller
         return response()->json($result);
     }
 
-    /**
-     * Get Doctor by ID
-     *
-     * Retrieves doctor information by doctor ID.
-     *
-     * @group Doctors
-     *
-     * @urlParam doctorId integer required The ID of the doctor. Example: 1
-     *
-     * @response 200 {
-     *   "success": true,
-     *   "doctor": {
-     *     "id": 1,
-     *     "user_id": 2,
-     *     "str_number": "STR123456",
-     *     "full_name": "Dr. Jane Smith",
-     *     "specialist": "Cardiology",
-     *     "polyclinic": "Heart",
-     *     "available_time": "08:00-16:00",
-     *     "user": {
-     *       "id": 2,
-     *       "name": "Dr. Jane Smith",
-     *       "email": "doctor@test.com",
-     *       "role": "doctor"
-     *     }
-     *   }
-     * }
-     * @response 404 {
-     *   "success": false,
-     *   "message": "Doctor not found"
-     * }
-     */
     public function getDoctorById($doctorId)
     {
         $result = $this->doctorService->getDoctorById($doctorId);
         return response()->json($result);
     }
 
-    /**
-     * Get Doctor by User ID
-     *
-     * Retrieves doctor information by user ID.
-     *
-     * @group Doctors
-     *
-     * @urlParam userId integer required The user ID of the doctor. Example: 2
-     *
-     * @response 200 {
-     *   "success": true,
-     *   "doctor": {
-     *     "id": 1,
-     *     "user_id": 2,
-     *     "str_number": "STR123456",
-     *     "full_name": "Dr. Jane Smith",
-     *     "specialist": "Cardiology",
-     *     "polyclinic": "Heart",
-     *     "available_time": "08:00-16:00",
-     *     "user": {
-     *       "id": 2,
-     *       "name": "Dr. Jane Smith",
-     *       "email": "doctor@test.com",
-     *       "role": "doctor"
-     *     }
-     *   }
-     * }
-     * @response 404 {
-     *   "success": false,
-     *   "message": "Doctor not found"
-     * }
-     */
     public function getDoctorByUserId($userId)
     {
         $result = $this->doctorService->getDoctorByUserId($userId);
         return response()->json($result);
     }
 
-    /**
-     * Search Doctors by Name
-     *
-     * Searches for doctors by their full name (partial match supported).
-     *
-     * @group Doctors
-     *
-     * @queryParam name string required Part or full name of the doctor to search. Example: Jane
-     *
-     * @response 200 {
-     *   "success": true,
-     *   "doctors": [
-     *     {
-     *       "id": 1,
-     *       "user_id": 2,
-     *       "str_number": "STR123456",
-     *       "full_name": "Dr. Jane Smith",
-     *       "specialist": "Cardiology",
-     *       "polyclinic": "Heart",
-     *       "available_time": "08:00-16:00"
-     *     }
-     *   ],
-     *   "count": 1
-     * }
-     */
     public function getDoctorsByName(Request $request)
     {
         $name = $request->input('name');
@@ -198,36 +103,6 @@ class DoctorController extends Controller
         return response()->json($result);
     }
 
-    /**
-     * List All Doctors
-     *
-     * Returns a list of all doctors with basic information.
-     *
-     * @group Doctors
-     *
-     * @response 200 {
-     *   "success": true,
-     *   "doctors": [
-     *     {
-     *       "id": 1,
-     *       "str_number": "STR123456",
-     *       "full_name": "Dr. Jane Smith",
-     *       "specialist": "Cardiology",
-     *       "available_time": "08:00-16:00",
-     *       "polyclinic": "Heart"
-     *     },
-     *     {
-     *       "id": 2,
-     *       "str_number": "STR789012",
-     *       "full_name": "Dr. John Doe",
-     *       "specialist": "Dermatology",
-     *       "available_time": "09:00-17:00",
-     *       "polyclinic": "Skin"
-     *     }
-     *   ],
-     *   "count": 2
-     * }
-     */
     public function listDoctors()
     {
         $result = $this->doctorService->listDoctors();
@@ -235,58 +110,44 @@ class DoctorController extends Controller
     }
 
 
-    /**
-     * View Medical Records (Doctor)
-     *
-     * VULNERABILITY 44: Mass data exposure without authorization.
-     * VULNERABILITY 45: Additional sensitive data exposure (passwords, tokens).
-     *
-     * Allows viewing medical records without proper authorization.
-     * Exposes sensitive patient information including passwords.
-     *
-     * @group Doctors
-     *
-     * @queryParam doctor_id integer required The ID of the doctor. Example: 1
-     * @queryParam patient_id integer required The ID of the patient. Example: 1
-     *
-     * @response 200 {
-     *   "success": true,
-     *   "records": [
-     *     {
-     *       "id": 1,
-     *       "patient_id": 1,
-     *       "doctor_id": 1,
-     *       "disease_name": "Hypertension",
-     *       "notes": "Regular checkup",
-     *       "created_at": "2024-01-15 10:00:00",
-     *       "sensitive_info": {
-     *         "password": "password123",
-     *         "remember_token": "abc123def456",
-     *         "allergies": "Peanuts",
-     *         "disease_histories": "Asthma"
-     *       }
-     *     }
-     *   ]
-     * }
-     */
     public function lihatRekamanMedis(Request $request)
     {
+        // Ambil token dan verifikasi user
+        $authHeader = $request->header('Authorization');
+        $token = null;
+        if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            $token = $matches[1];
+        } elseif ($request->has('token')) {
+            $token = $request->query('token');
+        }
+        if (!$token) {
+            return response()->json(['success' => false, 'message' => 'Token not provided'], 401);
+        }
+        $user = $this->authService->verifyToken($token);
+        if (!$user || $user->role !== 'doctor') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
         $doctorId = $request->input('doctor_id');
         $patientId = $request->input('patient_id');
 
-        // No authorization - any user can view any medical records
+        // Pastikan dokter hanya bisa akses rekam medis pasien yang pernah ditangani
+        $doctor = \App\Models\Doctor::where('user_id', $user->id)->first();
+        \Log::info($doctor);
+        \Log::info($doctorId);
+        if (!$doctor || $doctor->id != $doctorId) {
+            return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+        }
+
         $result = $this->medicalRecordService->getRekamMedisByDoctor($doctorId, $patientId);
 
-        // VULNERABILITY 45: Additional sensitive data exposure
+        // Hanya info non-sensitif
         if ($result['success']) {
-            // Adds more sensitive information to response
             foreach ($result['records'] as &$record) {
-                $patientDetails = DB::select("SELECT u.password, u.remember_token, p.allergies, p.disease_histories
-                                             FROM users u
-                                             JOIN patients p ON u.id = p.user_id
-                                             WHERE p.id = {$record->patient_id}");
-
-                $record->sensitive_info = $patientDetails[0] ?? null;
+                $patientDetails = \App\Models\Patient::select('allergies', 'disease_histories')
+                    ->where('id', $record->patient_id)
+                    ->first();
+                $record->sensitive_info = $patientDetails;
             }
         }
 

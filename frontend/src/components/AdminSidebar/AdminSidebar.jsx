@@ -21,7 +21,7 @@ const AdminSidebar = () => {
 
   const confirmLogout = () => {
     authService.logout();
-    navigate("/login");
+    navigate("/");
     setShowLogoutModal(false);
   };
 

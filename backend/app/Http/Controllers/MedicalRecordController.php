@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AuthService;
 use Illuminate\Http\Request;
 use App\Services\MedicalRecordService;
 
 class MedicalRecordController extends Controller
 {
     protected $medicalRecordService;
+    protected $authService;
 
-    public function __construct(MedicalRecordService $medicalRecordService)
+    public function __construct(AuthService $authService, MedicalRecordService $medicalRecordService)
     {
+        $this->authService = $authService;
         $this->medicalRecordService = $medicalRecordService;
     }
-
     /**
      * Upload Medical Record
      *
@@ -57,16 +59,21 @@ class MedicalRecordController extends Controller
      *   }
      * }
      */
+
     public function uploadRekamMedis(Request $request)
     {
         $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'required|exists:doctors,id',
             'file' => 'required|file|max:2048|mimes:pdf,jpg,jpeg,png',
-            'doctor_note' => 'nullable|string'
+            'doctor_note' => 'nullable|string',
+            'disease_name' => 'required|string'
+            // path_file tidak perlu diinput, di-generate oleh service
         ]);
 
-        $user = auth()->user();
+        $token = (new \App\Services\AuthService())->extractToken($request);
+        $user = (new \App\Services\AuthService())->verifyToken($token);
+
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
@@ -74,9 +81,16 @@ class MedicalRecordController extends Controller
         $patientId = $request->input('patient_id');
         $doctorId = $request->input('doctor_id');
         $file = $request->file('file');
-        $note = $request->input('doctor_note');
+        $doctorNote = $request->input('doctor_note');
+        $diseaseName = $request->input('disease_name');
 
-        $result = $this->medicalRecordService->uploadRekamMedis($patientId, $doctorId, $file, $note);
+        $result = $this->medicalRecordService->uploadRekamMedis(
+            $diseaseName,
+            $patientId,
+            $doctorId,
+            $file,
+            $doctorNote
+        );
 
         return response()->json($result);
     }
@@ -170,6 +184,124 @@ class MedicalRecordController extends Controller
         $result = $this->medicalRecordService->getRekamMedisById($id);
 
         return response()->json($result);
+    }
+    public function getByDoctor(Request $request)
+    {
+        // Ambil token dari header atau query
+        $authHeader = $request->header('Authorization');
+        $token = null;
+        if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            $token = $matches[1];
+        } elseif ($request->has('token')) {
+            $token = $request->query('token');
+        }
+        if (!$token) {
+            return response()->json(['success' => false, 'message' => 'Token not provided'], 401);
+        }
+
+        // Verifikasi user
+        $user = $this->authService->verifyToken($token);
+        if (!$user || $user->role !== 'doctor') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        // Ambil doctorId dari user yang login
+        $doctor = \App\Models\Doctor::where('user_id', $user->id)->first();
+        if (!$doctor) {
+            return response()->json(['success' => false, 'message' => 'Doctor not found'], 404);
+        }
+        $doctorId = $doctor->id;
+
+        $result = $this->medicalRecordService->getRekamMedisByDoctor(
+            $doctorId,
+            $token
+        );
+
+        return response()->json($result);
+    }
+
+    // Update method viewRekamMedisById di MedicalRecordController
+    public function viewRekamMedisById(Request $request, $id)
+    {
+        // Ekstrak token dari request
+        $token = $this->authService->extractToken($request);
+
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token not provided'
+            ], 401);
+        }
+
+        // Verify token dan get user
+        $user = $this->authService->verifyToken($token);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired token'
+            ], 401);
+        }
+
+        // Get medical record
+        $result = $this->medicalRecordService->getRekamMedisById($id);
+
+        if (!$result['success']) {
+            return response()->json($result, 404);
+        }
+
+        $record = $result['record'];
+
+        // Authorization check
+        $authorized = false;
+
+        if ($user->role === 'admin') {
+            $authorized = true;
+        } elseif ($user->role === 'patient') {
+            // Check if this record belongs to the patient
+            $patient = \App\Models\Patient::where('id', $record->patient_id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($patient) {
+                $authorized = true;
+            }
+        } elseif ($user->role === 'doctor') {
+            // Check if this doctor treated this patient
+            $doctor = \App\Models\Doctor::where('user_id', $user->id)->first();
+
+            if ($doctor && $record->doctor_id == $doctor->id) {
+                $authorized = true;
+            }
+        }
+
+        if (!$authorized) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden: You do not have access to this medical record'
+            ], 403);
+        }
+
+        // Parse file path and create protected URLs
+        if ($record->path_file) {
+            // Extract patient_id and filename from path
+            // Format: uploads/36/rekam_medis/691968a26b17a.png
+            preg_match('/uploads\/(\d+)\/rekam_medis\/(.+)$/', $record->path_file, $matches);
+
+            if (count($matches) === 3) {
+                $patientId = $matches[1];
+                $filename = $matches[2];
+
+                // Generate protected URLs with token
+                $record->file_url = url("/api/files/medical-records/{$patientId}/{$filename}?token={$token}");
+                $record->download_url = url("/api/files/medical-records/{$patientId}/{$filename}/download?token={$token}");
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'record' => $record
+        ], 200);
     }
 
     /**

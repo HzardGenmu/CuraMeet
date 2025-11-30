@@ -23,7 +23,7 @@ const CatatanMedis = () => {
       setError("");
       try {
         if (!authService.isAuthenticated()) {
-          navigate("/login");
+          navigate("/");
           return;
         }
 
@@ -34,7 +34,9 @@ const CatatanMedis = () => {
           const patientId = profileRes.patient.id;
 
           // Langkah B: Gunakan patient.id untuk mengambil catatan medis dari service yang benar
-          const recordsRes = await medicalRecordService.getForPatient(patientId);
+          const recordsRes = await medicalRecordService.getForPatient(
+            patientId
+          );
           if (recordsRes.success && Array.isArray(recordsRes.records)) {
             setCatatanMedis(recordsRes.records);
           } else {

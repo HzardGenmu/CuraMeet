@@ -42,7 +42,6 @@ export const authService = {
         localStorage.setItem("userInfo", JSON.stringify(responseData.user));
       }
     }
-
     return responseData;
   },
 
@@ -131,5 +130,9 @@ export const authService = {
   hasAnyRole: (roles) => {
     const user = authService.getCurrentUser();
     return roles.includes(user?.role);
+  },
+  getRole: () => {
+    const user = authService.getCurrentUser();
+    return user?.role || null;
   },
 };

@@ -26,14 +26,38 @@ import SystemMonitoring from "./Pages/Admin/SystemMonitoring/SystemMonitoring";
 import DataManagement from "./Pages/Admin/DataManagement/DataManagement";
 import ForbiddenPage from "./Pages/Forbidden/ForbiddenPage";
 import AuthGuard from "./components/AuthGuard/AuthGuard";
+import { authService } from "./services/authService";
 
 function App() {
+  const isAuthenticated = authService.isAuthenticated();
+  const userRole = authService.getRole(); // Buat fungsi getRole di authService
+
+  // Fungsi untuk menentukan dashboard sesuai role
+  const getDashboardPath = () => {
+    if (userRole === "admin") return "/admin";
+    if (userRole === "doctor") return "/dokter";
+    if (userRole === "patient") return "/dashboard"; // default pasien
+  };
+
   return (
     <div>
       <Routes>
-        {/* Rute Otentikasi */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? <Navigate to={getDashboardPath()} /> : <Login />
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            isAuthenticated ? (
+              <Navigate to={getDashboardPath()} />
+            ) : (
+              <Register />
+            )
+          }
+        />
 
         {/* Rute Pasien */}
         <Route
@@ -74,6 +98,7 @@ function App() {
             </AuthGuard>
           }
         >
+          {/* <Route path="/admin" element={<AdminLayout />}> */}
           <Route path="kelola-role" element={<ManageRoles />} />
           <Route path="log-viewer" element={<LogViewer />} />
           <Route path="system-monitoring" element={<SystemMonitoring />} />

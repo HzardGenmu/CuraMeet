@@ -7,6 +7,8 @@ import { authService } from "../../services/authService";
 const DoctorSidebar = () => {
   // Logic untuk Logout Dokter
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const navigate = useNavigate(); // Pastikan useNavigate diimport dari react-router-dom
 
   const handleLogout = () => {
@@ -14,9 +16,14 @@ const DoctorSidebar = () => {
   };
 
   const confirmLogout = () => {
-    authService.logout();
-    navigate("/login");
     setShowLogoutModal(false);
+    setIsLoggingOut(true);
+    authService.logout();
+    localStorage.removeItem("authToken");
+    setTimeout(() => {
+      setIsLoggingOut(false);
+      window.location.href = "/login";
+    }, 3000);
   };
 
   const cancelLogout = () => {
@@ -30,7 +37,9 @@ const DoctorSidebar = () => {
         {/* Profile Section (fixed at top) */}
         <div className="flex flex-col items-center justify-center p-6 border-b border-emerald-600">
           <IoPersonCircleOutline size={72} className="text-emerald-200 mb-3" />
-          <h3 className="text-xl font-semibold text-white">Dokter</h3>
+          <h3 className="text-xl font-semibold text-white text-center">
+            {authService.getCurrentUser().name}
+          </h3>
         </div>
 
         {/* Navigation Section (scrollable, fills remaining space) */}
@@ -73,6 +82,7 @@ const DoctorSidebar = () => {
           </button>
         </div>
       </aside>
+
       <ConfirmationModal
         show={showLogoutModal}
         title="Konfirmasi Logout"

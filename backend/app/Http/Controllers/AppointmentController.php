@@ -95,6 +95,23 @@ class AppointmentController extends Controller
         return response()->json($result);
     }
 
+    public function deleteAppointment(Request $request, $appointmentId)
+    {
+        // Ambil user dari token/session (misal via AuthService)
+        $token = (new AuthService())->extractToken($request);
+        $user = (new AuthService())->verifyToken($token);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $result = $this->appointmentService->deleteAppointment($appointmentId, $user->id);
+
+        return response()->json($result);
+    }
     /**
      * Cancel Appointment by Doctor ID
      *

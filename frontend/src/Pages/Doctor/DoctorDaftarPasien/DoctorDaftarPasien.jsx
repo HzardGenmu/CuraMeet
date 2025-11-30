@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { FaUserCircle } from "react-icons/fa";
 import { doctorService } from "../../../services/doctorService";
 
 const DoctorDaftarPasien = () => {
@@ -16,27 +16,24 @@ const DoctorDaftarPasien = () => {
       setError(null);
       try {
         // Ambil semua janji temu dokter (otomatis ambil doctorId dari profile)
-        const response =
-          await doctorService.viewPatientAppointmentsByDoctorNow();
-
-        if (response.success && Array.isArray(response.appointments)) {
+        const response = await doctorService.getPatientMedicalRecords();
+        // console.log(response);
+        if (response.success && Array.isArray(response.patients)) {
           // Map janji temu ke data pasien unik
           const patientsMap = {};
-          response.appointments.forEach((app) => {
-            const patient = app.patient;
-            if (patient && !patientsMap[patient.id]) {
-              patientsMap[patient.id] = {
-                id: patient.id,
-                nama: patient.full_name,
-                foto: patient.picture || "", // jika ada foto di backend
-                deskripsiSingkat: app.patient_note || "",
-                alamat: patient.address || "",
-                tanggalLahir: patient.birth_date || "",
-                jenisKelamin: patient.gender || "",
-                telepon: patient.phone || "",
-                email: patient.email || "",
-              };
-            }
+          response.patients.forEach((p) => {
+            // console.log(p);
+            patientsMap[p.id] = {
+              id: p.id,
+              nama: p.full_name,
+              foto: p.picture || "", // jika ada foto di backend
+              deskripsiSingkat: p.allergies || "",
+              alamat: p.address || "",
+              tanggalLahir: p.birth_date || "",
+              jenisKelamin: p.gender || "",
+              telepon: p.phone || "",
+              email: p.email || "",
+            };
           });
           setMyPatients(Object.values(patientsMap));
         } else {
@@ -94,7 +91,7 @@ const DoctorDaftarPasien = () => {
                   {patient.nama}
                 </h3>
                 <p className="text-gray-600 text-sm italic line-clamp-2">
-                  {patient.deskripsiSingkat || "Tidak ada deskripsi singkat."}
+                  {patient.deskripsiSingkat || "Tidak ada alergi."}
                 </p>
               </div>
             </div>

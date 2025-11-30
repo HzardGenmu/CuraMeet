@@ -10,7 +10,7 @@ class MedicalRecordService
     /**
      * Upload rekam medis (Create)
      */
-    public function uploadRekamMedis($patientId, $doctorId, $file, $doctorNote = null)
+    public function uploadRekamMedis($disease_name, $patientId, $doctorId, $file, $doctorNote = null)
     {
         $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
         $maxSize = 2 * 1024 * 1024; // 2MB
@@ -24,13 +24,13 @@ class MedicalRecordService
         }
 
         $filename = uniqid() . '.' . $extension;
-        $path = $file->storeAs('uploads/rekam_medis', $filename, 'public');
+        $path = $file->storeAs('uploads/' . $patientId . '/rekam_medis', $filename, 'local');
 
         $record = MedicalRecord::create([
             'doctor_id' => $doctorId,
             'patient_id' => $patientId,
             'path_file' => $path,
-            'disease_name' => 'Uploaded File',
+            'disease_name' => $disease_name,
             'catatan_dokter' => $doctorNote
         ]);
 
@@ -39,27 +39,38 @@ class MedicalRecordService
             'file_path' => $path,
             'patient_id' => $patientId,
             'catatan_dokter' => $doctorNote,
-            'record_id' => $record->id
+            'disease_name' => $disease_name
         ];
     }
 
-    /**
-     * Read rekam medis by patient
-     */
-    public function getRekamMedisByPatient($patientId)
+    public function getRekamMedisByPatient($patientId, $token = null)
     {
-        // No authorization - anyone can view any patient's records
-        $query = 'SELECT mr.*, p.full_name as patient_name, p."NIK", p.allergies,
-                         d.full_name as doctor_name, u.email as patient_email, u.password
-                  FROM medical_records mr
-                  JOIN patients p ON mr.patient_id = p.id
-                  JOIN doctors d ON mr.doctor_id = d.id
-                  JOIN users u ON p.user_id = u.id
-                  WHERE mr.patient_id = '. (int)$patientId;
+        $records = MedicalRecord::with([
+            'patient:id,full_name,NIK,allergies,user_id',
+            'patient.user:id,email',
+            'doctor:id,full_name'
+        ])
+            ->where('patient_id', $patientId)
+            ->get();
 
-        $records = \Illuminate\Support\Facades\DB::select($query);
+        // Add protected URLs if token provided
+        if ($token) {
+            $records = $records->map(function ($record) use ($token) {
+                if ($record->path_file) {
+                    preg_match('/uploads\/(\d+)\/rekam_medis\/(.+)$/', $record->path_file, $matches);
 
-        // Returns sensitive information including passwords
+                    if (count($matches) === 3) {
+                        $patientId = $matches[1];
+                        $filename = $matches[2];
+
+                        $record->file_url = url("/api/files/medical-records/{$patientId}/{$filename}?token={$token}");
+                        $record->download_url = url("/api/files/medical-records/{$patientId}/{$filename}/download?token={$token}");
+                    }
+                }
+                return $record;
+            });
+        }
+
         return [
             'success' => true,
             'records' => $records,
@@ -67,10 +78,8 @@ class MedicalRecordService
         ];
     }
 
-    /**
-     * Lihat rekaman medis pasien (hanya dokter terkait)
-     */
-    public function getRekamMedisByDoctor($doctorId, $patientId = null)
+    // Update getRekamMedisByDoctor juga dengan logic yang sama
+    public function getRekamMedisByDoctor($doctorId, $patientId = null, $token = null)
     {
         $doctor = Doctor::find($doctorId);
         if (!$doctor) {
@@ -86,8 +95,27 @@ class MedicalRecordService
 
         $records = $query->get();
 
+        // Add protected URLs if token provided
+        if ($token) {
+            $records = $records->map(function ($record) use ($token) {
+                if ($record->path_file) {
+                    preg_match('/uploads\/(\d+)\/rekam_medis\/(.+)$/', $record->path_file, $matches);
+
+                    if (count($matches) === 3) {
+                        $patientId = $matches[1];
+                        $filename = $matches[2];
+
+                        $record->file_url = url("/api/files/medical-records/{$patientId}/{$filename}?token={$token}");
+                        $record->download_url = url("/api/files/medical-records/{$patientId}/{$filename}/download?token={$token}");
+                    }
+                }
+                return $record;
+            });
+        }
+
         return [
             'success' => true,
+            'patient_id' => $patientId,
             'records' => $records,
             'total_records' => $records->count()
         ];
@@ -150,8 +178,8 @@ class MedicalRecordService
         }
 
         // Hapus file dari storage jika ada
-        if ($record->path_file && Storage::disk('public')->exists($record->path_file)) {
-            Storage::disk('public')->delete($record->path_file);
+        if ($record->path_file && Storage::disk('local')->exists($record->path_file)) {
+            Storage::disk('local')->delete($record->path_file);
         }
 
         $record->delete();

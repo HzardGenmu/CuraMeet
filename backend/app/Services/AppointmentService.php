@@ -35,16 +35,46 @@ class AppointmentService
             'message' => 'Pengecekan berhasil didaftarkan'
         ];
     }
+    public function deleteAppointment($appointmentId, $userId)
+    {
+        $appointment = Appointment::find($appointmentId);
 
+        // Pastikan appointment ada dan user adalah pemilik (pasien)
+        if (!$appointment || $appointment->patient_id !== $userId) {
+            return [
+                'success' => false,
+                'message' => 'Unauthorized or appointment not found'
+            ];
+        }
+
+        $appointment->delete();
+
+        return [
+            'success' => true,
+            'message' => 'Appointment deleted successfully'
+        ];
+    }
     /**
      * Batalkan pengecekan (oleh pasien)
      */
     public function cancelAppointment($appointmentId, $reason)
     {
         $appointment = Appointment::find($appointmentId);
+        // Ambil token dari request
+        $token = (new \App\Services\AuthService())->extractToken(request());
 
-        if (!$appointment || Auth::id() !== $appointment->patient->user_id) {
-            return ['success' => false, 'message' => 'Unauthorized'];
+        // Ambil user dari token
+        $user = (new \App\Services\AuthService())->verifyToken($token);
+
+        if (!$appointment || !$user || $user->id !== $appointment->patient->user_id) {
+            return [
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => [
+                    'appointment_id' => $appointmentId,
+                    'user_id' => Auth::id()
+                ]
+            ];
         }
 
         $appointment->status = 'cancelled';

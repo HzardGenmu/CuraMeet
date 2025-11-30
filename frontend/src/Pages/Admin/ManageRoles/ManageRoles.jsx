@@ -27,7 +27,7 @@ const ManageRoles = () => {
     setError("");
     try {
       const response = await adminService.getAllUsers();
-      console.log(response);
+      // console.log(response);
       let combinedUsers = [];
       if (response.success && Array.isArray(response.users)) {
         combinedUsers = response.users.map((u) => ({

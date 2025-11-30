@@ -24,18 +24,18 @@ apiClient.interceptors.response.use(
   (error) => {
     console.error("API Error:", error);
 
-    if (error.response?.status === 401) {
+//    if (error.response?.status === 401) {
       // Handle unauthorized access
-      console.log("Unauthorized access, clearing auth data");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userInfo");
-      localStorage.removeItem("isAuthenticated");
+      // console.log("Unauthorized access, clearing auth data");
+      //localStorage.removeItem("authToken");
+      //localStorage.removeItem("userInfo");
+      //localStorage.removeItem("isAuthenticated");
 
       // Redirect to login if not already there
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
-      }
-    }
+//      if (window.location.pathname !== "/login") {
+//        window.location.href = "/login";
+//      }
+//    }
 
     return Promise.reject(error);
   }

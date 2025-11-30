@@ -9,10 +9,14 @@ class CorsMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
+
         $allowedOrigins = [
             'http://localhost:3000',
-            'https://curameet.duckdns.org',
-            'https://api.curameet.duckdns.org',
+            'http://backend-secure.test',
+            'https://curameet-secure.duckdns.org',
+            'https://api.curameet-secure.duckdns.org',
+ 'http://curameet-secure.duckdns.org',
+            'http://api.curameet-secure.duckdns.org',
         ];
 
         $origin = $request->headers->get('Origin');
@@ -28,7 +32,7 @@ class CorsMiddleware
         }
 
         if ($request->getMethod() === 'OPTIONS') {
-            return response('OK', 200)->withHeaders($headers);
+            return response('', 204)->withHeaders($headers);
         }
 
         $response = $next($request);
@@ -40,4 +44,3 @@ class CorsMiddleware
         return $response;
     }
 }
-

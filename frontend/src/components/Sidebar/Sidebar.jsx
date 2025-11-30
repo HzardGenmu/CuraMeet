@@ -2,19 +2,26 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { IoPersonCircleOutline, IoLogOutOutline } from "react-icons/io5";
 import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
+import { authService } from "../../services/authService";
+import LogoutLoadingOverlay from "../LogoutLoadingOverlay";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
 
   const confirmLogout = () => {
-    localStorage.removeItem("authToken");
-    navigate("/login");
     setShowLogoutModal(false);
+    setIsLoggingOut(true);
+    localStorage.removeItem("authToken");
+    setTimeout(() => {
+      setIsLoggingOut(false);
+      window.location.href = "/login";
+    }, 3000);
   };
 
   const cancelLogout = () => {
@@ -27,9 +34,11 @@ const Sidebar = () => {
         <div className="p-8 text-center border-b border-gray-200">
           <IoPersonCircleOutline
             size={60}
-            className="text-gray-400 mx-auto mb-2"
+            className="text-white mx-auto mb-2"
           />
-          <h3 className="m-0 font-semibold text-gray-800 text-lg">Patient</h3>
+          <h3 className="m-0 font-semibold text-gray-800 text-lg">
+            {authService.getCurrentUser().name}
+          </h3>
         </div>
 
         <nav className="flex-grow py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-white">
@@ -78,7 +87,7 @@ const Sidebar = () => {
                 Profil
               </NavLink>
             </li>
-            <li>
+            {/* <li>
               <NavLink
                 to="/catatan-medis"
                 className={({ isActive }) =>
@@ -91,7 +100,7 @@ const Sidebar = () => {
               >
                 Catatan Medis
               </NavLink>
-            </li>
+            </li> */}
             {/* Tambahkan item navigasi lainnya di sini jika ada */}
           </ul>
         </nav>
@@ -111,7 +120,7 @@ const Sidebar = () => {
           </button>
         </div>
       </aside>
-
+      <LogoutLoadingOverlay isVisible={isLoggingOut} />
       <ConfirmationModal
         show={showLogoutModal}
         title="Konfirmasi Logout"

@@ -22,7 +22,7 @@ export const patientService = {
     const response = await apiClient.get("/patients/search", {
       params: { name },
     });
-    console.log(response);
+    // console.log(response);
     return response.data;
   },
 

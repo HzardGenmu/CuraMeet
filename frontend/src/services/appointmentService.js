@@ -50,15 +50,17 @@ export const appointmentService = {
       `/appointments/${appointmentId}/cancel`,
       { reason }
     );
+    // console.log(response);
     return response.data;
   },
 
   cancelByDoctor: async (appointmentId, doctorId, reason) => {
-    const response = await apiClient.post("/appointments/cancel/doctor", {
+    const response = await apiClient.post("/appointments/cancel-by-doctor", {
       appointment_id: appointmentId,
       doctor_id: doctorId,
       reason: reason,
     });
+    // console.log(response);
     return response.data;
   },
 

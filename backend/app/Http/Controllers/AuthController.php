@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Log;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -214,15 +216,45 @@ class AuthController extends Controller
      */
     public function resetPassword(Request $request)
     {
-        $email = $request->input('email');
-        $newPassword = $request->input('new_password');
+        
+        $user = $request->user(); 
+        
+        if (!$user) {
+          
+             $token = $this->authService->extractToken($request);
+             $user = $this->authService->verifyToken($token);
+             if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+             }
+        }
 
-        // Anyone can reset anyone's password (VULNERABILITY)
-        $result = $this->authService->resetPassword($email, $newPassword);
+       
+        $validator = Validator::make($request->all(), [
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+        
+        $validatedData = $validator->validated();
+        
+        if (!Hash::check($validatedData['old_password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password lama Anda salah.'
+            ], 422);
+        }
+
+        $result = $this->authService->changePassword(
+            $user->id, 
+            $validatedData['old_password'], 
+            $validatedData['new_password']
+        );
 
         return response()->json($result);
     }
-
     /**
      * User Logout
      *
@@ -415,6 +447,7 @@ class AuthController extends Controller
      */
     public function changePassword(Request $request)
     {
+        // 1. Verifikasi token (sama seperti kode Anda)
         $token = $this->authService->extractToken($request);
         $user = $this->authService->verifyToken($token);
 
@@ -425,10 +458,32 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $oldPassword = $request->input('old_password');
-        $newPassword = $request->input('new_password');
+        // 2. PERBAIKAN: Validasi semua input
+        $validator = Validator::make($request->all(), [
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed', // 'confirmed' akan mencocokkan 'new_password_confirmation'
+        ]);
 
-        $result = $this->authService->changePassword($user->id, $oldPassword, $newPassword);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+        
+        $validatedData = $validator->validated();
+
+    
+        if ($user->password !== $validatedData['old_password']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password lama Anda salah.'
+            ], 422);
+        }
+
+        
+        $result = $this->authService->changePassword(
+            $user->id, 
+            $validatedData['old_password'], 
+            $validatedData['new_password']
+        );
 
         return response()->json($result);
     }

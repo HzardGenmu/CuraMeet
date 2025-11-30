@@ -10,6 +10,7 @@ import {
   IoChatbubblesOutline,
   IoArrowBackOutline,
   IoAlertCircleOutline,
+  IoDocument,
 } from "react-icons/io5";
 
 // Import services (sesuaikan path Anda)
@@ -45,13 +46,34 @@ const DoctorPasienDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
-
-  // Get current doctor ID from auth
-  const CURRENT_DOCTOR_ID = authService.getCurrentUser()?.id || "";
+  const [currentDoctorId, setCurrentDoctorId] = useState(null); // Ganti const jadi state
+  const [currentDoctor, setCurrentDoctor] = useState(null); // Ganti const jadi state
 
   useEffect(() => {
-    fetchPatientData();
-  }, [pasienId]);
+    fetchDoctorProfile();
+  }, []);
+
+  useEffect(() => {
+    if (currentDoctorId) {
+      fetchPatientData();
+    }
+  }, [pasienId, currentDoctorId]);
+
+  const fetchDoctorProfile = async () => {
+    try {
+      const res = await doctorService.getProfile();
+      if (res.data.success && res.data.doctor) {
+        setCurrentDoctorId(res.data.doctor.id);
+        setCurrentDoctor(res.data.doctor);
+      } else {
+        throw new Error("Gagal memuat profil dokter");
+      }
+    } catch (err) {
+      console.error("Failed to fetch doctor profile:", err);
+      setError("Gagal memuat profil dokter.");
+      setLoading(false);
+    }
+  };
 
   const fetchPatientData = async () => {
     setLoading(true);
@@ -86,26 +108,18 @@ const DoctorPasienDetail = () => {
       });
 
       // 2. Fetch medical records using medicalRecordService.getForPatient()
-      const recordsResponse = await medicalRecordService.getForPatient(
+      const recordsResponse = await doctorService.viewPatientMedicalRecords(
+        currentDoctorId,
         pasienId
       );
-      const records = recordsResponse.records || recordsResponse.data || [];
 
-      // Transform records to match UI expectations
-      const transformedRecords = records.map((record) => ({
-        id: record.id,
-        judul: record.disease_name || record.title || "Rekam Medis",
-        tanggal: record.created_at || record.date || "-",
-        type: record.file_type || "Document",
-        fileUrl: record.file_url || record.url || "#",
-        doctorNote: record.catatan_dokter || "",
-      }));
-
-      setMedicalRecords(transformedRecords);
+      const records = recordsResponse.records || [];
+      // console.log(records);
+      setMedicalRecords(records);
 
       // 3. Fetch doctor's medical notes using doctorService.viewPatientMedicalRecords()
       const notesResponse = await doctorService.viewPatientMedicalRecords(
-        CURRENT_DOCTOR_ID,
+        currentDoctorId,
         pasienId
       );
 
@@ -138,21 +152,53 @@ const DoctorPasienDetail = () => {
     setIsAddNoteModalOpen(false);
   };
 
-  const handleSaveNewNote = async (data) => {
-    try {
-      const { diagnosa, resepObat, file } = data;
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
 
+    if (!selectedFile || !selectedDoctorId || !diseaseName) {
+      setError("Semua field wajib harus diisi.");
+      return;
+    }
+
+    setUploadLoading(true);
+
+    try {
       // Buat FormData untuk upload
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("doctor_id", selectedDoctorId);
+      formData.append("file", selectedFile);
+      formData.append("disease_name", diseaseName);
+      formData.append("doctor_note", doctorNote || "");
+
+      // Kirim FormData ke parent component
+      await onSave(formData);
+
+      setSuccess("Rekam medis berhasil ditambahkan!");
+
+      // Tutup modal setelah 1.5 detik
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (err) {
+      console.error("Error uploading:", err);
+      setError("Gagal menambahkan rekam medis. Silakan coba lagi.");
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const handleSaveNewNote = async (formData) => {
+    try {
+      // FormData sudah dibuat di modal dengan doctor_id, file, disease_name, doctor_note
+      // Tinggal tambahkan patient_id
       formData.append("patient_id", patient.id);
-      formData.append("doctor_id", CURRENT_DOCTOR_ID);
-      formData.append(
-        "doctor_note",
-        sanitize(
-          `Diagnosa: ${diagnosa}${resepObat ? ` | Resep: ${resepObat}` : ""}`
-        )
-      );
+
+      // console.log("FormData entries:");
+      for (let pair of formData.entries()) {
+        // console.log(pair[0] + ": " + pair[1]);
+      }
 
       // Upload menggunakan medicalRecordService
       const result = await medicalRecordService.upload(formData);
@@ -182,7 +228,7 @@ const DoctorPasienDetail = () => {
       if (response.success) {
         alert("Data pasien berhasil diekspor!");
         // Handle download or display export data
-        console.log("Export data:", response);
+        // console.log("Export data:", response);
       }
     } catch (err) {
       console.error("Error exporting data:", err);
@@ -297,93 +343,91 @@ const DoctorPasienDetail = () => {
 
         {medicalRecords.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
-            {medicalRecords.map((record) => (
-              <div key={record.id} className="...">
-                <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-800">
-                  {sanitize(record.judul)}
-                </h3>
-                <p className="text-gray-600 text-sm mb-1">
-                  <strong>Tanggal:</strong> {sanitize(record.tanggal)}
-                </p>
-                <p className="text-gray-600 text-sm mb-1">
-                  <strong>Tipe:</strong> {sanitize(record.type)}
-                </p>
-                {record.doctorNote && (
-                  <p className="text-gray-600 text-sm mt-2 pt-2 border-t border-gray-200">
-                    <strong>Catatan:</strong> {sanitize(record.doctorNote)}
-                  </p>
-                )}
-                <a
-                  href={
-                    /^https?:\/\/[\w.-]+\//.test(record.fileUrl)
-                      ? record.fileUrl
-                      : "#"
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 block bg-emerald-600 text-white py-2 px-4 rounded-lg text-center text-sm font-medium hover:bg-emerald-700 transition"
+            {medicalRecords.map((record) => {
+              // Ambil filename dari path_file
+              const filename = record.path_file
+                ? record.path_file.split("/").pop()
+                : null;
+
+              // Cek apakah file adalah gambar
+              const isImage =
+                filename && /\.(jpeg|jpg|png|gif)$/i.test(filename);
+
+              return (
+                <div
+                  key={record.id}
+                  className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col"
                 >
-                  Lihat Rekam Medis
-                </a>
-              </div>
-            ))}
+                  {/* Preview Section */}
+                  <div className="relative w-full h-48 bg-gray-100 flex items-center justify-center p-4">
+                    {isImage ? (
+                      <img
+                        src={`https://api.curameet-secure.duckdns.org/api/files/medical-records/${
+                          record.patient_id
+                        }/${filename}?token=${localStorage.getItem(
+                          "authToken"
+                        )}`}
+                        alt={record.disease_name}
+                        className="object-cover w-full h-full"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src =
+                            "https://via.placeholder.com/300x200/cccccc/666666?text=Image+Not+Found";
+                        }}
+                      />
+                    ) : (
+                      <div className="text-5xl text-red-500">
+                        <IoDocument />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content Section */}
+                  <div className="p-5 flex-grow">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-800">
+                      {sanitize(record.disease_name)}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-1">
+                      <strong>Tanggal:</strong> {sanitize(record.created_at)}
+                    </p>
+                    <p className="text-gray-600 text-sm mb-1">
+                      <strong>File:</strong> {sanitize(filename)}
+                    </p>
+                    {record.catatan_dokter && (
+                      <p className="text-gray-600 text-sm mt-2 pt-2 border-t border-gray-200">
+                        <strong>Catatan:</strong>{" "}
+                        {sanitize(record.catatan_dokter)}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Action Button */}
+                  <div className="p-4 border-t border-gray-200">
+                    {record.path_file && filename && (
+                      <a
+                        href={`https://api.curameet-secure.duckdns.org/api/files/medical-records/${
+                          record.patient_id
+                        }/${filename}?token=${localStorage.getItem(
+                          "authToken"
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full inline-flex items-center justify-center py-2 px-4 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition duration-200 ease-in-out text-sm"
+                      >
+                        <IoDocument className="mr-2 text-lg" />
+                        {isImage ? "Lihat Gambar" : "Lihat Dokumen"}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="bg-gray-100 rounded-lg p-8 text-center mb-12">
             <IoFlaskOutline size={48} className="text-gray-400 mx-auto mb-3" />
             <p className="text-gray-600 italic">
               Tidak ada rekam medis digital untuk pasien ini.
-            </p>
-          </div>
-        )}
-
-        {/* Doctor Notes Section */}
-        <div className="flex items-center mt-12 mb-6 text-emerald-600">
-          <IoChatbubblesOutline size={25} className="mr-3" />
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
-            Catatan Medis untuk Pasien Ini
-          </h2>
-        </div>
-
-        {doctorNotes.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
-            {doctorNotes.map((note) => (
-              <div key={note.id} className="...">
-                <p className="text-sm text-gray-500 mb-3 pb-2 border-b border-dashed border-emerald-200">
-                  <strong className="text-gray-600">Tanggal:</strong>{" "}
-                  {sanitize(note.tanggal)}
-                </p>
-                <p className="text-gray-700 text-base mb-2">
-                  <strong className="text-emerald-700">Dokter:</strong>{" "}
-                  {sanitize(note.dokter)}
-                </p>
-                <p className="text-gray-700 text-base mb-2">
-                  <strong className="text-emerald-700">Diagnosa:</strong>{" "}
-                  {sanitize(note.diagnosis)}
-                </p>
-                {note.resepObat && (
-                  <p className="text-gray-700 text-base mb-2">
-                    <strong className="text-emerald-700">Resep Obat:</strong>{" "}
-                    {sanitize(note.resepObat)}
-                  </p>
-                )}
-                {note.catatan && (
-                  <p className="text-gray-700 text-sm mt-2 pt-2 border-t border-emerald-200">
-                    <strong className="text-emerald-700">Catatan:</strong>{" "}
-                    {sanitize(note.catatan)}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-gray-100 rounded-lg p-8 text-center mb-12">
-            <IoChatbubblesOutline
-              size={48}
-              className="text-gray-400 mx-auto mb-3"
-            />
-            <p className="text-gray-600 italic">
-              Belum ada catatan medis untuk pasien ini.
             </p>
           </div>
         )}
@@ -404,6 +448,7 @@ const DoctorPasienDetail = () => {
         show={isAddNoteModalOpen}
         onClose={handleCloseAddNoteModal}
         onSave={handleSaveNewNote}
+        doctor={currentDoctor}
       />
     </>
   );

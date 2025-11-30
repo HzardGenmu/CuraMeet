@@ -85,43 +85,43 @@ class AuthService
             ->where('role', $role)
             ->first();
 
-
-        if ($user) {
-            // Generate token yang aman
-            $token = $this->generateSecureToken();
-            $expiresAt = now()->addHours(24);
-
-            // Simpan token ke database dengan Eloquent
-            $user->api_token = $token;
-            $user->token_expires_at = $expiresAt;
-            $user->save();
-
-            // Set session sebagai fallback
-            Session::put('user_id', $user->id);
-            Session::put('user_role', $user->role);
-            Session::put('logged_in', true);
-            Session::put('api_token', $token);
-
-            // Log tanpa password
-            \Log::info("User login successful: {$email}");
-
-            return [
-                'success' => true,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                ],
-                'token' => $token,
-                'token_type' => 'Bearer',
-                'expires_in' => 86400, // 24 jam dalam detik
-            ];
+        // Cek apakah user ada dan password benar (hash comparison)
+        if (!$user || !Hash::check($password, $user->password)) {
+            \Log::warning("Login failed for email: {$email}");
+            return ['success' => false, 'message' => 'Invalid credentials'];
         }
 
-        return ['success' => false, 'message' => 'Invalid credentials'];
-    }
+        // Generate token yang aman
+        $token = $this->generateSecureToken();
+        $expiresAt = now()->addHours(24);
 
+        // Simpan token ke database dengan Eloquent
+        $user->api_token = $token;
+        $user->token_expires_at = $expiresAt;
+        $user->save();
+
+        // Set session sebagai fallback
+        Session::put('user_id', $user->id);
+        Session::put('user_role', $user->role);
+        Session::put('logged_in', true);
+        Session::put('api_token', $token);
+
+        // Log tanpa password
+        \Log::info("User login successful: {$email}");
+
+        return [
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+            'token' => $token,
+            'token_type' => 'Bearer',
+            'expires_in' => 86400, // 24 jam dalam detik
+        ];
+    }
     /**
      * Generate secure token menggunakan Laravel Str::random
      */
@@ -147,7 +147,6 @@ class AuthService
             return null;
         }
 
-        // Query dengan prepared statement (untuk token verification saja, query lain tetap vulnerable)
         $user = User::where('api_token', $token)
             ->where('token_expires_at', '>', now())
             ->first();
@@ -169,7 +168,7 @@ class AuthService
         $newToken = $this->generateSecureToken();
 
         // Perbaiki bagian ini:
-        $expiresAt = now()->addHours(24)->format('Y-m-d H:i:s');
+        $expiresAt = now()->addHours(1)->format('Y-m-d H:i:s');
         $query = "UPDATE users SET api_token = '$newToken', token_expires_at = '$expiresAt' WHERE id = {$user->id}";
         DB::update($query);
 

@@ -58,6 +58,7 @@ const DoctorJanjiTemu = () => {
     try {
       const res = await appointmentService.getForDoctor(doctorNowData.id);
       setAppointments(res.appointments || []);
+      // console.log(res.appointments);
     } catch (err) {
       console.error("Error fetching appointments:", err);
       setError("Gagal memuat data janji temu.");
@@ -417,6 +418,8 @@ const DoctorJanjiTemu = () => {
                           )}`}
                         >
                           {item.status}
+                          {item.status?.toUpperCase() === "CANCELLED" &&
+                            ` by ${item.cancelled_by}`}
                         </span>
                       </div>
                       <p className="text-gray-600 text-base mb-1">
@@ -425,14 +428,11 @@ const DoctorJanjiTemu = () => {
                       <p className="text-gray-600 text-sm">
                         🏥 Ruang: {doctorNowData.polyclinic || "-"}
                       </p>
-                      {console.log(item)}
+                      {/* XSS FIX */}
                       {item.patient_note && (
-                        <p
-                          className="text-gray-500 text-sm mt-2 italic"
-                          dangerouslySetInnerHTML={{
-                            __html: "📝 " + item.patient_note,
-                          }}
-                        />
+                        <p className="text-gray-500 text-sm mt-2 italic">
+                          {"📝 " + item.patient_note}
+                        </p>
                       )}
                     </div>
                     <div className="flex gap-2 flex-wrap">
@@ -448,7 +448,7 @@ const DoctorJanjiTemu = () => {
                             <IoCheckmarkCircle size={20} />
                             Konfirmasi
                           </button>
-                          <button
+                          {/* <button
                             className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition duration-200"
                             onClick={() =>
                               handleStatusActionClick(item, "cancel")
@@ -457,7 +457,7 @@ const DoctorJanjiTemu = () => {
                           >
                             <IoCloseCircle size={20} />
                             Tolak
-                          </button>
+                          </button> */}
                         </>
                       )}
                       {item.status?.toLowerCase() === "confirmed" && (
@@ -557,10 +557,10 @@ const DoctorJanjiTemu = () => {
                         {app.patient_note && (
                           <p
                             className="text-gray-500 text-sm mt-2 italic"
-                            dangerouslySetInnerHTML={{
-                              __html: "📝 " + app.patient_note,
-                            }}
-                          />
+                            //ganti biar ga xss
+                          >
+                            {"📝 " + app.patient_note}
+                          </p>
                         )}
                       </div>
                       <div className="flex flex-col gap-2 ml-4">

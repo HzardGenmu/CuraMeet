@@ -1,13 +1,19 @@
-import React, { useState } from 'react';
-import { IoClose, IoCalendar, IoTime, IoPerson, IoDocumentText } from 'react-icons/io5';
+import React, { useState } from "react";
+import {
+  IoClose,
+  IoCalendar,
+  IoTime,
+  IoPerson,
+  IoDocumentText,
+} from "react-icons/io5";
 
 const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
   // State untuk mengelola input form
-  const [doctorId, setDoctorId] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [notes, setNotes] = useState('');
-  const [error, setError] = useState('');
+  const [doctorId, setDoctorId] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
 
   if (!isOpen) {
     return null;
@@ -15,11 +21,11 @@ const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Validasi sederhana, sekarang termasuk 'notes'
     if (!doctorId || !date || !time || !notes) {
-      setError('Harap lengkapi semua field yang wajib diisi.');
+      setError("Harap lengkapi semua field yang wajib diisi.");
       return;
     }
 
@@ -41,23 +47,37 @@ const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
       {/* Konten Modal */}
       <div
         className="bg-white p-6 sm:p-8 rounded-xl w-11/12 max-w-lg shadow-2xl transform transition-all"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}
         <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Buat Janji Temu Baru</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition p-1 rounded-full">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Buat Janji Temu Baru
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-800 transition p-1 rounded-full"
+          >
             <IoClose size={28} />
           </button>
         </div>
 
         {/* Body Modal berisi Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg text-center text-sm">⚠️ {error}</div>}
+          {error && (
+            <div className="bg-red-100 text-red-700 p-3 rounded-lg text-center text-sm">
+              ⚠️ {error}
+            </div>
+          )}
 
           {/* Input Dokter */}
           <div>
-            <label htmlFor="doctor" className="block text-sm font-medium mb-2 text-gray-700">Pilih Dokter <span className="text-red-500">*</span></label>
+            <label
+              htmlFor="doctor"
+              className="block text-sm font-medium mb-2 text-gray-700"
+            >
+              Pilih Dokter <span className="text-red-500">*</span>
+            </label>
             <div className="relative">
               <IoPerson className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <select
@@ -67,7 +87,9 @@ const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
                 required
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="" disabled>-- Pilih seorang dokter --</option>
+                <option value="" disabled>
+                  -- Pilih seorang dokter --
+                </option>
                 {doctors.map((doctor) => (
                   <option key={doctor.id} value={doctor.id}>
                     {doctor.full_name} - {doctor.specialist}
@@ -80,9 +102,14 @@ const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
           {/* Input Tanggal & Waktu */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="date" className="block text-sm font-medium mb-2 text-gray-700">Tanggal <span className="text-red-500">*</span></label>
+              <label
+                htmlFor="date"
+                className="block text-sm font-medium mb-2 text-gray-700"
+              >
+                Tanggal <span className="text-red-500">*</span>
+              </label>
               <div className="relative">
-                 <IoCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <IoCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="date"
                   id="date"
@@ -94,7 +121,12 @@ const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
               </div>
             </div>
             <div>
-              <label htmlFor="time" className="block text-sm font-medium mb-2 text-gray-700">Waktu <span className="text-red-500">*</span></label>
+              <label
+                htmlFor="time"
+                className="block text-sm font-medium mb-2 text-gray-700"
+              >
+                Waktu <span className="text-red-500">*</span>
+              </label>
               <div className="relative">
                 <IoTime className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -111,7 +143,12 @@ const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
 
           {/* Input Catatan */}
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium mb-2 text-gray-700">Catatan <span className="text-red-500">*</span></label>
+            <label
+              htmlFor="notes"
+              className="block text-sm font-medium mb-2 text-gray-700"
+            >
+              Catatan <span className="text-red-500">*</span>
+            </label>
             <div className="relative">
               <IoDocumentText className="absolute left-3 top-4 text-gray-400" />
               <textarea
@@ -121,6 +158,7 @@ const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Contoh: Saya mengalami demam selama 3 hari."
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                pattern="^[^<>]*$"
                 required
               ></textarea>
             </div>
@@ -149,4 +187,3 @@ const AppointmentFormModal = ({ isOpen, onClose, onSubmit, doctors }) => {
 };
 
 export default AppointmentFormModal;
-

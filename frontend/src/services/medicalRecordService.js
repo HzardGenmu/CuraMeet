@@ -26,12 +26,24 @@ export const medicalRecordService = {
    * @returns {Promise<any>} Daftar rekam medis.
    */
   getForPatient: async (patientId) => {
+    const token = localStorage.getItem("authToken");
+    const params = { patient_id: patientId };
+    if (token) params.token = token;
+
     const response = await apiClient.get("/medical-records/patient", {
-      params: { patient_id: patientId },
+      params,
     });
     return response.data;
   },
-  
+
+  getByDoctor: async () => {
+    const token = localStorage.getItem("authToken");
+    const response = await apiClient.get("/medical-records/doctor", {
+      token: token,
+    });
+    return response.data;
+  },
+
   /**
    * 🔍 Mengambil detail satu rekam medis berdasarkan ID-nya.
    * @param {number} recordId - ID unik rekam medis.
@@ -51,7 +63,10 @@ export const medicalRecordService = {
    * @returns {Promise<any>} Data rekam medis yang telah diupdate.
    */
   update: async (updateData) => {
-    const response = await apiClient.post("/medical-records/update", updateData);
+    const response = await apiClient.post(
+      "/medical-records/update",
+      updateData
+    );
     return response.data;
   },
 
@@ -61,7 +76,9 @@ export const medicalRecordService = {
    * @returns {Promise<any>} Respons konfirmasi penghapusan.
    */
   delete: async (recordId) => {
-    const response = await apiClient.delete(`/medical-records/${recordId}/delete`);
+    const response = await apiClient.delete(
+      `/medical-records/${recordId}/delete`
+    );
     return response.data;
   },
 };

@@ -10,6 +10,8 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         \App\Http\Middleware\CorsMiddleware::class,
+        \App\Http\Middleware\SecurityHeaders::class,
+
         // \App\Http\Middleware\TrustProxies::class,
         // \Illuminate\Http\Middleware\HandleCors::class, // Disable, kita pakai custom CORS
         // \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
@@ -23,8 +25,15 @@ class Kernel extends HttpKernel
      */
     protected $middlewareGroups = [
 
+        'web' => [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ],
+
         'api' => [
-            // 'throttle:api', // DISABLED - No rate limiting (allows brute force)
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -41,5 +50,6 @@ class Kernel extends HttpKernel
      */
     protected $middlewareAliases = [
         'auth' => \App\Http\Middleware\Authenticate::class,
+        'auth.token' => \App\Http\Middleware\AuthTokenMiddleware::class,
     ];
 }
