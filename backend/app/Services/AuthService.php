@@ -290,7 +290,7 @@ class AuthService
             $result = DB::transaction(function () use ($data, $role) {
                 $name = $data['name'];
                 $email = $data['email'];
-                $password = $data['password'];
+                $password = Hash::make($data['password']);
 
                 $insertSql = "INSERT INTO users (name, email, password, role, created_at, updated_at)
                               VALUES (?, ?, ?, ?, ?, ?)
