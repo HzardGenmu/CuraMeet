@@ -6,10 +6,10 @@ return [
 
     'allowed_origins' => [
         'http://localhost:3000',
-        'https://curameet-secure.duckdns.org',
-        'http://curameet-secure.duckdns.org',
-        'https://api.curameet-secure.duckdns.org',
-        'http://api.curameet-secure.duckdns.org'
+        'https://curameet.duckdns.org',
+        'http://curameet.duckdns.org',
+        'https://api.curameet.duckdns.org',
+        'http://api.curameet.duckdns.org'
     ],
 
     'allowed_origins_patterns' => [],
