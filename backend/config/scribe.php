@@ -2,7 +2,7 @@
 
 use Knuckles\Scribe\Extracting\Strategies;
 use Knuckles\Scribe\Config\Defaults;
-//use Knuckles\Scribe\Config\AuthIn;
+use Knuckles\Scribe\Config\AuthIn;
 use function Knuckles\Scribe\Config\{removeStrategies, configureStrategy};
 
 // Only the most common configs are shown. See the https://scribe.knuckles.wtf/laravel/reference/config for all.
@@ -13,7 +13,7 @@ return [
 
     // A short description of your API. Will be included in the docs webpage, Postman collection and OpenAPI spec.
     'description' => '',
-    'use_static_files' => false,
+
     // Text to place in the "Introduction" section, right after the `description`. Markdown and HTML are supported.
     'intro_text' => <<<INTRO
         This documentation aims to provide all the information you need to work with our API.
@@ -110,7 +110,7 @@ return [
         'default' => false,
 
         // Where is the auth value meant to be sent in a request?
-        'in' => 'bearer',
+        'in' => AuthIn::BEARER->value,
 
         // The name of the auth parameter (e.g. token, key, apiKey) or header (e.g. Authorization, Api-Key).
         'name' => 'key',
