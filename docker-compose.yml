@@ -1,22 +1,5 @@
 services:
   # ----------------
-  # Reverse Proxy
-  # ----------------
-  npm:
-    image: jc21/nginx-proxy-manager:latest
-    container_name: nginx_proxy_manager
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "81:81" # dashboard NPM
-      - "443:443"
-    volumes:
-      - npm_data:/data
-      - npm_letsencrypt:/etc/letsencrypt
-    networks:
-      - app-network
-
-  # ----------------
   # Apps1: OJS
   # ----------------
   # ----------------
@@ -125,4 +108,5 @@ volumes:
 
 networks:
   app-network:
+    name: curameet_network_shared
     external: true
