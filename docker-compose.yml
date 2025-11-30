@@ -52,6 +52,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./backend:/var/www/html
+      - /var/www/html/vendor
     networks:
       - app-network
 
