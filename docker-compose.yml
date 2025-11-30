@@ -116,6 +116,8 @@ volumes:
   npm_letsencrypt:
   ojs_data:
   backend_data:
+    external: true
+    name: curameet_backend_data
 
 networks:
   app-network:
