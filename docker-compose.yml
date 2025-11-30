@@ -53,6 +53,16 @@ services:
     volumes:
       - ./backend:/var/www/html
       - /var/www/html/vendor
+    environment:
+      APP_ENV: production
+      APP_DEBUG: 'true'
+      APP_URL: https://curameet.duckdns.org
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres_backend  # Harus sama dengan container_name database di bawah
+      DB_PORT: 5432
+      DB_DATABASE: curameet
+      DB_USERNAME: postgres
+      DB_PASSWORD: password123
     networks:
       - app-network
 
