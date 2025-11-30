@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Doctor;
 use App\Models\Patient;
 
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
