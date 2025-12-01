@@ -6,12 +6,12 @@ rules:
   - id: laravel-raw-sql-concatenation
     patterns:
       - pattern-either:
-          # Mendeteksi konkatenasi string di dalam method raw
-          - pattern: DB::raw("..." . $VAR . "...")
-          - pattern: DB::statement("..." . $VAR . "...")
-          - pattern: DB::select("..." . $VAR . "...")
-          - pattern: $MODEL::whereRaw("..." . $VAR . "...")
-          - pattern: $MODEL::selectRaw("..." . $VAR . "...")
+          # Gunakan tanda kutip untuk pattern yang mengandung karakter spesial
+          - pattern: 'DB::raw("..." . $VAR . "...")'
+          - pattern: 'DB::statement("..." . $VAR . "...")'
+          - pattern: 'DB::select("..." . $VAR . "...")'
+          - pattern: '$MODEL::whereRaw("..." . $VAR . "...")'
+          - pattern: '$MODEL::selectRaw("..." . $VAR . "...")'
     message: |
       POTENSI SQL INJECTION: Terdeteksi penggabungan variabel PHP langsung ke dalam query SQL mentah.
       Jangan pernah menyambung string untuk query. Gunakan 'parameter binding' (tanda tanya ?).
@@ -33,7 +33,8 @@ rules:
 
   - id: react-dangerously-set-inner-html
     patterns:
-      - pattern: <$TAG dangerouslySetInnerHTML={{ __html: ... }} ... />
+      # WAJIB PAKAI KUTIP DI SINI KARENA ADA ":" DI DALAM {{ }}
+      - pattern: "<$TAG dangerouslySetInnerHTML={{ __html: ... }} ... />"
     message: |
       XSS RISK: Penggunaan 'dangerouslySetInnerHTML' memungkinkan injeksi skrip berbahaya.
       Hanya gunakan jika konten benar-benar terpercaya atau sudah disanitasi menggunakan library seperti 'dompurify'.
@@ -42,8 +43,8 @@ rules:
 
   - id: react-href-javascript-protocol
     patterns:
-      - pattern: <a href="javascript:...">
-      - pattern: <a href={"javascript:" + ...}>
+      - pattern: '<a href="javascript:...">'
+      - pattern: '<a href={"javascript:" + ...}>'
     message: |
       XSS RISK: Menggunakan protokol 'javascript:' pada href memungkinkan eksekusi skrip sembarang.
       Gunakan event handler React seperti 'onClick' untuk logika interaktif.
@@ -51,7 +52,7 @@ rules:
     severity: ERROR
 
   - id: react-untrusted-url-in-img
-    pattern: <img src={...} ... />
+    pattern: '<img src={...} ... />'
     message: |
       XSS/PHISHING RISK: Pastikan sumber gambar (src) divalidasi jika berasal dari input user.
       User jahat bisa menyisipkan URL berbahaya atau tracking pixel.
@@ -59,8 +60,6 @@ rules:
     severity: INFO
 
   - id: laravel-blade-unescaped-output
-    # Note: Semgrep men-scan file .blade.php sebagai teks/generic jika tidak diset khusus,
-    # tapi rule ini bekerja jika extension .blade.php dianggap file ter-scan.
     patterns:
       - pattern: "{!! $VAR !!}"
     paths:
@@ -69,8 +68,8 @@ rules:
     message: |
       XSS RISK: Output {!! !!} di Blade tidak melakukan escaping HTML.
       Jika variabel ini berasal dari input user, script jahat akan dieksekusi.
-      Gunakan {{ }} kecuali Anda yakin data tersebut aman/sudah disanitasi (misal: HTML Purifier).
-    languages: [generic] # Menggunakan mode generic text search untuk blade
+      Gunakan {{ }} kecuali Anda yakin data tersebut aman/sudah disanitasi.
+    languages: [generic]
     severity: WARNING
 
   # =========================================================
@@ -84,7 +83,6 @@ rules:
       - pattern: $MODEL::create($REQ->input())
     message: |
       BROKEN ACCESS CONTROL (Integrity): Menggunakan $request->all() langsung ke database berbahaya.
-      User bisa mengirim field tersembunyi (misal: 'is_admin': 1) untuk menaikkan hak akses.
       Gunakan $request->only(['field1', 'field2']) atau $request->validated().
     languages: [php]
     severity: WARNING
@@ -112,8 +110,7 @@ rules:
             ...
         }
     message: |
-      POTENSI BROKEN ACCESS CONTROL (IDOR): Method update/delete ditemukan tanpa pemanggilan '$this->authorize()' atau penggunaan Policy.
-      Pastikan Anda mengecek apakah user yang sedang login BERHAK mengubah data ID tersebut.
+      POTENSI BROKEN ACCESS CONTROL (IDOR): Method update/delete ditemukan tanpa pemanggilan '$this->authorize()'.
     languages: [php]
     severity: WARNING
 
@@ -125,7 +122,6 @@ rules:
           $MODEL->user_id = $REQ->get('user_id');
     message: |
       POTENSI IDOR: Mengambil 'user_id' dari input request untuk disimpan ke database.
-      Jangan percaya input user untuk menentukan kepemilikan data.
-      Gunakan Auth::id() atau $request->user()->id untuk mendapatkan ID user yang sedang login secara aman.
+      Gunakan Auth::id() atau $request->user()->id.
     languages: [php]
     severity: ERROR
