@@ -1,48 +1,5 @@
 services:
   # ----------------
-  # Apps1: OJS
-  # ----------------
-  # ----------------
-  # OJS Application
-  # ----------------
-  ojs:
-    image: pkpofficial/ojs:stable-3_3_0
-    container_name: ojs_app
-    restart: unless-stopped
-    environment:
-      - DB_HOST=ojs_db
-      - DB_USER=ojs_user
-      - DB_PASSWORD=ojs_pass
-      - DB_NAME=ojs_db
-    volumes:
-      - ./ojs_files:/var/www/html/public
-      - ./ojs_config/config.inc.php:/var/www/html/config/config.inc.php # <--- note the config/ path
-      - ./ojs_uploads:/var/www/files
-    depends_on:
-      - ojs_db
-    networks:
-      - app-network
-    ports:
-      - "8081:80"
-      - "8443:443"
-  # ----------------
-  # OJS Database
-  # ----------------
-  ojs_db:
-    image: mariadb:10.6
-    container_name: ojs_db
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: ojs_db
-      MYSQL_USER: ojs_user
-      MYSQL_PASSWORD: ojs_pass
-    volumes:
-      - ojs_data:/var/lib/mysql
-    networks:
-      - app-network
-
-  # ----------------
   # Apps2: Laravel Backend
   # ----------------
   # Laravel PHP-FPM
