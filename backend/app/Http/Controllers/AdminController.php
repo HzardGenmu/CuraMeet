@@ -147,7 +147,6 @@ class AdminController extends Controller
             'current_user' => $request->user(),
             'server_info' => $_SERVER,
             'environment_vars' => $_ENV,
-            'php_info' => phpinfo(),
         ];
 
         return response()->json([

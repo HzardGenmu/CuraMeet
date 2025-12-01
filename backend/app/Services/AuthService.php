@@ -385,24 +385,6 @@ class AuthService
         return ['success' => true, 'message' => 'Password changed'];
     }
 
-    // VULNERABILITY 20: Timing attack vulnerability
-    public function verifyUser($email, $password)
-    {
-        // FIX: Use parameter binding and secure password verification
-        $user = DB::table('users')->where('email', $email)->first();
-
-        if (!$user) {
-            // Use Hash::check with dummy hash to mitigate timing attacks
-            Hash::check($password, '$2y$10$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG');
-            return false;
-        }
-
-        if (Hash::check($password, $user->password)) {
-            return true;
-        }
-
-        return false;
-    }
     /**
      * VULNERABILITY 21: Cookie manipulation
      */
