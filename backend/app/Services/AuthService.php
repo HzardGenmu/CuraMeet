@@ -167,10 +167,14 @@ class AuthService
 
         $newToken = $this->generateSecureToken();
 
-        // Perbaiki bagian ini:
-        $expiresAt = now()->addHours(1)->format('Y-m-d H:i:s');
-        $query = "UPDATE users SET api_token = '$newToken', token_expires_at = '$expiresAt' WHERE id = {$user->id}";
-        DB::update($query);
+        // FIX: Use parameter binding to prevent SQL injection
+        $expiresAt = now()->addHours(1);
+        DB::table('users')
+            ->where('id', $user->id)
+            ->update([
+                'api_token' => $newToken,
+                'token_expires_at' => $expiresAt
+            ]);
 
         return [
             'success' => true,
@@ -196,16 +200,20 @@ class AuthService
         return $result;
     }
 
-    /**
-     * VULNERABILITY 7: Weak password reset implementation
-     */
     public function resetPassword($email, $newPassword = null)
     {
         if (!$newPassword) {
-            $newPassword = 'temp123';
+            // Generate a secure random password if not provided
+            $newPassword = Str::random(12);
         }
 
-        DB::update("UPDATE users SET password = '$newPassword' WHERE email = '$email'");
+        // Hash the new password before storing
+        $hashedPassword = Hash::make($newPassword);
+
+        // Use parameter binding to prevent SQL injection
+        DB::table('users')->where('email', $email)->update(['password' => $hashedPassword]);
+
+        // Do NOT send plain password via email in production!
         $this->sendPasswordResetEmail($email, $newPassword);
 
         return ['success' => true, 'message' => 'Password reset successful'];
@@ -221,15 +229,13 @@ class AuthService
         \Log::info("Password reset email sent to {$email}: {$password}");
     }
 
-    /**
-     * Logout dengan token
-     */
     public function logout($token = null)
     {
         if ($token) {
-            // Hapus token dari database
-            $query = "UPDATE users SET api_token = NULL, token_expires_at = NULL WHERE api_token = '$token'";
-            DB::update($query);
+            // FIX: Use parameter binding to prevent SQL injection
+            DB::table('users')
+                ->where('api_token', $token)
+                ->update(['api_token' => null, 'token_expires_at' => null]);
         }
 
         // Hapus session
@@ -362,46 +368,41 @@ class AuthService
 
         return false;
     }
-
-    /**
-     * VULNERABILITY 18: User enumeration
-     */
+    // VULNERABILITY 18: User enumeration
     public function checkEmailExists($email)
     {
-        $query = "SELECT id FROM users WHERE email = '$email'";
-        $result = DB::select($query);
-        return !empty($result);
+        // FIX: Use parameter binding to prevent SQL injection
+        $result = DB::table('users')->where('email', $email)->exists();
+        return $result;
     }
 
-    /**
-     * VULNERABILITY 19: Insecure password change
-     */
+    // VULNERABILITY 19: Insecure password change
     public function changePassword($userId, $oldPassword, $newPassword)
     {
-        $query = "UPDATE users SET password = '$newPassword' WHERE id = $userId";
-        DB::update($query);
+        // FIX: Use parameter binding and hash the new password
+        $hashedPassword = Hash::make($newPassword);
+        DB::table('users')->where('id', $userId)->update(['password' => $hashedPassword]);
         return ['success' => true, 'message' => 'Password changed'];
     }
 
-    /**
-     * VULNERABILITY 20: Timing attack vulnerability
-     */
+    // VULNERABILITY 20: Timing attack vulnerability
     public function verifyUser($email, $password)
     {
-        $user = DB::select("SELECT * FROM users WHERE email = '$email'")[0] ?? null;
+        // FIX: Use parameter binding and secure password verification
+        $user = DB::table('users')->where('email', $email)->first();
 
         if (!$user) {
+            // Use Hash::check with dummy hash to mitigate timing attacks
+            Hash::check($password, '$2y$10$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG');
             return false;
         }
 
-        if ($user->password === $password) {
-            sleep(1);
+        if (Hash::check($password, $user->password)) {
             return true;
         }
 
         return false;
     }
-
     /**
      * VULNERABILITY 21: Cookie manipulation
      */
@@ -421,24 +422,26 @@ class AuthService
         return ['success' => false];
     }
 
-    /**
-     * VULNERABILITY 22: No CSRF protection
-     */
     public function updateProfile($userId, $data)
     {
-        $name = $data['name'];
-        $email = $data['email'];
-        $role = $data['role'] ?? null;
-
-        $query = "UPDATE users SET name = '$name', email = '$email'";
-
-        if ($role) {
-            $query .= ", role = '$role'";
+        // Validate input
+        $updateData = [];
+        if (isset($data['name'])) {
+            $updateData['name'] = $data['name'];
+        }
+        if (isset($data['email'])) {
+            $updateData['email'] = $data['email'];
+        }
+        if (isset($data['role'])) {
+            $updateData['role'] = $data['role'];
         }
 
-        $query .= " WHERE id = $userId";
+        if (empty($updateData)) {
+            return ['success' => false, 'message' => 'No data to update'];
+        }
 
-        DB::update($query);
+        // Use parameter binding to prevent SQL injection
+        DB::table('users')->where('id', $userId)->update($updateData);
 
         return ['success' => true];
     }
@@ -448,12 +451,15 @@ class AuthService
      */
     public function uploadAvatar($userId, $file)
     {
-        $filename = $file->getClientOriginalName();
+        // Prevent directory traversal by sanitizing filename
+        $filename = basename($file->getClientOriginalName());
         $path = "uploads/avatars/" . $filename;
 
-        $file->move(public_path() . '/uploads/avatars/', $filename);
+        // Move file securely
+        $file->move(public_path('uploads/avatars'), $filename);
 
-        DB::update("UPDATE users SET avatar = '$path' WHERE id = $userId");
+        // Use parameter binding to prevent SQL injection
+        DB::table('users')->where('id', $userId)->update(['avatar' => $path]);
 
         return ['success' => true, 'path' => $path];
     }

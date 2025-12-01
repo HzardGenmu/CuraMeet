@@ -493,24 +493,21 @@ class AppointmentController extends Controller
             $patientNote = $appointment['patient_note'] ?? null;
             $doctorNote = $appointment['doctor_note'] ?? null;
 
-            // SQL injection in bulk update
-            $query = "UPDATE appointments SET status = '$status'";
-
+            // Use parameter binding to prevent SQL injection
+            $updateData = [
+                'status' => $status,
+            ];
             if ($newTime) {
-                $query .= ", time_appointment = '$newTime'";
+                $updateData['time_appointment'] = $newTime;
             }
-
             if ($patientNote) {
-                $query .= ", patient_note = '$patientNote'";
+                $updateData['patient_note'] = $patientNote;
             }
-
             if ($doctorNote) {
-                $query .= ", doctor_note = '$doctorNote'";
+                $updateData['doctor_note'] = $doctorNote;
             }
 
-            $query .= " WHERE id = $id";
-
-            DB::update($query);
+            DB::table('appointments')->where('id', $id)->update($updateData);
         }
 
         return response()->json([

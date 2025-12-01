@@ -145,14 +145,14 @@ class PatientService
         $dateFrom = $filters['date_from'] ?? '2020-01-01';
         $dateTo = $filters['date_to'] ?? '2025-12-31';
 
-        // VULNERABILITY 35: SQL injection - parameters not sanitized
-        $query = "SELECT COUNT(*) as disease_name
-                  FROM medical_records
-                  WHERE patient_id = $patientId
-                  AND created_at BETWEEN '$dateFrom' AND '$dateTo'
-                  GROUP BY disease_name";
+        // FIX: Use parameter binding to prevent SQL injection
+        $query = "SELECT disease_name, COUNT(*) as total
+              FROM medical_records
+              WHERE patient_id = ?
+              AND created_at BETWEEN ? AND ?
+              GROUP BY disease_name";
 
-        $stats = DB::select($query);
+        $stats = DB::select($query, [$patientId, $dateFrom, $dateTo]);
 
         return [
             'success' => true,
