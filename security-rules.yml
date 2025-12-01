@@ -25,20 +25,20 @@ rules:
           - pattern: '$QUERY = "... {$VAR} ..."'
           - pattern: "$QUERY = '... $VAR ...'"
           - pattern: "$QUERY = '... {$VAR} ...'"
-      - pattern-regex: '.*(SELECT|INSERT|UPDATE|DELETE|WHERE|FROM|SET).*'
+      - pattern-regex: ".*(SELECT|INSERT|UPDATE|DELETE|WHERE|FROM|SET).*"
     message: |
       CRITICAL SQL INJECTION: Terdeteksi interpolasi variabel langsung dalam string SQL query.
       Ini adalah vulnerability SANGAT BERBAHAYA yang memungkinkan attacker mengeksekusi query arbitrary.
-      
+
       CONTOH VULNERABLE CODE:
       ❌ $query = "SELECT * FROM users WHERE email = '$email'";
       ❌ $query = "UPDATE users SET token = '$token' WHERE id = {$id}";
-      
+
       SOLUSI AMAN:
       ✅ Gunakan Query Builder Laravel:
          $user = DB::table('users')->where('email', $email)->first();
          DB::table('users')->where('id', $id)->update(['token' => $token]);
-      
+
       ✅ Atau gunakan Parameter Binding:
          $query = "SELECT * FROM users WHERE email = ?";
          $user = DB::select($query, [$email]);
@@ -47,14 +47,14 @@ rules:
 
   - id: laravel-db-select-with-concat
     patterns:
-      - pattern: 'DB::select($QUERY)'
+      - pattern: "DB::select($QUERY)"
       - metavariable-regex:
           metavariable: $QUERY
           regex: '.*\$.*'
     message: |
       POTENSI SQL INJECTION: DB::select() dipanggil dengan query yang mengandung variabel.
       Pastikan Anda menggunakan parameter binding, bukan string concatenation.
-      
+
       SALAH: DB::select("SELECT * FROM users WHERE id = $id")
       BENAR: DB::select("SELECT * FROM users WHERE id = ?", [$id])
     languages: [php]
@@ -62,14 +62,14 @@ rules:
 
   - id: laravel-db-update-with-concat
     patterns:
-      - pattern: 'DB::update($QUERY)'
+      - pattern: "DB::update($QUERY)"
       - metavariable-regex:
           metavariable: $QUERY
           regex: '.*\$.*'
     message: |
       POTENSI SQL INJECTION: DB::update() dipanggil dengan query yang mengandung variabel.
       Gunakan parameter binding untuk mencegah SQL injection.
-      
+
       SALAH: DB::update("UPDATE users SET token = '$token' WHERE id = $id")
       BENAR: DB::update("UPDATE users SET token = ? WHERE id = ?", [$token, $id])
     languages: [php]
@@ -77,14 +77,14 @@ rules:
 
   - id: laravel-db-insert-with-concat
     patterns:
-      - pattern: 'DB::insert($QUERY)'
+      - pattern: "DB::insert($QUERY)"
       - metavariable-regex:
           metavariable: $QUERY
           regex: '.*\$.*'
     message: |
       POTENSI SQL INJECTION: DB::insert() dipanggil dengan query yang mengandung variabel.
       Gunakan parameter binding untuk keamanan.
-      
+
       SALAH: DB::insert("INSERT INTO users (name) VALUES ('$name')")
       BENAR: DB::insert("INSERT INTO users (name) VALUES (?)", [$name])
     languages: [php]
@@ -92,14 +92,14 @@ rules:
 
   - id: laravel-db-delete-with-concat
     patterns:
-      - pattern: 'DB::delete($QUERY)'
+      - pattern: "DB::delete($QUERY)"
       - metavariable-regex:
           metavariable: $QUERY
           regex: '.*\$.*'
     message: |
       POTENSI SQL INJECTION: DB::delete() dipanggil dengan query yang mengandung variabel.
       Gunakan parameter binding untuk mencegah injection attacks.
-      
+
       SALAH: DB::delete("DELETE FROM users WHERE id = $id")
       BENAR: DB::delete("DELETE FROM users WHERE id = ?", [$id])
     languages: [php]
@@ -135,8 +135,6 @@ rules:
       Gunakan event handler React seperti 'onClick' untuk logika interaktif.
     languages: [javascript, typescript]
     severity: ERROR
-
-
 
   - id: laravel-blade-unescaped-output
     patterns:
