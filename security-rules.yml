@@ -1,0 +1,201 @@
+rules:
+  # =========================================================
+  # 1. SQL INJECTION (SQLi) - Backend (Laravel)
+  # =========================================================
+
+  - id: laravel-raw-sql-concatenation
+    patterns:
+      - pattern-either:
+          - pattern: 'DB::raw("..." . $VAR . "...")'
+          - pattern: 'DB::statement("..." . $VAR . "...")'
+          - pattern: 'DB::select("..." . $VAR . "...")'
+          - pattern: '$MODEL::whereRaw("..." . $VAR . "...")'
+          - pattern: '$MODEL::selectRaw("..." . $VAR . "...")'
+    message: |
+      POTENSI SQL INJECTION: Terdeteksi penggabungan variabel PHP langsung ke dalam query SQL mentah.
+      Jangan pernah menyambung string untuk query. Gunakan 'parameter binding' (tanda tanya ?).
+      Contoh aman: whereRaw('age > ?', [$age])
+    languages: [php]
+    severity: ERROR
+
+  - id: laravel-string-interpolation-sql
+    patterns:
+      - pattern-either:
+          - pattern: '$QUERY = "... $VAR ..."'
+          - pattern: '$QUERY = "... {$VAR} ..."'
+          - pattern: "$QUERY = '... $VAR ...'"
+          - pattern: "$QUERY = '... {$VAR} ...'"
+      - pattern-regex: '.*(SELECT|INSERT|UPDATE|DELETE|WHERE|FROM|SET).*'
+    message: |
+      CRITICAL SQL INJECTION: Terdeteksi interpolasi variabel langsung dalam string SQL query.
+      Ini adalah vulnerability SANGAT BERBAHAYA yang memungkinkan attacker mengeksekusi query arbitrary.
+
+      CONTOH VULNERABLE CODE:
+      ❌ $query = "SELECT * FROM users WHERE email = '$email'";
+      ❌ $query = "UPDATE users SET token = '$token' WHERE id = {$id}";
+
+      SOLUSI AMAN:
+      ✅ Gunakan Query Builder Laravel:
+         $user = DB::table('users')->where('email', $email)->first();
+         DB::table('users')->where('id', $id)->update(['token' => $token]);
+
+      ✅ Atau gunakan Parameter Binding:
+         $query = "SELECT * FROM users WHERE email = ?";
+         $user = DB::select($query, [$email]);
+    languages: [php]
+    severity: ERROR
+
+  - id: laravel-db-select-with-concat
+    patterns:
+      - pattern: 'DB::select($QUERY)'
+      - metavariable-regex:
+          metavariable: $QUERY
+          regex: '.*\$.*'
+    message: |
+      POTENSI SQL INJECTION: DB::select() dipanggil dengan query yang mengandung variabel.
+      Pastikan Anda menggunakan parameter binding, bukan string concatenation.
+
+      SALAH: DB::select("SELECT * FROM users WHERE id = $id")
+      BENAR: DB::select("SELECT * FROM users WHERE id = ?", [$id])
+    languages: [php]
+    severity: ERROR
+
+  - id: laravel-db-update-with-concat
+    patterns:
+      - pattern: 'DB::update($QUERY)'
+      - metavariable-regex:
+          metavariable: $QUERY
+          regex: '.*\$.*'
+    message: |
+      POTENSI SQL INJECTION: DB::update() dipanggil dengan query yang mengandung variabel.
+      Gunakan parameter binding untuk mencegah SQL injection.
+
+      SALAH: DB::update("UPDATE users SET token = '$token' WHERE id = $id")
+      BENAR: DB::update("UPDATE users SET token = ? WHERE id = ?", [$token, $id])
+    languages: [php]
+    severity: ERROR
+
+  - id: laravel-db-insert-with-concat
+    patterns:
+      - pattern: 'DB::insert($QUERY)'
+      - metavariable-regex:
+          metavariable: $QUERY
+          regex: '.*\$.*'
+    message: |
+      POTENSI SQL INJECTION: DB::insert() dipanggil dengan query yang mengandung variabel.
+      Gunakan parameter binding untuk keamanan.
+
+      SALAH: DB::insert("INSERT INTO users (name) VALUES ('$name')")
+      BENAR: DB::insert("INSERT INTO users (name) VALUES (?)", [$name])
+    languages: [php]
+    severity: ERROR
+
+  - id: laravel-db-delete-with-concat
+    patterns:
+      - pattern: 'DB::delete($QUERY)'
+      - metavariable-regex:
+          metavariable: $QUERY
+          regex: '.*\$.*'
+    message: |
+      POTENSI SQL INJECTION: DB::delete() dipanggil dengan query yang mengandung variabel.
+      Gunakan parameter binding untuk mencegah injection attacks.
+
+      SALAH: DB::delete("DELETE FROM users WHERE id = $id")
+      BENAR: DB::delete("DELETE FROM users WHERE id = ?", [$id])
+    languages: [php]
+    severity: ERROR
+
+  - id: laravel-raw-order-by
+    pattern: $Q->orderByRaw($VAR)
+    message: |
+      POTENSI SQL INJECTION: orderByRaw sering menjadi target serangan jika input user masuk langsung.
+      Validasi input user terhadap daftar kolom yang diizinkan (whitelist) sebelum memasukkannya ke sini.
+    languages: [php]
+    severity: WARNING
+
+  # =========================================================
+  # 2. CROSS-SITE SCRIPTING (XSS) - Frontend (React) & Backend
+  # =========================================================
+
+  - id: react-dangerously-set-inner-html
+    patterns:
+      - pattern: "<$TAG dangerouslySetInnerHTML={{ __html: ... }} ... />"
+    message: |
+      XSS RISK: Penggunaan 'dangerouslySetInnerHTML' memungkinkan injeksi skrip berbahaya.
+      Hanya gunakan jika konten benar-benar terpercaya atau sudah disanitasi menggunakan library seperti 'dompurify'.
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: react-href-javascript-protocol
+    patterns:
+      - pattern: '<a href="javascript:...">'
+      - pattern: '<a href={"javascript:" + ...}>'
+    message: |
+      XSS RISK: Menggunakan protokol 'javascript:' pada href memungkinkan eksekusi skrip sembarang.
+      Gunakan event handler React seperti 'onClick' untuk logika interaktif.
+    languages: [javascript, typescript]
+    severity: ERROR
+
+
+
+  - id: laravel-blade-unescaped-output
+    patterns:
+      - pattern: "{!! $VAR !!}"
+    paths:
+      include:
+        - "*.blade.php"
+    message: |
+      XSS RISK: Output {!! !!} di Blade tidak melakukan escaping HTML.
+      Jika variabel ini berasal dari input user, script jahat akan dieksekusi.
+      Gunakan {{ }} kecuali Anda yakin data tersebut aman/sudah disanitasi.
+    languages: [generic]
+    severity: WARNING
+
+  # =========================================================
+  # 3. BROKEN ACCESS CONTROL (BAC) & IDOR - Backend (Laravel)
+  # =========================================================
+
+  - id: laravel-mass-assignment-vulnerability
+    patterns:
+      - pattern: $MODEL::create($REQ->all())
+      - pattern: $MODEL->update($REQ->all())
+      - pattern: $MODEL::create($REQ->input())
+    message: |
+      BROKEN ACCESS CONTROL (Integrity): Menggunakan $request->all() langsung ke database berbahaya.
+      Gunakan $request->only(['field1', 'field2']) atau $request->validated().
+    languages: [php]
+    severity: WARNING
+
+  - id: laravel-missing-authorization-check
+    patterns:
+      - pattern: |
+          public function update(..., $id) {
+            ...
+            $MODEL = $M::find($id);
+            ...
+            $MODEL->update(...);
+          }
+      - pattern: |
+          public function destroy(..., $id) {
+            ...
+            $MODEL = $M::find($id);
+            ...
+            $MODEL->delete();
+          }
+    message: |
+      POTENSI BROKEN ACCESS CONTROL (IDOR): Method update/delete ditemukan tanpa pemanggilan '$this->authorize()'.
+      Pastikan ada authorization check sebelum mengubah/menghapus data.
+    languages: [php]
+    severity: WARNING
+
+  - id: laravel-ignoring-auth-id
+    patterns:
+      - pattern: |
+          $MODEL->user_id = $REQ->input('user_id');
+      - pattern: |
+          $MODEL->user_id = $REQ->get('user_id');
+    message: |
+      POTENSI IDOR: Mengambil 'user_id' dari input request untuk disimpan ke database.
+      Gunakan Auth::id() atau $request->user()->id.
+    languages: [php]
+    severity: ERROR
