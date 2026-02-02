@@ -1,5 +1,5 @@
 # backend/Dockerfile
-FROM php:8.2-fpm
+FROM php:8.5.3RC1-fpm
 
 # Install system dependencies + PHP extensions
 RUN apt-get update && apt-get install -y \
